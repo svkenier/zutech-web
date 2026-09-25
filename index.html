@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- LCP Hero Image: prioridad nativa via fetchpriority="high" + loading="eager" en el <img> del componente -->
+    <link rel="preload" as="image" href="/hero-desktop.webp?v=17" media="(min-width: 900px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/hero-mobile.webp?v=17" media="(max-width: 899px)" fetchpriority="high" />
+    <!-- SEO y Meta Tags Base (serán sobreescritos por React Helmet) -->
+    <title>ZUTECH | Hardware, Software y Servicio Técnico</title>
+    <meta name="description" content="Tienda especializada en computación: venta de hardware, software y servicio técnico profesional." />
+    <meta name="theme-color" content="#00E5FF" />
+
+    <!-- Favicon & PWA -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.webp" type="image/webp" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="apple-touch-icon" href="/favicon.webp" />
+
+    <!-- Tipografía Inter (Google Fonts) asíncrona -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    </noscript>
+  </head>
+  <body>
+    <div id="root">
+      <style>
+        body, html {
+          margin: 0;
+          padding: 0;
+          background-color: #0B1118;
+        }
+        .initial-loader-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          width: 100vw;
+          background-color: #0B1118;
+        }
+        .initial-loader-spinner {
+          width: 50px;
+          height: 50px;
+          border: 4px solid rgba(0, 229, 255, 0.2);
+          border-left-color: #00E5FF;
+          border-radius: 50%;
+          animation: initial-loader-spin 1s linear infinite;
+        }
+        @keyframes initial-loader-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+      <div class="initial-loader-container">
+        <div class="initial-loader-spinner"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,511 @@
+import { useState, useCallback, useRef, type ChangeEvent } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid2';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import CloseIcon     from '@mui/icons-material/Close';
+import AddPhotoIcon  from '@mui/icons-material/AddPhotoAlternate';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import CollectionsIcon from '@mui/icons-material/Collections';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { post, put, formatApiError, clearEtagCache } from '@core/api/client';
+import { optimizeImage } from '@core/media/imageOptimizer';
+import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
+import type { BaseRecord } from '@core/types/record';
+
+interface ProductFormProps {
+  open:    boolean;
+  onClose: () => void;
+  initial?: BaseRecord | null;
+  collectionName?: string;
+  onSuccess?: (isEdit: boolean) => void;
+}
+
+const EMPTY = {
+  title: '', brand: '', category: '', price: '',
+  description: '', status: 'active',
+  in_stock: true, featured: false,
+};
+
+const validationSchema = Yup.object({
+  title: Yup.string().required('El título/nombre es obligatorio'),
+  brand: Yup.string(),
+  category: Yup.string().required('La categoría es obligatoria'),
+  price: Yup.number().typeError('Debe ser un número').min(0, 'No puede ser negativo').required('El precio es obligatorio'),
+  description: Yup.string(),
+  status: Yup.string().required('El estado es obligatorio'),
+  in_stock: Yup.boolean(),
+  featured: Yup.boolean(),
+});
+
+interface ImagePickerProps {
+  label:   string;
+  preview: string;
+  onFile:  (file: File) => void;
+  onClear?: () => void;
+  size?:   'small' | 'large';
+}
+
+function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImagePickerProps) {
+  const h = size === 'large' ? 180 : 110;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onFile(file);
+    e.target.value = '';
+    setDrawerOpen(false);
+  };
+
+  const handleTrigger = () => {
+    if (isMobile) {
+      setDrawerOpen(true);
+    } else {
+      galleryInputRef.current?.click();
+    }
+  };
+
+  return (
+    <Box sx={{ position: 'relative' }}>
+      <Box
+        onClick={handleTrigger}
+        sx={{
+          display:        'flex',
+          flexDirection:  'column',
+          alignItems:     'center',
+          justifyContent: 'center',
+          height:         h,
+          border:         '2px dashed',
+          borderColor:    preview ? 'primary.main' : 'divider',
+          borderRadius: 0,
+          cursor:         'pointer',
+          overflow:       'hidden',
+          bgcolor:        'background.default',
+          transition:     'border-color 200ms',
+          '&:hover':      { borderColor: 'primary.main' },
+        }}
+      >
+        {preview ? (
+          <Box
+            component="img"
+            src={preview}
+            alt={label ? `Vista previa de ${label}` : 'Vista previa de imagen'}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = ITEM_IMAGE_FALLBACK; }}
+            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <Box sx={{ textAlign: 'center', p: 1, pointerEvents: 'none' }}>
+            <AddPhotoIcon sx={{ fontSize: '2rem', color: 'text.disabled', mb: 0.5 }} />
+            <Typography variant="caption" color="text.disabled" display="block">
+              {label}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleChange}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleChange}
+      />
+      <Drawer
+        anchor="bottom"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{ sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16 } }}
+        sx={{ zIndex: (theme) => theme.zIndex.modal + 100 }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 1, px: 2, pt: 1 }}>
+            Seleccionar imagen
+          </Typography>
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => cameraInputRef.current?.click()}>
+                <ListItemIcon><PhotoCameraIcon /></ListItemIcon>
+                <ListItemText primary="Tomar foto" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => galleryInputRef.current?.click()}>
+                <ListItemIcon><CollectionsIcon /></ListItemIcon>
+                <ListItemText primary="Elegir de la galería" />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
+      {preview && onClear && (
+        <Tooltip title="Quitar foto">
+          <IconButton aria-label="Quitar foto"
+            size="small"
+            onClick={onClear}
+            sx={{
+              position: 'absolute', top: 4, right: 4,
+              bgcolor: 'rgba(0,0,0,0.55)', color: 'white',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+    </Box>
+  );
+}
+
+export default function ProductForm({ open, onClose, initial, collectionName = 'products', onSuccess }: ProductFormProps) {
+  const isEdit = Boolean(initial?.id);
+  const qc     = useQueryClient();
+
+  const formik = useFormik({
+    initialValues: initial
+      ? {
+          title:           initial.title,
+          description:     initial.description     ?? '',
+          status:          initial.status          ?? 'active',
+          brand:           (initial.attributes?.['brand'] as string) ?? '',
+          category:        (initial.attributes?.['category'] as string) ?? '',
+          price:           initial.attributes?.['price'] !== undefined ? String(initial.attributes?.['price']) : '',
+          in_stock:        (initial.attributes?.['in_stock'] as boolean) ?? true,
+          featured:        (initial.attributes?.['featured'] as boolean) ?? false,
+        }
+      : EMPTY,
+    enableReinitialize: true,
+    validationSchema,
+    onSubmit: () => {
+      mutation.mutate();
+    },
+  });
+
+  const [mainPreview,  setMainPreview]  = useState<string>(initial?.main_image ?? '');
+  const [mainBase64,   setMainBase64]   = useState<string>('');
+  const [extraFiles,   setExtraFiles]   = useState<{ preview: string; base64: string }[]>([]);
+  const [imgLoading,   setImgLoading]   = useState(false);
+  const [error,        setError]        = useState('');
+
+  const handleMainFile = useCallback(async (file: File) => {
+    setImgLoading(true);
+    try {
+      const result = await optimizeImage(file);
+      const b64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve((reader.result as string).split(',')[1] ?? '');
+        reader.onerror = reject;
+        reader.readAsDataURL(result.blob);
+      });
+      setMainPreview(result.previewUrl);
+      setMainBase64(b64);
+    } finally {
+      setImgLoading(false);
+    }
+  }, []);
+
+  const handleExtraFile = useCallback(async (file: File) => {
+    if (extraFiles.length >= 5) return;
+    setImgLoading(true);
+    try {
+      const result = await optimizeImage(file);
+      const b64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve((reader.result as string).split(',')[1] ?? '');
+        reader.onerror = reject;
+        reader.readAsDataURL(result.blob);
+      });
+      setExtraFiles((p) => [...p, { preview: result.previewUrl, base64: b64 }]);
+    } finally {
+      setImgLoading(false);
+    }
+  }, [extraFiles.length]);
+
+  const removeExtra = (idx: number) =>
+    setExtraFiles((p) => p.filter((_, i) => i !== idx));
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      const payload = {
+        ...(isEdit && initial?.id ? { id: initial.id } : {}),
+        title: formik.values.title,
+        description: formik.values.description,
+        status: formik.values.status,
+        attributes: {
+          brand: formik.values.brand,
+          category: formik.values.category,
+          price: parseFloat(formik.values.price as string),
+          in_stock: formik.values.in_stock,
+          featured: formik.values.featured,
+        },
+        ...(mainBase64 ? { 
+          main_image_base64: mainBase64,
+        } : {}),
+        ...(extraFiles.length > 0
+          ? { gallery_base64: extraFiles.map((f) => f.base64) }
+          : {}),
+        ...(isEdit
+          ? { gallery_existing: initial?.gallery ?? [] }
+          : {}),
+      };
+      if (isEdit) {
+        return put(`/collections/${collectionName}`, payload);
+      }
+      return post(`/collections/${collectionName}`, payload);
+    },
+    onSuccess: () => {
+      clearEtagCache(collectionName);
+      void qc.invalidateQueries({ queryKey: [`${collectionName}-index`] });
+      if (onSuccess) {
+        onSuccess(isEdit);
+      } else {
+        onClose();
+      }
+    },
+    onError: (err: unknown) => {
+      const msg = formatApiError(err, isEdit ? 'Error al actualizar el registro' : 'Error al crear el registro');
+      setError(msg);
+    },
+  });
+
+  const handleSubmit = () => {
+    setError('');
+    formik.handleSubmit();
+  };
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{ sx: { borderRadius: 0 } }}
+    >
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="h6" fontWeight={700}>
+          {isEdit ? 'Editar Producto' : 'Registrar Nuevo Producto'}
+        </Typography>
+        <IconButton aria-label="Cerrar formulario" onClick={onClose} size="small" disabled={mutation.isPending}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ pt: 2 }}>
+        {error && (
+          <Alert severity="error" onClose={() => setError('')} sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1.5}>
+          Datos básicos
+        </Typography>
+        <Grid container spacing={2} mb={2}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label="Nombre / Título comercial *"
+              name="title"
+              value={formik.values.title}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.title && Boolean(formik.errors.title)}
+              helperText={formik.touched.title && (formik.errors.title as string)}
+              fullWidth size="small"
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <TextField
+              label="Marca"
+              name="brand"
+              value={formik.values.brand}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              fullWidth size="small"
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <FormControl fullWidth size="small" error={formik.touched.category && Boolean(formik.errors.category)}>
+              <InputLabel id="label-category">Categoría *</InputLabel>
+              <Select labelId="label-category" name="category" value={formik.values.category} label="Categoría *" onChange={formik.handleChange} onBlur={formik.handleBlur}>
+                <MenuItem value="">—</MenuItem>
+                <MenuItem value="Procesadores">Procesadores</MenuItem>
+                <MenuItem value="Tarjetas Gráficas">Tarjetas Gráficas</MenuItem>
+                <MenuItem value="Tarjetas Madre">Tarjetas Madre</MenuItem>
+                <MenuItem value="Memorias RAM">Memorias RAM</MenuItem>
+                <MenuItem value="Almacenamiento">Almacenamiento</MenuItem>
+                <MenuItem value="Fuentes de Poder">Fuentes de Poder</MenuItem>
+                <MenuItem value="Chasis / Cases">Chasis / Cases</MenuItem>
+                <MenuItem value="Periféricos">Periféricos</MenuItem>
+                <MenuItem value="Servicio Técnico / Software">Servicio Técnico / Software</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              label="Precio (USD) *"
+              type="number"
+              name="price"
+              value={formik.values.price}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.price && Boolean(formik.errors.price)}
+              helperText={formik.touched.price && (formik.errors.price as string)}
+              fullWidth size="small"
+              inputProps={{ min: 0, step: 0.01 }}
+              InputProps={{ startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>$</Typography> }}
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ mb: 2 }} />
+
+        <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1.5}>
+          Estado y descripción
+        </Typography>
+        <Grid container spacing={2} mb={2}>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <FormControl fullWidth size="small" error={formik.touched.status && Boolean(formik.errors.status)}>
+              <InputLabel>Estado interno</InputLabel>
+              <Select name="status" value={formik.values.status} label="Estado interno" onChange={formik.handleChange} onBlur={formik.handleBlur}>
+                <MenuItem value="active">Activo</MenuItem>
+                <MenuItem value="inactive">Inactivo</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 8 }}>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              <FormControlLabel
+                control={<Switch name="in_stock" checked={formik.values.in_stock} onChange={formik.handleChange} color="primary" />}
+                label="En Stock"
+              />
+              <FormControlLabel
+                control={<Switch name="featured" checked={formik.values.featured} onChange={formik.handleChange} color="warning" />}
+                label="Destacado ⭐"
+              />
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              label="Descripción"
+              name="description"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              fullWidth
+              multiline
+              rows={3}
+              size="small"
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ mb: 2 }} />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+            Fotos
+          </Typography>
+          {imgLoading && <CircularProgress size={16} />}
+        </Box>
+
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Foto Principal (Opcional, pero recomendado)
+            </Typography>
+            <ImagePicker
+              label="Foto Principal"
+              preview={mainPreview}
+              onFile={handleMainFile}
+              onClear={() => { setMainPreview(''); setMainBase64(''); }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 8 }}>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Fotos adicionales (máx. 5)
+            </Typography>
+            <Grid container spacing={1}>
+              {extraFiles.map((ef, idx) => (
+                <Grid key={idx} size={{ xs: 4 }}>
+                  <ImagePicker
+                    label={`Foto ${idx + 2}`}
+                    preview={ef.preview}
+                    onFile={() => {}}
+                    onClear={() => removeExtra(idx)}
+                    size="small"
+                  />
+                </Grid>
+              ))}
+              {extraFiles.length < 5 && (
+                <Grid size={{ xs: 4 }}>
+                  <ImagePicker
+                    label="Agregar foto"
+                    preview=""
+                    onFile={handleExtraFile}
+                    size="small"
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </Grid>
+        </Grid>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Button onClick={onClose} disabled={mutation.isPending} color="inherit">
+          Cancelar
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={mutation.isPending || imgLoading || formik.isSubmitting}
+          startIcon={mutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
+          sx={{ borderRadius: 0, px: 3 }}
+        >
+          {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear registro'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
