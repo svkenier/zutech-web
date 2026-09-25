@@ -91,11 +91,11 @@ export default function Login() {
           <Box
             component="img"
             src="/logo.svg"
-            alt="Patitas de Amor Barquisimeto"
+            alt="ZUTECH"
             sx={{ height: 56, width: 'auto', objectFit: 'contain', mb: 2 }}
           />
           <Typography variant="body2" color="text.secondary">
-            Acceso exclusivo para el equipo de Patitas de Amor
+            Acceso exclusivo para el equipo de ZUTECH
           </Typography>
         </Box>
 

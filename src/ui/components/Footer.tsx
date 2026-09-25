@@ -79,7 +79,7 @@ export default function Footer() {
     <Box
       component="footer"
       sx={{
-        bgcolor:    '#0B1118',
+        bgcolor:    '#03060A',
         color:      'rgba(255, 255, 255, 0.8)',
         mt:         'auto',
         pt:         6,
@@ -171,7 +171,7 @@ export default function Footer() {
                   component={RouterLink}
                   to={l.to}
                   underline="none"
-                  sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', transition: 'color 0.2s ease-in-out', '&:hover': { color: '#35b4dd' } }}
+                  sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', transition: 'color 0.2s ease-in-out', '&:hover': { color: 'primary.main' } }}
                 >
                   {l.label}
                 </Link>
@@ -185,13 +185,13 @@ export default function Footer() {
               Contacto
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20necesito%20soporte%20técnico`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: '#00E5FF' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20necesito%20soporte%20técnico`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
                 Soporte Técnico
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20quisiera%20información%20sobre%20productos`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: '#00E5FF' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20quisiera%20información%20sobre%20productos`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
                 Ventas y Catálogo
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20quiero%20consultar%20el%20estado%20de%20mi%20pedido`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: '#00E5FF' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20quiero%20consultar%20el%20estado%20de%20mi%20pedido`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
                 Estado de mi pedido
               </Link>
             </Box>
@@ -208,20 +208,20 @@ export default function Footer() {
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
                 {config.phone && (
-                  <Link href={`tel:${config.phone.replace(/\s+/g, '')}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#35b4dd', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <PhoneIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#35b4dd', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
+                  <Link href={`tel:${config.phone.replace(/\s+/g, '')}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: 'primary.main', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
+                    <PhoneIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: 'primary.main', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
                     <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.2s ease-in-out' }}>{config.phone}</Typography>
                   </Link>
                 )}
                 {config.email && (
-                  <Link href={`mailto:${config.email}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#35b4dd', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <EmailIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#35b4dd', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
+                  <Link href={`mailto:${config.email}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: 'primary.main', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
+                    <EmailIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: 'primary.main', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
                     <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.2s ease-in-out' }}>{config.email}</Typography>
                   </Link>
                 )}
                 {config.address && (
-                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', '&:hover': { color: '#35b4dd', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <PlaceIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#35b4dd', flexShrink: 0, mt: 0.3, transition: 'all 0.2s ease-in-out' }} /> 
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', '&:hover': { color: 'primary.main', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
+                    <PlaceIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: 'primary.main', flexShrink: 0, mt: 0.3, transition: 'all 0.2s ease-in-out' }} /> 
                     <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.2s ease-in-out' }}>{config.address}</Typography>
                   </Box>
                 )}
@@ -275,7 +275,7 @@ export default function Footer() {
                 component={RouterLink}
                 to={l.to}
                 underline="hover"
-                sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.75rem', '&:hover': { color: '#35b4dd' } }}
+                sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.75rem', '&:hover': { color: 'primary.main' } }}
               >
                 {l.label}
               </Link>

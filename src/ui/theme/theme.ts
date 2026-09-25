@@ -1,292 +1,120 @@
-/**
- * Tema global de Material UI para Patitas de Amor.
- *
- * Principios de diseño (Sharp UI & Visual Consistency):
- * - Sharp UI: Bordes completamente rectos (borderRadius: 0) para una estética geométrica, sobria y profesional.
- * - Paleta cromática neutra: Escala de grises profundos con un solo color de acento.
- * - Tipografía estructurada con jerarquía estricta.
- */
-
 import { createTheme, type PaletteOptions } from '@mui/material/styles';
-import type {} from '@mui/material/themeCssVarsAugmentation';
-
-// ─── Paleta de colores ────────────────────────────────────────────────────────
 
 const palette: PaletteOptions = {
-  mode: 'dark',
+  mode: 'light',
 
   primary: {
-    main:        '#00E5FF', // Cyan / Aqua Neón
-    contrastText: '#000000',
+    main:        '#0A1322', // ZUTECH Navy
+    contrastText: '#FFFFFF',
   },
 
   secondary: {
-    main:        '#BAFE93',
-    contrastText: '#1E1F20',
+    main:        '#00E5FF', // ZUTECH Cyan
+    contrastText: '#0A1322',
   },
 
   error: { main: '#DC2626' },
-  warning: { main: '#FFAF2B' },
-  success: { main: '#059669' },
-  info: { main: '#2563EB' },
+  warning: { main: '#F59E0B' },
+  success: { main: '#10B981' },
+  info: { main: '#3B82F6' },
 
   background: {
-    default: '#0B1118', // Fondo base
-    paper:   '#131D27', // Superficie
+    default: '#FFFFFF', // Base luminosa
+    paper:   '#F8FAFC', // Slate 50
   },
 
   text: {
-    primary:   '#FFFFFF',
-    secondary: '#94A3B8',
-    disabled:  '#A0AEC0',
+    primary:   '#0A1322', // ZUTECH Navy para lectura
+    secondary: '#475569', // Slate 600
+    disabled:  '#94A3B8', // Slate 400
   },
 
-  divider: 'rgba(0, 229, 255, 0.15)',
+  divider: '#E2E8F0', // Slate 200 para bordes ultra finos
 };
-
-// ─── Tipografía ───────────────────────────────────────────────────────────────
 
 const fontFamily = [
   '"Inter"',
-  '"Segoe UI"',
+  '"Roboto Flex"',
+  '"Geist"',
   '-apple-system',
   'BlinkMacSystemFont',
-  '"Helvetica Neue"',
-  'Arial',
+  '"Segoe UI"',
   'sans-serif',
 ].join(', ');
 
-// ─── Duración de transiciones ─────────────────────────────────────────────────
 
-const TRANSITION_DURATION = {
-  shortest: 150,
-  shorter:  200,
-  short:    250,
-  standard: 300,
-  complex:  375,
-  entering: 225,
-  leaving:  195,
-} as const;
-
-// ─── Creación del tema ────────────────────────────────────────────────────────
 
 const theme = createTheme({
   palette,
-
-  // ─── Tipografía ───────────────────────────────────────────────────────────
   typography: {
     fontFamily,
     fontSize: 14,
-
-    h1: {
-      fontWeight: 800,
-      fontSize: 'clamp(2rem, 5vw, 3rem)',
-      lineHeight: 1.2,
-      letterSpacing: '-0.03em',
-      color: '#1E1F20',
-    },
-    h2: {
-      fontWeight: 800,
-      fontSize: 'clamp(1.5rem, 3.5vw, 2.25rem)',
-      lineHeight: 1.25,
-      letterSpacing: '-0.02em',
-      color: '#1E1F20',
-    },
-    h3: {
-      fontWeight: 700,
-      fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-      lineHeight: 1.3,
-      letterSpacing: '-0.01em',
-    },
-    h4: {
-      fontWeight: 700,
-      fontSize: 'clamp(1rem, 2vw, 1.35rem)',
-      lineHeight: 1.35,
-    },
-    h5: {
-      fontWeight: 600,
-      fontSize: '1.125rem',
-    },
-    h6: {
-      fontWeight: 600,
-      fontSize: '1rem',
-    },
-    subtitle1: {
-      fontWeight: 500,
-      fontSize: '1rem',
-      lineHeight: 1.5,
-    },
-    subtitle2: {
-      fontWeight: 500,
-      fontSize: '0.875rem',
-      lineHeight: 1.5,
-    },
-    body1: {
-      fontSize: '1rem',
-      lineHeight: 1.7,
-      color: '#4A5568',
-    },
-    body2: {
-      fontSize: '0.875rem',
-      lineHeight: 1.6,
-      color: '#4A5568',
-    },
-    caption: {
-      fontSize: '0.75rem',
-      color: '#A0AEC0',
-    },
-    button: {
-      fontWeight: 600,
-      textTransform: 'none',
-      letterSpacing: '0.01em',
-    },
-    overline: {
-      fontWeight: 700,
-      fontSize: '0.75rem',
-      letterSpacing: '0.12em',
-      textTransform: 'uppercase',
-    },
+    h1: { fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 4rem)', lineHeight: 1.1, letterSpacing: '-0.03em', color: '#0A1322' },
+    h2: { fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', lineHeight: 1.15, letterSpacing: '-0.02em', color: '#0A1322' },
+    h3: { fontWeight: 700, fontSize: 'clamp(1.5rem, 3vw, 2rem)', lineHeight: 1.2, letterSpacing: '-0.01em', color: '#0A1322' },
+    h4: { fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)', lineHeight: 1.3, color: '#0A1322' },
+    h5: { fontWeight: 600, fontSize: '1.125rem' },
+    h6: { fontWeight: 600, fontSize: '1rem' },
+    subtitle1: { fontWeight: 500, fontSize: '1rem', lineHeight: 1.5 },
+    subtitle2: { fontWeight: 500, fontSize: '0.875rem', lineHeight: 1.5 },
+    body1: { fontSize: '1rem', lineHeight: 1.7, color: '#334155' },
+    body2: { fontSize: '0.875rem', lineHeight: 1.6, color: '#475569' },
+    caption: { fontSize: '0.75rem', color: '#64748B' },
+    button: { fontWeight: 600, textTransform: 'none', letterSpacing: '0.01em' },
+    overline: { fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase' },
   },
-
-  transitions: {
-    duration: TRANSITION_DURATION,
-    easing: {
-      easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      easeOut:   'cubic-bezier(0.0, 0, 0.2, 1)',
-      easeIn:    'cubic-bezier(0.4, 0, 1, 1)',
-      sharp:     'cubic-bezier(0.4, 0, 0.6, 1)',
-    },
-  },
-
-  // ─── Bordes redondeados orgánicos ─────────────────────────────────
-  shape: {
-    borderRadius: 12, 
-  },
-
-  shadows: [
-    'none',
-    '0 1px 2px rgba(0,0,0,0.05)',
-    '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
-    '0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03)',
-    '0 6px 10px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.03)',
-    '0 8px 15px rgba(0,0,0,0.07), 0 3px 6px rgba(0,0,0,0.04)',
-    '0 10px 20px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04)',
-    '0 12px 25px rgba(0,0,0,0.08)',
-    '0 15px 30px rgba(0,0,0,0.09)',
-    '0 20px 40px rgba(0,0,0,0.09)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-    '0 25px 50px rgba(0,0,0,0.10)',
-  ],
-
+  shape: { borderRadius: 8 },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
-        '*, *::before, *::after': {
-          boxSizing: 'border-box',
-        },
-        html: {
-          scrollBehavior: 'smooth',
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-        },
-        body: {
-          backgroundColor: '#0B1118',
-          color: '#FFFFFF',
-        },
-        ':target': {
-          scrollMarginTop: '80px',
-        },
+        '*, *::before, *::after': { boxSizing: 'border-box' },
+        html: { scrollBehavior: 'smooth', WebkitFontSmoothing: 'antialiased' },
+        body: { backgroundColor: '#FFFFFF', color: '#0A1322' },
       },
     },
-
     MuiCard: {
-      defaultProps: {
-        elevation: 0,
-      },
+      defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          backgroundColor: '#131D27',
-          border: '1px solid rgba(0, 229, 255, 0.15)', // Borde sutil acentuado
-          borderRadius: 16,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
-          transition: 'transform 200ms cubic-bezier(0.4,0,0.2,1), box-shadow 200ms, border-color 200ms',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: 12,
+          transition: 'transform 200ms ease-in-out, box-shadow 200ms ease-in-out, border-color 200ms',
           '&:hover': {
-            transform: 'translateY(-3px)',
-            boxShadow: '0 8px 30px rgba(0, 229, 255, 0.08)',
-            borderColor: 'rgba(0, 229, 255, 0.4)',
+            boxShadow: '0 10px 40px -10px rgba(10, 19, 34, 0.08)',
+            borderColor: '#CBD5E1',
           },
         },
       },
     },
-
     MuiButton: {
-      defaultProps: {
-        disableElevation: true,
-      },
+      defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          fontWeight: 700,
-          paddingLeft: 24,
-          paddingRight: 24,
-          paddingTop: 10,
-          paddingBottom: 10,
-          transition: 'background-color 200ms, border-color 200ms, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-          '&:active': {
-            transform: 'scale(0.97)',
-          },
-        },
-        containedPrimary: {
-          backgroundColor: '#00E5FF',
-          color: '#000000',
-          '&:hover': {
-            backgroundColor: '#66EEFF',
-          },
-        },
-        outlined: {
-          borderWidth: '1px',
-          borderColor: 'rgba(0, 229, 255, 0.3)',
-          color: '#00E5FF',
-          '&:hover': {
-            borderWidth: '1px',
-            backgroundColor: 'rgba(0, 229, 255, 0.08)',
-            borderColor: '#00E5FF',
-          },
+          borderRadius: 6,
+          fontWeight: 600,
+          padding: '8px 20px',
+          transition: 'transform 0.2s',
+          '&:active': { transform: 'scale(0.98)' },
         },
       },
     },
-
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 6,
           backgroundColor: '#FFFFFF',
-          transition: 'border-color 200ms',
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#4A9218',
+            borderColor: '#0A1322',
             borderWidth: '2px',
           },
         },
       },
     },
-
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 6,
+          borderRadius: 4,
           fontWeight: 600,
           fontSize: '0.75rem',
           letterSpacing: '0.05em',
@@ -294,137 +122,7 @@ const theme = createTheme({
         },
       },
     },
-
-    MuiDialog: {
-      styleOverrides: {
-        paper: {
-          borderRadius: 12,
-          border: '1px solid rgba(0, 0, 0, 0.06)',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.10)',
-        },
-      },
-    },
-
-    MuiPaper: {
-      defaultProps: {
-        elevation: 0,
-      },
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-        },
-        rounded: {
-          borderRadius: 8,
-        },
-      },
-    },
-
-    MuiTableHead: {
-      styleOverrides: {
-        root: {
-          '& .MuiTableCell-head': {
-            fontWeight: 700,
-            fontSize: '0.75rem',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            backgroundColor: '#131D27',
-            color: '#94A3B8',
-            borderBottom: '2px solid rgba(0, 229, 255, 0.15)',
-          },
-        },
-      },
-    },
-
-    MuiDivider: {
-      styleOverrides: {
-        root: {
-          borderColor: 'rgba(0, 229, 255, 0.15)',
-        },
-      },
-    },
-
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: '#1D1D1B',
-          color: '#FFFFFF',
-          fontSize: '0.75rem',
-          borderRadius: 6,
-          padding: '8px 12px',
-          fontWeight: 600,
-        },
-        arrow: {
-          color: '#1D1D1B',
-        },
-      },
-    },
-
-    MuiLinearProgress: {
-      styleOverrides: {
-        root: {
-          borderRadius: 6, // Orgánico
-          height: 6,
-        },
-      },
-    },
-
-    MuiSkeleton: {
-      defaultProps: {
-        animation: 'wave',
-      },
-      styleOverrides: {
-        root: {
-          borderRadius: 12, // Orgánico
-          backgroundColor: '#F1F5F9',
-        },
-      },
-    },
-
-    MuiAlert: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12, // Orgánico
-          fontSize: '0.875rem',
-          fontWeight: 500,
-          border: '1px solid',
-        },
-        standardError: {
-          borderColor: '#FECACA',
-          backgroundColor: '#FEF2F2',
-          color: '#991B1B',
-        },
-        standardWarning: {
-          borderColor: '#FDE68A',
-          backgroundColor: '#FFFBEB',
-          color: '#92400E',
-        },
-        standardInfo: {
-          borderColor: '#BFDBFE',
-          backgroundColor: '#EFF6FF',
-          color: '#1E3A8A',
-        },
-        standardSuccess: {
-          borderColor: '#A7F3D0',
-          backgroundColor: '#ECFDF5',
-          color: '#064E3B',
-        },
-      },
-    },
   },
 });
 
 export default theme;
-
-// ─── Tokens utilitarios exportados ───────────────────────────────────────────
-
-/** Duración estándar de animaciones de sección (AnimatedSection). */
-export const SECTION_ANIMATION_DURATION = 500; // ms
-
-/** Color del borde de tarjetas (constante compartida con sx props). */
-export const CARD_BORDER = 'none';
-
-/** Fondo de tarjeta (constante compartida). */
-export const CARD_BG = '#FFFFFF';
-
-/** Número máximo de columnas en el grid de mascotas. */
-export const CATALOG_COLS = { xs: 1, sm: 2, md: 3, lg: 4 } as const;

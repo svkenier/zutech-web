@@ -84,7 +84,7 @@ export default function Admin() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    document.title = 'Panel de Administración — Patitas de Amor';
+    document.title = 'Panel de Administración — ZUTECH';
   }, []);
 
   const [tabIndex, setTabIndex] = useState(0);

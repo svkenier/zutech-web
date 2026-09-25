@@ -22,6 +22,7 @@ import { post, formatApiError } from '@core/api/client';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTheme, alpha } from '@mui/material/styles';
 
 export default function CartDrawer() {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, subtotal, clearCart, canCheckout, removeUnavailableItems } = useCart();
@@ -96,15 +97,24 @@ export default function CartDrawer() {
     }
   };
 
-  return (
-    <Drawer
-      anchor="right"
-      open={isCartOpen}
-      onClose={() => setIsCartOpen(false)}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 400 }, bgcolor: 'background.default', backgroundImage: 'none' }
-      }}
-    >
+    const theme = useTheme();
+
+    return (
+      <Drawer
+        anchor="right"
+        open={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        PaperProps={{
+          sx: { 
+            width: { xs: '100%', sm: 400 }, 
+            bgcolor: alpha(theme.palette.background.default, 0.95), 
+            backdropFilter: 'blur(10px)',
+            backgroundImage: 'none',
+            borderLeft: '1px solid',
+            borderColor: 'divider'
+          }
+        }}
+      >
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
           <ShoppingCartIcon color="primary" /> Mi Carrito

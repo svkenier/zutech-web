@@ -51,8 +51,8 @@ interface NavLink {
 
 const PUBLIC_LINKS: NavLink[] = [
   { label: 'Inicio',     to: '/' },
-  { label: 'Productos',  to: '/productos' },
-  { label: 'Contacto',   to: '/contacto' },
+  { label: 'Tienda',     to: '/productos' },
+  { label: 'Servicios',  to: '/contacto' },
 ];
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -204,7 +204,8 @@ export default function Navbar() {
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor:    'background.paper',
+          bgcolor:    'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(12px)',
           borderBottom: '1px solid',
           borderColor: 'divider',
           color:       'text.primary',
