@@ -46,6 +46,10 @@ export default function HistoricalViewer() {
     if (type === 'hoy') {
       const d = tzDate(today);
       setStartDate(d); setEndDate(d);
+    } else if (type === 'ayer') {
+      const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+      const d = tzDate(yesterday);
+      setStartDate(d); setEndDate(d);
     } else if (type === 'semana') {
       const start = new Date(today); start.setDate(today.getDate() - 7);
       setStartDate(tzDate(start)); setEndDate(tzDate(today));
@@ -189,7 +193,7 @@ export default function HistoricalViewer() {
           />
           <TextField 
             size="small" 
-            placeholder="Buscar por ID, cliente, usuario..."
+            placeholder="Buscar..."
             title="Puedes buscar por ID de cierre, ID de pedido, usuario, nombre de cliente o teléfono"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -216,6 +220,7 @@ export default function HistoricalViewer() {
         </Stack>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button size="small" variant="outlined" onClick={() => handleDateShortcut('hoy')}>Hoy</Button>
+          <Button size="small" variant="outlined" onClick={() => handleDateShortcut('ayer')}>Ayer</Button>
           <Button size="small" variant="outlined" onClick={() => handleDateShortcut('semana')}>Esta semana</Button>
           <Button size="small" variant="outlined" onClick={() => handleDateShortcut('mes')}>Este mes</Button>
           <Button size="small" variant="outlined" onClick={() => handleDateShortcut('3meses')}>Últimos 3 meses</Button>
