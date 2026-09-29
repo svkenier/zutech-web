@@ -21,7 +21,6 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import { useAuth } from '@ui/context/AuthContext';
 
 const PAYMENT_LABELS: Record<string, string> = {
   pago_movil: 'Pago Móvil',
@@ -32,7 +31,6 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 export default function HistoricalViewer() {
-  const { user } = useAuth();
   const [data, setData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedClosureId, setSelectedClosureId] = useState<string | false>(false);
