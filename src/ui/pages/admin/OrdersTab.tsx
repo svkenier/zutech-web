@@ -24,7 +24,9 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Chip from '@mui/material/Chip';
-import { get, put, formatApiError } from '@core/api/client';
+import LockIcon from '@mui/icons-material/Lock';
+import Alert from '@mui/material/Alert';
+import { get, put, post, formatApiError } from '@core/api/client';
 import OrderEditModal, { EditableOrder, OrderItem } from '@ui/components/OrderEditModal';
 import AdminEmptyState from '@ui/components/AdminEmptyState';
 import InvoiceModal from '@ui/components/InvoiceModal';
@@ -42,6 +44,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
   const [revertOrder, setRevertOrder] = useState<any | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const [viewOrder, setViewOrder] = useState<any | null>(null);
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
 
   // Undo state
   const [pendingApproval, setPendingApproval] = useState<string | null>(null);
@@ -147,10 +150,28 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
     return acc;
   }, { total: 0, count: 0, pago_movil: 0, transferencia: 0, zelle: 0, binance: 0, efectivo: 0 });
 
+  const closeMutation = useMutation({
+    mutationFn: () => post('/admin/orders/close', {}),
+    onSuccess: () => {
+      showToast('Caja cerrada exitosamente', 'success');
+      setCloseModalOpen(false);
+      void qc.invalidateQueries({ queryKey: ['admin-orders'] });
+      void qc.invalidateQueries({ queryKey: ['admin-closures'] });
+    },
+    onError: (err) => showToast(formatApiError(err, 'Error al cerrar caja'), 'error')
+  });
+
+  const isMutating = updateMutation.isPending || closeMutation.isPending;
+
   return (
     <Box>
       <Box mb={3} p={2.5} border="1px solid" borderColor="divider" borderRadius={2} bgcolor="background.paper" boxShadow={1}>
-        <Typography variant="subtitle2" fontWeight={600} color="text.secondary" fontSize="0.75rem" textTransform="uppercase">ESTADO DE CAJA ABIERTA (EN VIVO)</Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+          <Typography variant="subtitle2" fontWeight={600} color="text.secondary" fontSize="0.75rem" textTransform="uppercase">ESTADO DE CAJA ABIERTA (EN VIVO)</Typography>
+          <Button variant="contained" color="primary" startIcon={<LockIcon />} size="small" onClick={() => setCloseModalOpen(true)} disabled={isLoading || isMutating}>
+            Realizar Cierre de Caja
+          </Button>
+        </Box>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} mt={1} alignItems="center" justifyContent="space-between">
           <Box>
             <Typography variant="h4" fontWeight={800} color="text.primary" fontSize="1.75rem">${boxSummary.total.toFixed(2)}</Typography>
@@ -405,6 +426,41 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         order={invoiceOrder} 
         onClose={() => setInvoiceOrder(null)} 
       />
+
+      {/* Close Caja Modal */}
+      <Dialog open={closeModalOpen} onClose={() => !isMutating && setCloseModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Realizar Cierre de Caja</DialogTitle>
+        <DialogContent>
+          {openBoxOrders.length === 0 ? (
+            <Typography color="error" mt={1}>
+              No hay órdenes aprobadas pendientes de cierre. Debe aprobar órdenes primero.
+            </Typography>
+          ) : (
+            <Box mt={1}>
+              <Typography variant="body2" mb={2}>
+                Se agruparán <strong>{openBoxOrders.length}</strong> órdenes aprobadas en un nuevo cierre oficial.
+              </Typography>
+              <Box p={2} border="1px solid" borderColor="divider" borderRadius={1} bgcolor="background.default">
+                <Typography variant="subtitle2" mb={1}>Totales a declarar:</Typography>
+                <Stack spacing={1}>
+                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Pago Móvil</Typography><Typography variant="body2">${boxSummary.pago_movil.toFixed(2)}</Typography></Box>
+                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Transferencia</Typography><Typography variant="body2">${boxSummary.transferencia.toFixed(2)}</Typography></Box>
+                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Zelle</Typography><Typography variant="body2">${boxSummary.zelle.toFixed(2)}</Typography></Box>
+                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Binance</Typography><Typography variant="body2">${boxSummary.binance.toFixed(2)}</Typography></Box>
+                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Efectivo</Typography><Typography variant="body2">${boxSummary.efectivo.toFixed(2)}</Typography></Box>
+                  <Box display="flex" justifyContent="space-between" mt={1} pt={1} borderTop="1px solid"><Typography variant="body2" fontWeight={700}>TOTAL CAJA</Typography><Typography variant="body2" fontWeight={700}>${boxSummary.total.toFixed(2)}</Typography></Box>
+                </Stack>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCloseModalOpen(false)} disabled={isMutating}>Cancelar</Button>
+          <Button onClick={() => closeMutation.mutate()} variant="contained" color="primary" disabled={isMutating || openBoxOrders.length === 0}>
+            {isMutating ? <CircularProgress size={24} /> : 'Confirmar y Cerrar Caja'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

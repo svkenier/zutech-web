@@ -17,6 +17,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AdminEmptyState from '@ui/components/AdminEmptyState';
 import InvoiceModal from '@ui/components/InvoiceModal';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import { useAuth } from '@ui/context/AuthContext';
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -34,6 +38,7 @@ export default function HistoricalViewer() {
   const [selectedClosureId, setSelectedClosureId] = useState<string | false>(false);
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const [search, setSearch] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Todos');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -53,7 +58,7 @@ export default function HistoricalViewer() {
       const start = new Date(today); start.setDate(today.getDate() - 90);
       setStartDate(tzDate(start)); setEndDate(tzDate(today));
     } else if (type === 'limpiar') {
-      setStartDate(''); setEndDate(''); setSearch('');
+      setStartDate(''); setEndDate(''); setSearch(''); setPaymentMethod('Todos');
     }
   };
 
@@ -123,18 +128,33 @@ export default function HistoricalViewer() {
     filteredClosures = filteredClosures.filter((c: any) => c.date <= endDate);
   }
 
-  if (search) {
+  if (search || paymentMethod !== 'Todos') {
     const s = search.toLowerCase();
     filteredClosures = filteredClosures.filter((c: any) => {
-      const matchClosure = c.id.toLowerCase().includes(s);
-      const orders = c.orders || c.ordenes || [];
-      const matchOrders = orders.some((o: any) => 
-        o.id?.toLowerCase().includes(s) || 
-        o.customer_name?.toLowerCase().includes(s) ||
-        o.client?.name?.toLowerCase().includes(s) ||
-        o.customer_phone?.toLowerCase().includes(s)
-      );
-      return matchClosure || matchOrders;
+      let orders = c.orders || c.ordenes || [];
+      
+      // Payment Method pre-filter for orders
+      if (paymentMethod !== 'Todos') {
+        orders = orders.filter((o: any) => o.payment_method === paymentMethod);
+      }
+      
+      let matchClosure = false;
+      if (search) {
+        matchClosure = c.id.toLowerCase().includes(s) || (c.closed_by && c.closed_by.toLowerCase().includes(s));
+      }
+      
+      const matchOrders = orders.some((o: any) => {
+        if (!search) return true;
+        return o.id?.toLowerCase().includes(s) || 
+               o.customer_name?.toLowerCase().includes(s) ||
+               o.client?.name?.toLowerCase().includes(s) ||
+               o.customer_phone?.toLowerCase().includes(s);
+      });
+      
+      // If filtering by paymentMethod but no orders match, then discard closure
+      if (paymentMethod !== 'Todos' && orders.length === 0) return false;
+      
+      return (!search) || matchClosure || matchOrders;
     });
   }
 
@@ -171,7 +191,7 @@ export default function HistoricalViewer() {
           />
           <TextField 
             size="small" 
-            placeholder="Buscar ID, Cliente o Teléfono..."
+            placeholder="Buscar ID cierre, usuario, cliente..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             sx={{ flex: 1 }}
@@ -179,6 +199,21 @@ export default function HistoricalViewer() {
               startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment>,
             }}
           />
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Método de Pago</InputLabel>
+            <Select
+              value={paymentMethod}
+              label="Método de Pago"
+              onChange={e => setPaymentMethod(e.target.value)}
+            >
+              <MenuItem value="Todos">Todos</MenuItem>
+              <MenuItem value="efectivo">Efectivo USD</MenuItem>
+              <MenuItem value="pago_movil">Pago Móvil</MenuItem>
+              <MenuItem value="zelle">Zelle</MenuItem>
+              <MenuItem value="punto_de_venta">Punto de Venta</MenuItem>
+              <MenuItem value="transferencia">Transferencia</MenuItem>
+            </Select>
+          </FormControl>
         </Stack>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button size="small" variant="outlined" onClick={() => handleDateShortcut('hoy')}>Hoy</Button>
@@ -194,14 +229,18 @@ export default function HistoricalViewer() {
       ) : (
         filteredClosures.map((c: any) => {
           let cOrders = c.orders || c.ordenes || [];
+          if (paymentMethod !== 'Todos') {
+            cOrders = cOrders.filter((o: any) => o.payment_method === paymentMethod);
+          }
           if (search) {
             const s = search.toLowerCase();
+            const matchClosure = c.id.toLowerCase().includes(s) || (c.closed_by && c.closed_by.toLowerCase().includes(s));
             cOrders = cOrders.filter((o: any) => 
+              matchClosure ||
               o.id?.toLowerCase().includes(s) || 
               o.customer_name?.toLowerCase().includes(s) ||
               o.client?.name?.toLowerCase().includes(s) ||
-              o.customer_phone?.toLowerCase().includes(s) ||
-              c.id.toLowerCase().includes(s) // si el id del cierre coincide, mostrar todas las órdenes
+              o.customer_phone?.toLowerCase().includes(s)
             );
           }
           

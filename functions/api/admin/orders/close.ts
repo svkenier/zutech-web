@@ -138,6 +138,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
     const search = url.searchParams.get('search')?.trim();
+    const paymentMethod = url.searchParams.get('paymentMethod')?.trim();
     const page = parseInt(url.searchParams.get('page') || '0', 10);
     const limit = parseInt(url.searchParams.get('limit') || '10', 10);
     const offset = page * limit;
@@ -147,12 +148,21 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     
     let hasOrderJoin = false;
     
-    if (search) {
-      query += ` LEFT JOIN orders o ON o.closure_id = c.id WHERE (c.id LIKE ? OR o.id LIKE ? OR o.customer_name LIKE ? OR o.customer_phone LIKE ?)`;
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    if (search || (paymentMethod && paymentMethod !== 'Todos' && paymentMethod !== 'all')) {
+      query += ` LEFT JOIN orders o ON o.closure_id = c.id WHERE 1=1 `;
       hasOrderJoin = true;
     } else {
       query += ` WHERE 1=1 `;
+    }
+
+    if (search) {
+      query += ` AND (c.id LIKE ? OR c.closed_by LIKE ? OR o.id LIKE ? OR o.customer_name LIKE ? OR o.customer_phone LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (paymentMethod && paymentMethod !== 'Todos' && paymentMethod !== 'all') {
+      query += ` AND o.payment_method = ?`;
+      params.push(paymentMethod);
     }
 
     if (startDate) {
@@ -180,6 +190,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         
         for (const c of results) {
             c.orders = orders.filter((o: any) => o.closure_id === c.id);
+            if (paymentMethod && paymentMethod !== 'Todos' && paymentMethod !== 'all') {
+              c.orders = c.orders.filter((o: any) => o.payment_method === paymentMethod);
+            }
         }
     }
 

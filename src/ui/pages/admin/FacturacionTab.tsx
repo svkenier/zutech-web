@@ -47,7 +47,6 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
   const [tab, setTab] = useState<'activos' | 'historico'>('activos');
 
   // Modals state
-  const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [fileDownloaded, setFileDownloaded] = useState(false);
   
@@ -75,6 +74,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
   const [endDate, setEndDate] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Todos');
   const [page, setPage] = useState(1);
   const limit = 10;
   
@@ -108,7 +108,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
       const start = new Date(today); start.setDate(today.getDate() - 90);
       setStartDate(tzDate(start)); setEndDate(tzDate(today));
     } else if (type === 'limpiar') {
-      setStartDate(''); setEndDate(''); setSearch('');
+      setStartDate(''); setEndDate(''); setSearch(''); setPaymentMethod('Todos');
     }
     setPage(1);
   };
@@ -120,6 +120,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
   if (startDate) queryParams.set('startDate', startDate);
   if (endDate) queryParams.set('endDate', endDate);
   if (debouncedSearch) queryParams.set('search', debouncedSearch);
+  if (paymentMethod !== 'Todos') queryParams.set('paymentMethod', paymentMethod);
 
   // Fetch active closures (paginated)
   const { data: closuresData, isLoading: isLoadingClosures } = useQuery<{ closures: any[], totalCount: number }>({
@@ -147,26 +148,6 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
   const { data: ordersData, isLoading: isLoadingOrders } = useQuery<{ records: any[] }>({
     queryKey: ['admin-orders'],
     queryFn: () => get('/admin/orders?t=' + Date.now()),
-  });
-
-  const openOrders = (ordersData?.records || []).filter(o => o.status === 'aprobado' || o.status === 'approved');
-  
-  const closePreviewTotals = openOrders.reduce((acc, o) => {
-    acc.total += o.totalUSD;
-    acc[o.payment_method] = (acc[o.payment_method] || 0) + o.totalUSD;
-    return acc;
-  }, { total: 0, pago_movil: 0, transferencia: 0, zelle: 0, binance: 0, efectivo: 0 });
-
-  // Mutations
-  const closeMutation = useMutation({
-    mutationFn: () => post('/admin/orders/close', {}),
-    onSuccess: () => {
-      showToast('Caja cerrada exitosamente', 'success');
-      setCloseModalOpen(false);
-      void qc.invalidateQueries({ queryKey: ['admin-orders'] });
-      void qc.invalidateQueries({ queryKey: ['admin-closures'] });
-    },
-    onError: (err) => showToast(formatApiError(err, 'Error al cerrar caja'), 'error')
   });
 
   const purgeMutation = useMutation({
@@ -234,7 +215,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
   };
 
   const isLoading = isLoadingOrders || isLoadingClosures;
-  const isMutating = closeMutation.isPending || purgeMutation.isPending;
+  const isMutating = purgeMutation.isPending;
 
   return (
     <Box>
@@ -268,10 +249,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
             </Alert>
           )}
           
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Button variant="contained" color="primary" startIcon={<LockIcon />} onClick={() => setCloseModalOpen(true)} disabled={isLoading || isMutating}>
-              Realizar Nuevo Cierre
-            </Button>
+          <Box display="flex" justifyContent="flex-end" alignItems="center" mb={3}>
             <Button variant="outlined" color="error" startIcon={<FileDownloadIcon />} onClick={() => { handleCloseExportModal(); setExportModalOpen(true); }} disabled={isLoading || isMutating || closures.length === 0}>
               Mantenimiento / Exportar Respaldo
             </Button>
@@ -298,13 +276,28 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
               />
               <TextField 
                 size="small" 
-                placeholder="Buscar ID cierre..."
+                placeholder="Buscar ID cierre, usuario, cliente..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 InputProps={{
                   startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment>,
                 }}
               />
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Método de Pago</InputLabel>
+                <Select
+                  value={paymentMethod}
+                  label="Método de Pago"
+                  onChange={e => setPaymentMethod(e.target.value)}
+                >
+                  <MenuItem value="Todos">Todos</MenuItem>
+                  <MenuItem value="efectivo">Efectivo USD</MenuItem>
+                  <MenuItem value="pago_movil">Pago Móvil</MenuItem>
+                  <MenuItem value="zelle">Zelle</MenuItem>
+                  <MenuItem value="punto_de_venta">Punto de Venta</MenuItem>
+                  <MenuItem value="transferencia">Transferencia</MenuItem>
+                </Select>
+              </FormControl>
             </Stack>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Button size="small" variant="outlined" onClick={() => handleDateShortcut('hoy')}>Hoy</Button>
@@ -429,41 +422,6 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
       {tab === 'historico' && (
         <HistoricalViewer />
       )}
-
-      {/* Close Caja Modal */}
-      <Dialog open={closeModalOpen} onClose={() => !isMutating && setCloseModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Realizar Cierre de Caja</DialogTitle>
-        <DialogContent>
-          {openOrders.length === 0 ? (
-            <Typography color="error">
-              No hay órdenes aprobadas pendientes de cierre. Debe aprobar órdenes en la pestaña de Pedidos primero.
-            </Typography>
-          ) : (
-            <Box>
-              <Typography variant="body2" mb={2}>
-                Se agruparán <strong>{openOrders.length}</strong> órdenes aprobadas en un nuevo cierre oficial.
-              </Typography>
-              <Box p={2} border="1px solid" borderColor="divider" borderRadius={1} bgcolor="background.default">
-                <Typography variant="subtitle2" mb={1}>Totales a declarar:</Typography>
-                <Stack spacing={1}>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Pago Móvil</Typography><Typography variant="body2">${closePreviewTotals.pago_movil.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Transferencia</Typography><Typography variant="body2">${closePreviewTotals.transferencia.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Zelle</Typography><Typography variant="body2">${closePreviewTotals.zelle.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Binance</Typography><Typography variant="body2">${closePreviewTotals.binance.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Efectivo</Typography><Typography variant="body2">${closePreviewTotals.efectivo.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between" mt={1} pt={1} borderTop="1px solid"><Typography variant="body2" fontWeight={700}>TOTAL CAJA</Typography><Typography variant="body2" fontWeight={700}>${closePreviewTotals.total.toFixed(2)}</Typography></Box>
-                </Stack>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCloseModalOpen(false)} disabled={isMutating}>Cancelar</Button>
-          <Button onClick={() => closeMutation.mutate()} variant="contained" color="primary" disabled={isMutating || openOrders.length === 0}>
-            {isMutating ? <CircularProgress size={24} /> : 'Confirmar y Cerrar Caja'}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Export & Purge Modal */}
       <Dialog open={exportModalOpen} onClose={handleCloseExportModal} maxWidth="sm" fullWidth>
