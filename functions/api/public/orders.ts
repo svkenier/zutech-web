@@ -63,6 +63,38 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     const validData = validationResult.data;
+    
+    const productIds = Array.from(new Set(validData.items.map(item => item.id)));
+    const placeholders = productIds.map(() => '?').join(', ');
+    
+    const { results } = await env.DB.prepare(`
+      SELECT id, title, price FROM products WHERE id IN (${placeholders})
+    `).bind(...productIds).all<{ id: string, title: string, price: number }>();
+    
+    const dbProducts = new Map<string, { title: string, price: number }>();
+    for (const row of results) {
+      dbProducts.set(row.id, { title: row.title, price: row.price });
+    }
+
+    let realTotal = 0;
+    const validatedItems = [];
+    for (const clientItem of validData.items) {
+      const dbProd = dbProducts.get(clientItem.id);
+      if (!dbProd) {
+        return new Response(JSON.stringify({ error: `Producto no válido o fuera de stock (ID: ${clientItem.id})` }), { 
+          status: 400, 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+      }
+      realTotal += dbProd.price * clientItem.quantity;
+      validatedItems.push({
+        id: clientItem.id,
+        title: dbProd.title, // blindaje de nombre
+        price: dbProd.price, // blindaje de precio oficial
+        quantity: clientItem.quantity
+      });
+    }
+
     const orderId = generateOrderId();
     const now = new Date().toISOString();
 
@@ -72,8 +104,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       customer_phone: validData.client.phone,
       delivery_type: validData.delivery?.method || 'pickup',
       delivery_address: validData.delivery?.address || '',
-      items: JSON.stringify(validData.items),
-      total: validData.totalUSD,
+      items: JSON.stringify(validatedItems),
+      total: realTotal, // total estrictamente calculado en el server
       status: 'pending',
       created_at: now,
       updated_at: now
