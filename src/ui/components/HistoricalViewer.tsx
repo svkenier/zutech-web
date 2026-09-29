@@ -229,7 +229,7 @@ export default function HistoricalViewer() {
                     <Typography fontWeight={800} variant="h6">{c.id}</Typography>
                     <Typography variant="body2" color="text.secondary">{displayDate}</Typography>
                     <Typography sx={{ fontWeight: 600, color: 'text.secondary' }} variant="body2">
-                      Usuario: {c.closed_by || user?.username || 'svkenier'}
+                      Usuario: {c.closed_by || 'Desconocido'}
                     </Typography>
                   </Box>
                   <Box textAlign="center">
