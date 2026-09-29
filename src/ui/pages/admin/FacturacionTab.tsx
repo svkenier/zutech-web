@@ -262,7 +262,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
 
           {/* Filtros */}
           <Box mb={3} p={2} bgcolor="background.default" border="1px solid" borderColor="divider" borderRadius={1}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" mb={2}>
+            <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" width="100%" mb={2}>
               <TextField 
                 size="small" 
                 type="date" 
@@ -270,6 +270,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                 InputLabelProps={{ shrink: true }}
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
+                sx={{ width: { xs: '100%', sm: 160 } }}
               />
               <TextField 
                 size="small" 
@@ -278,6 +279,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                 InputLabelProps={{ shrink: true }}
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
+                sx={{ width: { xs: '100%', sm: 160 } }}
               />
               <TextField 
                 size="small" 
@@ -285,11 +287,12 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                 title="Puedes buscar por ID de cierre, ID de pedido, usuario, nombre de cliente o teléfono"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                sx={{ flexGrow: 1, minWidth: { xs: '100%', md: 240 } }}
                 InputProps={{
                   startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment>,
                 }}
               />
-              <FormControl size="small" sx={{ minWidth: 150 }}>
+              <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 } }}>
                 <InputLabel>Método de Pago</InputLabel>
                 <Select
                   value={paymentMethod}
@@ -304,8 +307,8 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                   <MenuItem value="transferencia">Transferencia</MenuItem>
                 </Select>
               </FormControl>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            </Box>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
               <Button size="small" variant="outlined" onClick={() => handleDateShortcut('hoy')}>Hoy</Button>
               <Button size="small" variant="outlined" onClick={() => handleDateShortcut('ayer')}>Ayer</Button>
               <Button size="small" variant="outlined" onClick={() => handleDateShortcut('semana')}>Esta semana</Button>
