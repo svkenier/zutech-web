@@ -21,7 +21,6 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import LockIcon from '@mui/icons-material/Lock';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import SearchIcon from '@mui/icons-material/Search';
@@ -35,7 +34,6 @@ import HistoricalViewer from '@ui/components/HistoricalViewer';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import { get, post, formatApiError } from '@core/api/client';
-import { useAuth } from '@ui/context/AuthContext';
 
 const PAYMENT_LABELS: Record<string, string> = {
   pago_movil: 'Pago Móvil',
@@ -47,7 +45,6 @@ const PAYMENT_LABELS: Record<string, string> = {
 
 export default function FacturacionTab({ showToast }: { showToast: (m: string, s?: 'success'|'error') => void }) {
   const qc = useQueryClient();
-  const { user } = useAuth();
   const [tab, setTab] = useState<'activos' | 'historico'>('activos');
 
   // Modals state
@@ -149,7 +146,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
   const showErrorAlert = totalHistoricalOrders >= 1800;
 
   // Fetch pending approved orders (closure_id IS NULL) for the live preview
-  const { data: ordersData, isLoading: isLoadingOrders } = useQuery<{ records: any[] }>({
+  const { isLoading: isLoadingOrders } = useQuery<{ records: any[] }>({
     queryKey: ['admin-orders'],
     queryFn: () => get('/admin/orders?t=' + Date.now()),
   });
