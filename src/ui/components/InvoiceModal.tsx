@@ -18,11 +18,11 @@ interface InvoiceModalProps {
 }
 
 export default function InvoiceModal({ open, order, onClose }: InvoiceModalProps) {
-  const { data: settingsData } = useQuery<{ settings: any }>({
+  const { data: settingsData } = useQuery<any>({
     queryKey: ['settings'],
     queryFn: () => get('/settings'),
   });
-  const settings = settingsData?.settings || {};
+  const settings = settingsData || {};
 
   const itemsList = useMemo(() => {
     if (!order?.items) return [];
@@ -94,10 +94,10 @@ export default function InvoiceModal({ open, order, onClose }: InvoiceModalProps
         <Box className="invoice-header" sx={{ mb: 4 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="h4" fontWeight="bold">{settings.store_name || 'ZuTech Store'}</Typography>
-              <Typography variant="body2">RIF: {settings.store_rif || 'J-000000000'}</Typography>
-              <Typography variant="body2">{settings.store_address || 'Av. Principal, Caracas'}</Typography>
-              <Typography variant="body2">{settings.store_instagram || '@zutech'} · {settings.store_phone || '+58 400 0000000'}</Typography>
+              <Typography variant="h4" fontWeight="bold">{settings?.store_name || 'ZuTech Store'}</Typography>
+              <Typography variant="body2">RIF: {settings?.rif || 'J-XXXXXXXX-X'}</Typography>
+              <Typography variant="body2">{settings?.address || 'Maracaibo, Zulia, Venezuela'}</Typography>
+              <Typography variant="body2">{settings?.store_instagram || '@zutech'} · {settings?.phone || '0414-XXXXXXX'}</Typography>
             </Box>
             <Box textAlign="right">
               <Typography variant="h6" fontWeight="bold">FACTURA / NOTA DE ENTREGA</Typography>

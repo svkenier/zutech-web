@@ -340,6 +340,9 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                       <Box>
                         <Typography fontWeight={800} variant="h6">{c.id}</Typography>
                         <Typography variant="body2" color="text.secondary">{formattedDate}</Typography>
+                        <Typography sx={{ fontWeight: 600, color: 'text.secondary' }} variant="body2">
+                          Cajero: {c.closed_by || 'Desconocido'}
+                        </Typography>
                       </Box>
                       <Box textAlign="center">
                         <Typography variant="body2" color="text.secondary">Órdenes</Typography>
@@ -352,7 +355,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails sx={{ borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.default' }}>
-                    <Typography variant="subtitle2" mb={1} color="text.secondary">Desglose de Caja (Cajero: {c.closed_by || c.user_name || 'Admin'})</Typography>
+                    <Typography variant="subtitle2" mb={1} color="text.secondary">Desglose de Caja</Typography>
                     <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
                       <Box px={1.5} py={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.05)" border="1px solid" borderColor="divider">
                         <Typography variant="caption" display="block">Pago Móvil</Typography>

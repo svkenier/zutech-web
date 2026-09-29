@@ -90,7 +90,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         totalBinance,
         totalEfectivo,
         openOrders.length,
-        auth.sub,
+        auth.username || auth.sub,
         body.notes ?? null,
       ),
       env.DB.prepare(`

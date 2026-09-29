@@ -225,7 +225,10 @@ export default function HistoricalViewer() {
                 <Box sx={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center', pr: 2 }}>
                   <Box>
                     <Typography fontWeight={800} variant="h6">{c.id}</Typography>
-                    <Typography variant="body2" color="text.secondary">{displayDate} (Cajero: {c.closed_by || c.user_name || 'Admin'})</Typography>
+                    <Typography variant="body2" color="text.secondary">{displayDate}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: 'text.secondary' }} variant="body2">
+                      Cajero: {c.closed_by || 'Desconocido'}
+                    </Typography>
                   </Box>
                   <Box textAlign="center">
                     <Typography variant="body2" color="text.secondary">Órdenes Mostradas</Typography>
