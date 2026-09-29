@@ -25,7 +25,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Chip from '@mui/material/Chip';
 import LockIcon from '@mui/icons-material/Lock';
-import Alert from '@mui/material/Alert';
+
 import { get, put, post, formatApiError } from '@core/api/client';
 import OrderEditModal, { EditableOrder, OrderItem } from '@ui/components/OrderEditModal';
 import AdminEmptyState from '@ui/components/AdminEmptyState';
@@ -139,7 +139,6 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
     });
   };
 
-  const isMutating = updateMutation.isPending;
 
   // Calculate live box summary (orders approved and not closed)
   const openBoxOrders = orders.filter(o => o.status === 'aprobado' || o.status === 'approved');
