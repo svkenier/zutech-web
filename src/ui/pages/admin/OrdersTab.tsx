@@ -41,6 +41,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
   const [discardOrder, setDiscardOrder] = useState<any | null>(null);
   const [revertOrder, setRevertOrder] = useState<any | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
+  const [viewOrder, setViewOrder] = useState<any | null>(null);
 
   // Undo state
   const [pendingApproval, setPendingApproval] = useState<string | null>(null);
@@ -225,7 +226,12 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
                         )
                       )}
                     </Stack>
-                    <Typography variant="h6" color="primary.main" fontWeight={800}>${order.totalUSD.toFixed(2)}</Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      {order.payment_method && (
+                        <Chip label={order.payment_method.replace('_', ' ').toUpperCase()} size="small" variant="outlined" color="primary" />
+                      )}
+                      <Typography variant="h6" color="primary.main" fontWeight={800}>${order.totalUSD.toFixed(2)}</Typography>
+                    </Stack>
                   </Box>
                   <Typography variant="body2" color="text.secondary" mb={1}>
                     {new Date(order.created_at).toLocaleString()} • {order.client?.name} ({order.client?.phone})
@@ -234,11 +240,20 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
                     <strong>Entrega:</strong> {order.delivery?.method === 'pickup' ? 'Pick up' : `Delivery: ${order.delivery?.address}`}
                   </Typography>
                   <Box bgcolor="background.default" p={1} borderRadius={1} border="1px solid" borderColor="divider">
-                    {order.items.map((it: any, idx: number) => (
+                    {order.items.slice(0, 3).map((it: any, idx: number) => (
                       <Typography key={idx} variant="caption" display="block">
                         {it.quantity}x {it.title} (${it.price.toFixed(2)})
                       </Typography>
                     ))}
+                    {order.items.length > 3 ? (
+                      <Button size="small" variant="text" sx={{ mt: 1, p: 0, minWidth: 0, textTransform: 'none', fontWeight: 'bold' }} onClick={() => setViewOrder(order)}>
+                        + Ver {order.items.length - 3} productos más
+                      </Button>
+                    ) : (
+                      <Button size="small" variant="text" sx={{ mt: 1, p: 0, minWidth: 0, textTransform: 'none', fontWeight: 'bold' }} onClick={() => setViewOrder(order)}>
+                        Ver Detalle
+                      </Button>
+                    )}
                   </Box>
                 </CardContent>
                 <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
@@ -246,7 +261,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
                     <Stack direction="row" spacing={1} width="100%">
                       <Button variant="contained" color="success" fullWidth onClick={() => {
                         setApproveOrder(order);
-                        setPaymentMethod(order.payment?.method || '');
+                        setPaymentMethod(order.payment_method || '');
                       }} startIcon={<CheckIcon />} disabled={isMutating || pendingApproval === order.id}>
                         Aprobar
                       </Button>
@@ -342,6 +357,48 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         onClose={() => setEditOrder(null)} 
         onSave={handleSaveEdit}
       />
+
+      {/* Detail Modal */}
+      <Dialog open={!!viewOrder} onClose={() => setViewOrder(null)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>
+          Detalle del Pedido {viewOrder?.id}
+          {viewOrder?.payment_method && (
+            <Chip label={viewOrder.payment_method.replace('_', ' ').toUpperCase()} size="small" variant="outlined" color="primary" sx={{ ml: 2, verticalAlign: 'middle' }} />
+          )}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="subtitle2" fontWeight={700} mb={1}>Datos del Cliente</Typography>
+          <Typography variant="body2" mb={0.5}><strong>Nombre:</strong> {viewOrder?.client?.name}</Typography>
+          <Typography variant="body2" mb={0.5}><strong>Teléfono:</strong> {viewOrder?.client?.phone}</Typography>
+          <Typography variant="body2" mb={2}><strong>Entrega:</strong> {viewOrder?.delivery?.method === 'pickup' ? 'Pick up' : `Delivery: ${viewOrder?.delivery?.address}`}</Typography>
+          
+          <Typography variant="subtitle2" fontWeight={700} mb={1}>Productos ({viewOrder?.items?.length || 0})</Typography>
+          <Box bgcolor="background.default" p={1.5} borderRadius={1} border="1px solid" borderColor="divider">
+            {viewOrder?.items?.map((it: any, idx: number) => (
+              <Box key={idx} display="flex" justifyContent="space-between" mb={1} borderBottom={idx < viewOrder.items.length - 1 ? '1px solid' : 'none'} borderColor="divider" pb={idx < viewOrder.items.length - 1 ? 1 : 0}>
+                <Typography variant="body2">{it.quantity}x {it.title}</Typography>
+                <Typography variant="body2" fontWeight={600}>${(it.price * it.quantity).toFixed(2)}</Typography>
+              </Box>
+            ))}
+            <Box display="flex" justifyContent="space-between" mt={2} pt={1} borderTop="2px solid" borderColor="divider">
+              <Typography variant="subtitle1" fontWeight={800}>TOTAL</Typography>
+              <Typography variant="subtitle1" fontWeight={800} color="primary.main">${viewOrder?.totalUSD?.toFixed(2)}</Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewOrder(null)}>Cerrar</Button>
+          {(viewOrder?.status === 'pendiente' || viewOrder?.status === 'pending') && pendingApproval !== viewOrder?.id && (
+            <Button variant="contained" color="success" onClick={() => {
+              setApproveOrder(viewOrder);
+              setPaymentMethod(viewOrder.payment_method || '');
+              setViewOrder(null);
+            }} startIcon={<CheckIcon />} disabled={isMutating}>
+              Aprobar
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
       <InvoiceModal 
         open={!!invoiceOrder} 
