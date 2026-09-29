@@ -17,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AdminEmptyState from '@ui/components/AdminEmptyState';
 import InvoiceModal from '@ui/components/InvoiceModal';
+import { useAuth } from '@ui/context/AuthContext';
 
 const PAYMENT_LABELS: Record<string, string> = {
   pago_movil: 'Pago Móvil',
@@ -27,6 +28,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 export default function HistoricalViewer() {
+  const { user } = useAuth();
   const [data, setData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedClosureId, setSelectedClosureId] = useState<string | false>(false);
@@ -227,7 +229,7 @@ export default function HistoricalViewer() {
                     <Typography fontWeight={800} variant="h6">{c.id}</Typography>
                     <Typography variant="body2" color="text.secondary">{displayDate}</Typography>
                     <Typography sx={{ fontWeight: 600, color: 'text.secondary' }} variant="body2">
-                      Cajero: {c.closed_by || 'Desconocido'}
+                      Usuario: {c.closed_by || user?.username || 'svkenier'}
                     </Typography>
                   </Box>
                   <Box textAlign="center">

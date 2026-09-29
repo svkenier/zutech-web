@@ -31,6 +31,7 @@ import HistoricalViewer from '@ui/components/HistoricalViewer';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import { get, post, formatApiError } from '@core/api/client';
+import { useAuth } from '@ui/context/AuthContext';
 
 const PAYMENT_LABELS: Record<string, string> = {
   pago_movil: 'Pago Móvil',
@@ -42,6 +43,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 
 export default function FacturacionTab({ showToast }: { showToast: (m: string, s?: 'success'|'error') => void }) {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [tab, setTab] = useState<'activos' | 'historico'>('activos');
 
   // Modals state
@@ -341,7 +343,7 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
                         <Typography fontWeight={800} variant="h6">{c.id}</Typography>
                         <Typography variant="body2" color="text.secondary">{formattedDate}</Typography>
                         <Typography sx={{ fontWeight: 600, color: 'text.secondary' }} variant="body2">
-                          Cajero: {c.closed_by || 'Desconocido'}
+                          Usuario: {c.closed_by || user?.username || 'svkenier'}
                         </Typography>
                       </Box>
                       <Box textAlign="center">
