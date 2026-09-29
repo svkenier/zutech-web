@@ -189,7 +189,8 @@ export default function HistoricalViewer() {
           />
           <TextField 
             size="small" 
-            placeholder="Buscar ID cierre, usuario, cliente..."
+            placeholder="Buscar por ID, cliente, usuario..."
+            title="Puedes buscar por ID de cierre, ID de pedido, usuario, nombre de cliente o teléfono"
             value={search}
             onChange={e => setSearch(e.target.value)}
             sx={{ flex: 1 }}

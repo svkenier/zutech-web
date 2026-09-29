@@ -222,8 +222,8 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
     <Box>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-          <Tab value="activos" label="Cierres de Caja (D1 Activos)" disabled={isMutating} />
-          <Tab value="historico" label="Visor Histórico Local" disabled={isMutating} />
+          <Tab value="activos" label="Cierres en Línea" disabled={isMutating} />
+          <Tab value="historico" label="Histórico Local" disabled={isMutating} />
         </Tabs>
       </Box>
 
@@ -277,7 +277,8 @@ export default function FacturacionTab({ showToast }: { showToast: (m: string, s
               />
               <TextField 
                 size="small" 
-                placeholder="Buscar ID cierre, usuario, cliente..."
+                placeholder="Buscar por ID, cliente, usuario..."
+                title="Puedes buscar por ID de cierre, ID de pedido, usuario, nombre de cliente o teléfono"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 InputProps={{
