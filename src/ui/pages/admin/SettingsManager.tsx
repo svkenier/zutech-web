@@ -15,11 +15,13 @@ import { DEFAULT_SETTINGS } from '@core/types/settings';
 import type { Settings } from '@core/types/settings';
 
 const validationSchema = Yup.object({
-  phone: Yup.string().required('El teléfono es obligatorio'),
-  whatsapp: Yup.string().matches(/^\d+$/, 'Solo números, sin espacios ni símbolos').required('El WhatsApp es obligatorio'),
-  email: Yup.string().email('Debe ser un correo válido').required('El correo es obligatorio'),
-  map_url: Yup.string().url('Debe ser una URL válida'),
-  address: Yup.string().required('La dirección es obligatoria'),
+  store_name: Yup.string().nullable(),
+  rif: Yup.string().nullable(),
+  phone: Yup.string().nullable(),
+  whatsapp: Yup.string().matches(/^\d*$/, 'Solo números, sin espacios ni símbolos').nullable(),
+  email: Yup.string().email('Debe ser un correo válido').nullable(),
+  map_url: Yup.string().url('Debe ser una URL válida').nullable(),
+  address: Yup.string().nullable(),
   social_links: Yup.object({
     instagram: Yup.string().url('Debe ser una URL válida').nullable(),
     facebook: Yup.string().url('Debe ser una URL válida').nullable(),
@@ -70,6 +72,10 @@ export default function SettingsManager() {
         Estos datos se mostrarán públicamente en el pie de página, en los botones de WhatsApp y en otras secciones de la plataforma.
       </Typography>
 
+      <Alert severity="info" sx={{ mb: 3 }}>
+        Recomendación: Completa la información fiscal y de contacto para que se refleje automáticamente en el membrete de tus facturas.
+      </Alert>
+
       {successMsg && <Alert severity="success" sx={{ mb: 3 }}>{successMsg}</Alert>}
       {mutation.isError && <Alert severity="error" sx={{ mb: 3 }}>{formatApiError(mutation.error, 'Error al guardar la configuración.')}</Alert>}
 
@@ -77,7 +83,32 @@ export default function SettingsManager() {
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
-            label="Teléfono de Contacto *"
+            label="Nombre de la Tienda"
+            name="store_name"
+            value={formik.values.store_name}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.store_name && Boolean(formik.errors.store_name)}
+            helperText={formik.touched.store_name && (formik.errors.store_name as string)}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="RIF de la Tienda"
+            name="rif"
+            placeholder="J-12345678-9"
+            value={formik.values.rif}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.rif && Boolean(formik.errors.rif)}
+            helperText={formik.touched.rif && (formik.errors.rif as string)}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="Teléfono de Contacto"
             name="phone"
             value={formik.values.phone}
             onChange={formik.handleChange}
@@ -89,7 +120,7 @@ export default function SettingsManager() {
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
-            label="WhatsApp (Sólo números) *"
+            label="WhatsApp (Sólo números)"
             name="whatsapp"
             value={formik.values.whatsapp}
             onChange={formik.handleChange}
@@ -101,7 +132,7 @@ export default function SettingsManager() {
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
-            label="Correo Electrónico *"
+            label="Correo Electrónico"
             name="email"
             type="email"
             value={formik.values.email}
@@ -126,7 +157,7 @@ export default function SettingsManager() {
         <Grid size={{ xs: 12 }}>
           <TextField
             fullWidth
-            label="Dirección Física *"
+            label="Dirección Física"
             name="address"
             value={formik.values.address}
             onChange={formik.handleChange}

@@ -94,10 +94,22 @@ export default function InvoiceModal({ open, order, onClose }: InvoiceModalProps
         <Box className="invoice-header" sx={{ mb: 4 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="h4" fontWeight="bold">{settings?.store_name || 'ZuTech Store'}</Typography>
-              <Typography variant="body2">RIF: {settings?.rif || 'J-XXXXXXXX-X'}</Typography>
-              <Typography variant="body2">{settings?.address || 'Maracaibo, Zulia, Venezuela'}</Typography>
-              <Typography variant="body2">{settings?.store_instagram || '@zutech'} · {settings?.phone || '0414-XXXXXXX'}</Typography>
+              <Typography fontWeight="bold" variant="h6">
+                {settings?.store_name || 'ZuTech Store'}
+              </Typography>
+              <Typography color="text.secondary" variant="body2">
+                {settings?.rif ? `RIF: ${settings.rif}` : 'RIF: J-00000000-0'}
+              </Typography>
+              {settings?.address && (
+                <Typography color="text.secondary" variant="body2">
+                  {settings.address}
+                </Typography>
+              )}
+              {settings?.phone && (
+                <Typography color="text.secondary" variant="body2">
+                  Teléfono: {settings.phone}
+                </Typography>
+              )}
             </Box>
             <Box textAlign="right">
               <Typography variant="h6" fontWeight="bold">FACTURA / NOTA DE ENTREGA</Typography>
