@@ -130,7 +130,7 @@ export default function Admin() {
 
   // Eliminar producto (API)
   const deleteProductMutation = useMutation({
-    mutationFn: (id: string) => del('/collections/products', { data: { id } }),
+    mutationFn: (id: string) => del(`/admin/products/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['products-index'] });
       setProductToDelete(null);
@@ -467,7 +467,7 @@ export default function Admin() {
 
         {/* ── PANEL FACTURACIÓN ───────────────────────────────────────────── */}
         <TabPanel value={tabIndex} index={2}>
-          <FacturacionTab />
+          <FacturacionTab showToast={showToast} />
         </TabPanel>
 
         {/* ── PANEL USUARIOS ──────────────────────────────────────────────── */}

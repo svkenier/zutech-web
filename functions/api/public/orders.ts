@@ -23,7 +23,12 @@ const OrderSchema = z.object({
 });
 
 function generateOrderId() {
-  return `#ZUT-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const d = new Date();
+  const yymmdd = d.getFullYear().toString().slice(-2) + 
+                 String(d.getMonth() + 1).padStart(2, '0') + 
+                 String(d.getDate()).padStart(2, '0');
+  const rand = crypto.randomUUID().substring(0, 4).toUpperCase();
+  return `ZT-${yymmdd}-${rand}`;
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {

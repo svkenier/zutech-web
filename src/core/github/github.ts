@@ -30,7 +30,7 @@ function getGhConfig(env: Env) {
     GITHUB_TOKEN:  env.GITHUB_TOKEN ?? '',
     GITHUB_OWNER:  env.GITHUB_OWNER ?? '',
     GITHUB_REPO:   env.GITHUB_REPO  ?? '',
-    GITHUB_BRANCH: env.GITHUB_BRANCH ?? 'main',
+    GITHUB_BRANCH: env.GITHUB_BRANCH ?? '',
   };
 }
 
@@ -41,7 +41,7 @@ const GH_HEADERS = (env: Env) => ({
   'Accept':              'application/vnd.github+json',
   'Content-Type':        'application/json',
   'X-GitHub-Api-Version': '2022-11-28',
-  'User-Agent':          'PatitasDeAmor-Worker/1.0',
+  'User-Agent':          'Cloudflare-Pages-App',
 });
 
 // ─── Tipos internos ───────────────────────────────────────────────────────────
@@ -88,12 +88,12 @@ async function ghRequest<T = unknown>(
   }
 
   if (!response.ok) {
-    const errorMsg = (json['message'] as string) ?? `GitHub API error: ${response.status}`;
+    const errorMsg = (json['message'] as string) ?? `GitHub API error: ${response.status} ${response.statusText}`;
+    console.error(`[GitHub Request Failed]: ${response.status} ${response.statusText} - ${JSON.stringify(json)}`);
     if (response.status === 401 || response.status === 403) {
-      console.error(`[GitHub Config Error]: ${errorMsg}`);
       throw new ConfigurationError('GitHub', `Token inválido o sin permisos: ${errorMsg}`);
     }
-    throw new Error(errorMsg);
+    throw new Error(`[Status ${response.status}] ${errorMsg}`);
   }
 
   return json as T;
@@ -182,21 +182,44 @@ export async function putFile(
     finalBase64 = btoa(binString);
   }
 
-  await ghRequest('PUT', path, env, {
+  const branch = getGhConfig(env).GITHUB_BRANCH;
+  const bodyPayload: any = {
     message,
     content: finalBase64,
-    branch:  getGhConfig(env).GITHUB_BRANCH,
     ...(sha ? { sha } : {}),
-  });
+  };
+  if (branch) {
+    bodyPayload.branch = branch;
+  }
+
+  await ghRequest('PUT', path, env, bodyPayload);
 }
 
 export async function deleteFile(
   path: string,
-  sha: string,
   message: string,
   env: Env,
 ): Promise<void> {
-  await ghRequest('DELETE', path, env, { message, sha, branch: getGhConfig(env).GITHUB_BRANCH });
+  const branch = getGhConfig(env).GITHUB_BRANCH;
+  
+  // 1. Obtener SHA del archivo
+  const fileInfo = await getFile(path, env);
+  if (!fileInfo || !fileInfo.sha) {
+    console.warn(`[GitHub Delete] Archivo no encontrado o ya eliminado: ${path}`);
+    return;
+  }
+
+  // 2. Ejecutar borrado
+  const bodyPayload: any = { message, sha: fileInfo.sha };
+  if (branch) {
+    bodyPayload.branch = branch;
+  }
+  
+  try {
+    await ghRequest('DELETE', path, env, bodyPayload);
+  } catch (e: any) {
+    console.error(`[GitHub Delete Error]: falló el borrado de ${path}`, e);
+  }
 }
 
 // ─── Helpers específicos ───────────────────────────────────────────────────
@@ -206,7 +229,8 @@ export const SHELTER_INFO_PATH = 'data/settings/general.json';
 
 export const cdnImageUrl = (relativePath: string, env: Env) => {
   const cfg = getGhConfig(env);
-  return `https://cdn.jsdelivr.net/gh/${cfg.GITHUB_OWNER}/${cfg.GITHUB_REPO}@${cfg.GITHUB_BRANCH}/${relativePath}`;
+  const branchPart = cfg.GITHUB_BRANCH ? `@${cfg.GITHUB_BRANCH}` : '@main';
+  return `https://cdn.jsdelivr.net/gh/${cfg.GITHUB_OWNER}/${cfg.GITHUB_REPO}${branchPart}/${relativePath}`;
 };
 
 export function isBase64(str: string): boolean {
@@ -219,7 +243,8 @@ export function generateItemId(): string {
 
 export function extractPathFromCdnUrl(url: string, env: Env): string | null {
   const cfg = getGhConfig(env);
-  const prefix = `https://cdn.jsdelivr.net/gh/${cfg.GITHUB_OWNER}/${cfg.GITHUB_REPO}@${cfg.GITHUB_BRANCH}/`;
+  const branchPart = cfg.GITHUB_BRANCH ? `@${cfg.GITHUB_BRANCH}` : '@main';
+  const prefix = `https://cdn.jsdelivr.net/gh/${cfg.GITHUB_OWNER}/${cfg.GITHUB_REPO}${branchPart}/`;
   if (url.startsWith(prefix)) {
     let path = url.substring(prefix.length);
     if (path.includes('?')) path = path.split('?')[0]; 

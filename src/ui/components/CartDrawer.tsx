@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Drawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -16,6 +16,11 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FormHelperText from '@mui/material/FormHelperText';
 import { useCart } from '@ui/context/CartContext';
 import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
 import { post, formatApiError } from '@core/api/client';
@@ -23,98 +28,116 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useTheme, alpha } from '@mui/material/styles';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+
+const validationSchema = Yup.object({
+  name: Yup.string().min(3, 'El nombre completo es requerido').required('El nombre completo es requerido'),
+  phone: Yup.string().matches(/^[0-9+\-\s()]+$/, 'Ingresa un número de contacto válido').min(7, 'Ingresa un número de contacto válido').required('Ingresa un número de contacto válido'),
+  deliveryMethod: Yup.string().oneOf(['pickup', 'delivery']).required(),
+  paymentMethod: Yup.string().required('Selecciona un método de pago')
+});
 
 export default function CartDrawer() {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, subtotal, clearCart, canCheckout, removeUnavailableItems } = useCart();
   const [checkoutMode, setCheckoutMode] = useState(false);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState('pickup'); // 'pickup' | 'delivery'
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorToast, setErrorToast] = useState('');
 
-  const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name || !phone || !canCheckout) return;
+  const formik = useFormik({
+    initialValues: {
+      name: '',
+      phone: '',
+      deliveryMethod: 'pickup',
+      paymentMethod: ''
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values, { setSubmitting }) => {
+      if (!canCheckout) return;
 
-    setIsSubmitting(true);
-    setErrorToast('');
+      setErrorToast('');
 
-    try {
-      const payload = {
-        client: { name, phone },
-        delivery: { method: deliveryMethod, address: '' },
-        items: cartItems.map(i => ({ id: i.id, title: i.title, quantity: i.quantity, price: i.price })),
-        totalUSD: subtotal
-      };
+      try {
+        const payload = {
+          client: { name: values.name, phone: values.phone },
+          delivery: { method: values.deliveryMethod, address: '' },
+          items: cartItems.map(i => ({ id: i.id, title: i.title, quantity: i.quantity, price: i.price })),
+          totalUSD: subtotal
+        };
 
-      const res = await post<{ ok: boolean, orderId: string }>('/public/orders', payload);
+        const res = await post<{ ok: boolean, orderId: string }>('/public/orders', payload);
 
-      if (res.ok && res.orderId) {
-        const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '584121234567'; // Fallback
-        
-        let message = `¡Hola ZUTECH! 👋\nAcabo de generar el pedido *${res.orderId}* para *${deliveryMethod === 'pickup' ? 'Retiro en Tienda' : 'Delivery'}*:\n\n`;
-        message += `👤 *Cliente:* ${name}\n`;
-        message += `📱 *Teléfono:* ${phone}\n`;
-        
-        if (deliveryMethod === 'pickup') {
-            message += `📦 *Método:* Retiro en Gran Bazar\n\n`;
-        } else {
-            message += `🛵 *Método:* Servicio de Delivery\n\n`;
-        }
-        
-        message += `🛒 *Detalle del Pedido:*\n`;
-        cartItems.forEach(item => {
-          message += `- ${item.quantity}x ${item.title} - $${(item.price * item.quantity).toFixed(2)}\n`;
-        });
-        
-        message += `...\n`;
-        
-        if (deliveryMethod === 'pickup') {
-            message += `💰 *Total a Pagar:* $${subtotal.toFixed(2)} USD\n\n`;
-            message += `Quedo a la espera de la confirmación para pasar a retirar. ¡Gracias!`;
-        } else {
-            message += `💰 *Total Productos:* $${subtotal.toFixed(2)} USD\n`;
-            message += `⚠️ *Nota:* El costo del delivery se acordará con la tienda según la zona.\n\n`;
-            message += `📍 *Ubicación de entrega:* (Por favor, adjunta aquí tu ubicación actual o punto de referencia exacto).`;
-        }
-
-        const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-        
-        window.open(whatsappUrl, '_blank');
-        clearCart();
-        setIsCartOpen(false);
-        setCheckoutMode(false);
-        setName('');
-        setPhone('');
-      }
-    } catch (err) {
-      setErrorToast(formatApiError(err, 'Error procesando la orden'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-    const theme = useTheme();
-
-    return (
-      <Drawer
-        anchor="right"
-        open={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        PaperProps={{
-          sx: { 
-            width: { xs: '100%', sm: 400 }, 
-            bgcolor: alpha(theme.palette.background.default, 0.95), 
-            backdropFilter: 'blur(10px)',
-            backgroundImage: 'none',
-            borderLeft: '1px solid',
-            borderColor: 'divider'
+        if (res.ok && res.orderId) {
+          const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '584121234567';
+          
+          let message = `🛒 *NUEVO PEDIDO - ZUTECH*\n`;
+          message += `--------------------------------\n`;
+          message += `👤 *Cliente:* ${values.name}\n`;
+          message += `📱 *Teléfono:* ${values.phone}\n`;
+          message += `📍 *Modalidad de Entrega:* ${values.deliveryMethod === 'pickup' ? 'Retiro en Tienda' : 'Delivery'}\n`;
+          message += `💳 *Método de Pago:* ${values.paymentMethod}\n`;
+          message += `--------------------------------\n`;
+          message += `📦 *DETALLE DE PRODUCTOS:*\n`;
+          
+          cartItems.forEach(item => {
+            message += `- ${item.quantity}x ${item.title} ($${(item.price * item.quantity).toFixed(2)})\n`;
+          });
+          
+          message += `--------------------------------\n`;
+          message += `💰 *TOTAL PRODUCTOS:* $${subtotal.toFixed(2)}\n`;
+          message += `--------------------------------\n`;
+          
+          if (values.deliveryMethod === 'delivery') {
+              message += `🛵 *DELIVERY:* El costo se calculará con la tienda vía WhatsApp según tu zona.\n`;
+              message += `📍 *Por favor, comparte tu ubicación actual por este chat para cotizar el envío.*\n`;
           }
-        }}
-      >
+          
+          if (values.paymentMethod !== 'Dólares en Efectivo') {
+              message += `📸 *Por favor, adjunta tu comprobante de pago por aquí para procesar tu orden.*`;
+          } else {
+              message += `💵 *Pago en efectivo al retirar en tienda.*`;
+          }
+
+          const encodedMessage = encodeURIComponent(message);
+          const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+          
+          window.open(whatsappUrl, '_blank');
+          clearCart();
+          setIsCartOpen(false);
+          setCheckoutMode(false);
+          formik.resetForm();
+        }
+      } catch (err) {
+        setErrorToast(formatApiError(err, 'Error procesando la orden'));
+      } finally {
+        setSubmitting(false);
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (formik.values.deliveryMethod === 'delivery' && formik.values.paymentMethod === 'Dólares en Efectivo') {
+      formik.setFieldValue('paymentMethod', '');
+    }
+  }, [formik.values.deliveryMethod, formik.values.paymentMethod, formik.setFieldValue]);
+
+  const theme = useTheme();
+
+  return (
+    <Drawer
+      anchor="right"
+      open={isCartOpen}
+      onClose={() => setIsCartOpen(false)}
+      PaperProps={{
+        sx: { 
+          width: { xs: '100%', sm: 400 }, 
+          bgcolor: alpha(theme.palette.background.default, 0.95), 
+          backdropFilter: 'blur(10px)',
+          backgroundImage: 'none',
+          borderLeft: '1px solid',
+          borderColor: 'divider'
+        }
+      }}
+    >
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
           <ShoppingCartIcon color="primary" /> Mi Carrito
@@ -131,31 +154,67 @@ export default function CartDrawer() {
             <Typography variant="h6" color="text.secondary">Tu carrito está vacío</Typography>
           </Box>
         ) : checkoutMode ? (
-          <form id="checkout-form" onSubmit={handleCheckout}>
+          <form id="checkout-form" onSubmit={formik.handleSubmit}>
             <Typography variant="subtitle1" fontWeight={700} mb={2}>Datos del Cliente</Typography>
             <Stack spacing={2}>
               <TextField 
                 label="Nombre Completo" 
-                required 
+                name="name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
                 fullWidth 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
               />
               <TextField 
                 label="Teléfono" 
-                required 
+                name="phone"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
                 fullWidth 
-                value={phone} 
-                onChange={(e) => setPhone(e.target.value)} 
               />
               
               <Divider sx={{ my: 1 }} />
               <Typography variant="subtitle1" fontWeight={700}>Método de Entrega</Typography>
               
-              <RadioGroup value={deliveryMethod} onChange={(e) => setDeliveryMethod(e.target.value)}>
+              <RadioGroup 
+                name="deliveryMethod"
+                value={formik.values.deliveryMethod} 
+                onChange={formik.handleChange}
+              >
                 <FormControlLabel value="pickup" control={<Radio />} label="Pick up (Gran bazar local # 326 y 327)" />
                 <FormControlLabel value="delivery" control={<Radio />} label="Delivery" />
               </RadioGroup>
+
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="subtitle1" fontWeight={700}>Método de Pago</Typography>
+              
+              <FormControl fullWidth error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}>
+                <InputLabel id="payment-method-label">Selecciona tu pago</InputLabel>
+                <Select
+                  labelId="payment-method-label"
+                  name="paymentMethod"
+                  value={formik.values.paymentMethod}
+                  label="Selecciona tu pago"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                >
+                  <MenuItem value="Pago Móvil">Pago Móvil</MenuItem>
+                  <MenuItem value="Transferencia Bancaria">Transferencia Bancaria</MenuItem>
+                  <MenuItem value="Zelle">Zelle</MenuItem>
+                  <MenuItem value="Binance Pay (USDT)">Binance Pay (USDT)</MenuItem>
+                  {formik.values.deliveryMethod === 'pickup' && (
+                    <MenuItem value="Dólares en Efectivo">Dólares en Efectivo</MenuItem>
+                  )}
+                </Select>
+                {formik.touched.paymentMethod && formik.errors.paymentMethod && (
+                  <FormHelperText>{formik.errors.paymentMethod}</FormHelperText>
+                )}
+              </FormControl>
             </Stack>
           </form>
         ) : (
@@ -196,9 +255,19 @@ export default function CartDrawer() {
             <Typography variant="subtitle1" fontWeight={700}>Total a pagar:</Typography>
             <Typography variant="h6" fontWeight={800} color="primary.main">${subtotal.toFixed(2)}</Typography>
           </Box>
-          {checkoutMode && deliveryMethod === 'delivery' && (
-            <Typography variant="caption" color="warning.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, bgcolor: 'warning.light', p: 1, borderRadius: 1, color: 'warning.contrastText', backgroundColor: 'rgba(237, 108, 2, 0.1)' }}>
-              ⚠️ El costo del delivery no está incluido y será cotizado por la tienda vía WhatsApp según su ubicación exacta.
+          {checkoutMode && formik.values.deliveryMethod === 'delivery' && (
+            <Typography variant="caption" color="warning.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, p: 1, borderRadius: 1, backgroundColor: 'rgba(237, 108, 2, 0.1)' }}>
+              🛵 <strong>Costo de Delivery:</strong> No está incluido en este monto. Se cotizará con la tienda por WhatsApp según la ubicación exacta que compartas por el chat (costo adicional).
+            </Typography>
+          )}
+          {checkoutMode && ['Pago Móvil', 'Transferencia Bancaria', 'Zelle', 'Binance Pay (USDT)'].includes(formik.values.paymentMethod) && (
+            <Typography variant="caption" color="info.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, p: 1, borderRadius: 1, backgroundColor: 'rgba(2, 136, 209, 0.1)' }}>
+              📸 <strong>Comprobante de pago:</strong> Recuerda que para procesar y validar tu orden es indispensable adjuntar la captura del comprobante de pago por el chat de WhatsApp una vez enviado el pedido.
+            </Typography>
+          )}
+          {checkoutMode && formik.values.paymentMethod === 'Dólares en Efectivo' && (
+            <Typography variant="caption" color="success.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, p: 1, borderRadius: 1, backgroundColor: 'rgba(46, 125, 50, 0.1)' }}>
+              💵 <strong>Pago en tienda:</strong> Pagarás el monto exacto en efectivo al momento de retirar tu pedido en la tienda física.
             </Typography>
           )}
           {!canCheckout && cartItems.length > 0 && (
@@ -208,15 +277,20 @@ export default function CartDrawer() {
           )}
           {checkoutMode ? (
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" fullWidth onClick={() => setCheckoutMode(false)} disabled={isSubmitting}>Atrás</Button>
+              <Button variant="outlined" fullWidth onClick={() => setCheckoutMode(false)} disabled={formik.isSubmitting}>Atrás</Button>
               <Button 
                 type="submit" 
                 form="checkout-form" 
                 variant="contained" 
                 color="primary" 
                 fullWidth 
-                startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <WhatsAppIcon />}
-                disabled={!canCheckout || isSubmitting}
+                startIcon={formik.isSubmitting ? <CircularProgress size={20} color="inherit" /> : <WhatsAppIcon />}
+                disabled={!canCheckout || formik.isSubmitting}
+                onClick={(e) => {
+                  if (!formik.isValid) {
+                    formik.handleSubmit(e);
+                  }
+                }}
               >
                 Hacer Pedido
               </Button>

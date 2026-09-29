@@ -2,6 +2,43 @@ import { getAuthPayload } from '../../../src/core/auth/auth.js';
 import { ROLE_LEVEL, type UserRole } from '../../../src/core/types/user.js';
 import type { Env } from '../../../src/core/auth/auth.js';
 
+// ─── Status mapping ───────────────────────────────────────────────────────────
+// Compatibilidad con registros legacy en inglés (pending/approved/discarded)
+function normalizeStatus(s: string): string {
+  if (s === 'pending')   return 'pendiente';
+  if (s === 'approved')  return 'aprobado';
+  if (s === 'discarded') return 'descartado';
+  return s; // ya está en español
+}
+
+function mapOrderRow(row: Record<string, unknown>) {
+  const items = (() => {
+    try { return JSON.parse(row.items as string); }
+    catch { return []; }
+  })();
+  return {
+    id: row.id,
+    client:   { name: row.customer_name, phone: row.customer_phone },
+    delivery: { method: row.delivery_type, address: row.delivery_address },
+    items,
+    totalUSD:       row.total,
+    payment_method: row.payment_method ?? null,
+    closure_id:     row.closure_id ?? null,
+    status:         normalizeStatus(row.status as string),
+    created_at:     row.created_at,
+    updated_at:     row.updated_at,
+  };
+}
+
+// ─── Validación de payment_method ────────────────────────────────────────────
+const PAYMENT_METHODS = ['pago_movil', 'zelle', 'efectivo'] as const;
+type PaymentMethod = typeof PAYMENT_METHODS[number];
+
+function isValidPaymentMethod(v: unknown): v is PaymentMethod {
+  return PAYMENT_METHODS.includes(v as PaymentMethod);
+}
+
+// ─── Handler principal ────────────────────────────────────────────────────────
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
 
@@ -9,115 +46,133 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const auth = await getAuthPayload(request, env);
   if (!auth) {
-    return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+    return new Response(JSON.stringify({ error: 'No autorizado' }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
+    // ─── GET: listado con purga perezosa ─────────────────────────────────────
     if (request.method === 'GET') {
+      // Purga silenciosa: eliminar pendientes con más de 7 días sin cerrar
+      await env.DB.prepare(`
+        DELETE FROM orders
+        WHERE (status = 'pendiente' OR status = 'pending')
+          AND closure_id IS NULL
+          AND created_at < datetime('now', '-7 days')
+      `).run();
+
+      // Retornar solo órdenes activas (sin closure_id asignado)
       const { results } = await env.DB.prepare(`
-        SELECT * FROM orders ORDER BY created_at DESC
-      `).all();
+        SELECT * FROM orders WHERE closure_id IS NULL ORDER BY created_at DESC
+      `).all<Record<string, unknown>>();
 
-      const validOrders = results.map((row: any) => ({
-        id: row.id,
-        client: { name: row.customer_name, phone: row.customer_phone },
-        delivery: { method: row.delivery_type, address: row.delivery_address },
-        items: JSON.parse(row.items),
-        totalUSD: row.total,
-        status: row.status,
-        created_at: row.created_at,
-        updated_at: row.updated_at
-      }));
-
-      return new Response(JSON.stringify({ records: validOrders }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({ records: results.map(mapOrderRow) }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
     }
 
+    // ─── PUT: mutación de estado / edición ───────────────────────────────────
     if (request.method === 'PUT') {
-      const url = new URL(request.url);
-      const urlId = url.pathname.split('/').pop();
-      let orderId = urlId === 'orders' ? null : urlId;
+      const body = await request.json() as Record<string, unknown>;
+      const now = new Date().toISOString();
 
-      const body = await request.json() as any;
-      if (!orderId && body.id) orderId = body.id;
+      // Resolver ID (soporta body.id o último segmento de URL)
+      const url = new URL(request.url);
+      const urlSegment = url.pathname.split('/').pop();
+      const orderId = (body.id as string) || (urlSegment !== 'orders' ? urlSegment : null);
 
       if (!orderId) {
-        return new Response(JSON.stringify({ error: 'ID requerido' }), { status: 400 });
+        return new Response(JSON.stringify({ error: 'ID de orden requerido' }), { status: 400 });
       }
 
-      if (body.action === 'purge_pending') {
-        // Special admin action to purge pending orders > 7 days old
+      const action = body.action as string;
+
+      // Acción: aprobar
+      if (action === 'aprobar') {
+        if (!isValidPaymentMethod(body.payment_method)) {
+          return new Response(
+            JSON.stringify({ error: 'payment_method inválido. Valores aceptados: pago_movil, zelle, efectivo' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
         await env.DB.prepare(`
-          DELETE FROM orders WHERE status = 'pending' AND created_at < date('now', '-7 days')
-        `).run();
-        return new Response(JSON.stringify({ success: true }), { status: 200 });
+          UPDATE orders
+          SET status = 'aprobado', payment_method = ?, updated_at = ?
+          WHERE id = ? AND (status = 'pendiente' OR status = 'pending')
+        `).bind(body.payment_method, now, orderId).run();
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
 
-      const updates: string[] = [];
-      const values: any[] = [];
-
-      if (body.action === 'approve') {
-        updates.push("status = ?");
-        values.push('approved');
-      } else if (body.action === 'revert') {
-        updates.push("status = ?");
-        values.push('pending');
-      } else if (body.action === 'discard') {
-        updates.push("status = ?");
-        values.push('discarded');
-      }
-
-      if (body.updates?.items) {
-        updates.push("items = ?");
-        values.push(JSON.stringify(body.updates.items));
-      }
-      if (body.updates?.totalUSD !== undefined) {
-        updates.push("total = ?");
-        values.push(Number(body.updates.totalUSD));
-      }
-
-      // Also support direct status/items/total updates if provided
-      if (body.status) {
-        updates.push("status = ?");
-        values.push(body.status);
-      }
-      if (body.items) {
-        updates.push("items = ?");
-        values.push(JSON.stringify(body.items));
-      }
-      if (body.totalUSD !== undefined) {
-        updates.push("total = ?");
-        values.push(Number(body.totalUSD));
-      }
-
-      if (updates.length > 0) {
-        updates.push("updated_at = ?");
-        values.push(new Date().toISOString());
-        values.push(orderId);
-
+      // Acción: revertir (solo si sin closure_id)
+      if (action === 'revertir') {
+        const existing = await env.DB.prepare(`SELECT closure_id FROM orders WHERE id = ?`).bind(orderId).first<{ closure_id: string | null }>();
+        if (!existing) {
+          return new Response(JSON.stringify({ error: 'Orden no encontrada' }), { status: 404 });
+        }
+        if (existing.closure_id) {
+          return new Response(
+            JSON.stringify({ error: 'No se puede revertir una orden que ya forma parte de un cierre de caja.' }),
+            { status: 409, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
         await env.DB.prepare(`
-          UPDATE orders SET ${updates.join(', ')} WHERE id = ?
-        `).bind(...values).run();
+          UPDATE orders SET status = 'pendiente', payment_method = NULL, updated_at = ?
+          WHERE id = ? AND closure_id IS NULL
+        `).bind(now, orderId).run();
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
 
-      return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      // Acción: descartar (elimina la fila, solo desde pendiente y sin cierre)
+      if (action === 'descartar') {
+        await env.DB.prepare(`
+          DELETE FROM orders WHERE id = ? AND closure_id IS NULL
+        `).bind(orderId).run();
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      // Acción: editar ítems / total (compatibilidad con OrderEditModal)
+      if (action === 'edit') {
+        const updates = body.updates as Record<string, unknown> | undefined;
+        const fields: string[] = [];
+        const vals: unknown[] = [];
+
+        if (updates?.items) { fields.push('items = ?'); vals.push(JSON.stringify(updates.items)); }
+        if (updates?.totalUSD !== undefined) { fields.push('total = ?'); vals.push(Number(updates.totalUSD)); }
+
+        if (fields.length === 0) {
+          return new Response(JSON.stringify({ error: 'Nada que actualizar' }), { status: 400 });
+        }
+        fields.push('updated_at = ?');
+        vals.push(now, orderId);
+
+        await env.DB.prepare(`UPDATE orders SET ${fields.join(', ')} WHERE id = ?`).bind(...vals).run();
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      return new Response(JSON.stringify({ error: `Acción desconocida: ${action}` }), { status: 400 });
     }
 
+    // ─── DELETE: borrar orden por ID ─────────────────────────────────────────
     if (request.method === 'DELETE') {
       const url = new URL(request.url);
       const orderId = url.pathname.split('/').pop();
-
       if (!orderId || orderId === 'orders') {
         return new Response(JSON.stringify({ error: 'ID requerido' }), { status: 400 });
       }
-
-      await env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
-
+      await env.DB.prepare(`DELETE FROM orders WHERE id = ? AND closure_id IS NULL`).bind(orderId).run();
       return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({ error: 'Método no soportado' }), { status: 405 });
-  } catch (e: any) {
-    console.error('Error in Admin Orders D1:', e);
-    return new Response(JSON.stringify({ error: 'Error interno del servidor', details: e.message }), { status: 500 });
+
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[admin/orders] Error:', msg);
+    return new Response(
+      JSON.stringify({ error: 'Error interno del servidor', details: msg }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    );
   }
 };

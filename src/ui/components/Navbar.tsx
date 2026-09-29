@@ -100,9 +100,45 @@ export default function Navbar() {
   const drawer = (
     <Box sx={{ width: 280, pt: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}>
-        <Typography variant="h6" fontWeight={700} color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box component="img" src="/logo.svg" alt="ZUTECH" {...({ width: 48, height: 48 } as any)} sx={{ height: { xs: 42, md: 48 }, width: 'auto', objectFit: 'contain' }} />
-        </Typography>
+        <Box
+          component={RouterLink}
+          to="/"
+          onClick={() => setDrawerOpen(false)}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            textDecoration: 'none',
+            color: 'inherit',
+            '&:hover img': {
+              transform: 'scale(1.05)'
+            }
+          }}
+        >
+          <Box
+            component="img"
+            src="/logo.webp"
+            alt="ZUTECH"
+            sx={{
+              width: { xs: 32, sm: 38 },
+              height: 'auto',
+              objectFit: 'contain',
+              transition: 'transform 0.3s ease-in-out'
+            }}
+          />
+          <Typography
+            variant="h6"
+            component="span"
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              color: 'text.primary',
+              userSelect: 'none'
+            }}
+          >
+            ZUTECH
+          </Typography>
+        </Box>
         <IconButton onClick={() => setDrawerOpen(false)} size="small" aria-label="Cerrar menú">
           <CloseIcon />
         </IconButton>
@@ -213,17 +249,46 @@ export default function Navbar() {
       >
         <Toolbar sx={{ maxWidth: 1280, width: '100%', mx: 'auto', px: { xs: 2, sm: 3 } }}>
           {/* Logo / Brand */}
-          <Typography
+          <Box
             component={RouterLink}
             to="/"
-            variant="h6"
-            fontWeight={800}
-            color="text.primary"
-            aria-label="ZUTECH - Ir a inicio"
-            sx={{ textDecoration: 'none', flexGrow: { xs: 1, md: 0 }, mr: 4, display: 'flex', alignItems: 'center', gap: 1 }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              textDecoration: 'none',
+              color: 'inherit',
+              flexGrow: { xs: 1, md: 0 },
+              mr: 4,
+              '&:hover img': {
+                transform: 'scale(1.05)'
+              }
+            }}
           >
-            <Box component="img" src="/logo.svg" alt="ZUTECH" {...({ width: 50, height: 50 } as any)} sx={{ height: { xs: 42, md: 50 }, width: 'auto', objectFit: 'contain' }} />
-          </Typography>
+            <Box
+              component="img"
+              src="/logo.webp"
+              alt="ZUTECH"
+              sx={{
+                width: { xs: 32, sm: 38 },
+                height: 'auto',
+                objectFit: 'contain',
+                transition: 'transform 0.3s ease-in-out'
+              }}
+            />
+            <Typography
+              variant="h6"
+              component="span"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                color: 'text.primary',
+                userSelect: 'none'
+              }}
+            >
+              ZUTECH
+            </Typography>
+          </Box>
 
           {/* Desktop nav links */}
           {!isMobile && (

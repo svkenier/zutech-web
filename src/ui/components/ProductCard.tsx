@@ -1,12 +1,11 @@
 import { Link as RouterLink } from 'react-router-dom';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import TechBadge from './TechBadge';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import { useCart } from '@ui/context/CartContext';
 import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
 
@@ -25,7 +24,7 @@ export default function ProductCard({ id, title, brand, category, price, inStock
   const { addToCart } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // prevent navigation since card might be wrapped or button is inside link
+    e.preventDefault(); // prevent navigation since button is inside link
     addToCart({ id, title, brand, price, image: image || ITEM_IMAGE_FALLBACK });
   };
 
@@ -33,82 +32,107 @@ export default function ProductCard({ id, title, brand, category, price, inStock
     <Card 
       component={RouterLink}
       to={`/productos/${id}`}
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        bgcolor: 'background.default',
+      sx={{
+        p: 0,
+        borderRadius: 3,
+        border: '1px solid #E2E8F0',
+        bgcolor: '#FFFFFF',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
         textDecoration: 'none',
         color: 'inherit',
-        position: 'relative'
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 12px 24px -8px rgba(0, 0, 0, 0.08)',
+          borderColor: '#CBD5E1',
+          transform: 'translateY(-3px)',
+          '& .product-image': {
+            transform: 'scale(1.05)'
+          }
+        },
       }}
     >
-      <Box sx={{ position: 'relative', pt: '80%', overflow: 'hidden', borderBottom: '1px solid', borderColor: 'divider' }}>
-        <CardMedia
-          component="img"
-          image={image || ITEM_IMAGE_FALLBACK}
+      {/* Área Superior: Escenario Edge-to-Edge */}
+      <Box sx={{ bgcolor: '#F8FAFC', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', height: { xs: 200, sm: 220 } }}>
+        {/* Badge DESTACADO flotante en la esquina */}
+        {destacado && (
+          <Chip 
+            label="DESTACADO" 
+            size="small" 
+            sx={{ 
+              bgcolor: '#2563EB', color: '#FFFFFF', letterSpacing: '0.05em', fontSize: '0.65rem', 
+              position: 'absolute', top: 12, left: 12, borderRadius: 9999, fontWeight: 700, zIndex: 2 
+            }} 
+          />
+        )}
+        {!inStock && (
+          <Chip 
+            label="AGOTADO" 
+            size="small" 
+            sx={{ 
+              bgcolor: '#EF4444', color: '#FFFFFF', letterSpacing: '0.05em', fontSize: '0.65rem', 
+              position: 'absolute', top: 12, right: 12, borderRadius: 9999, fontWeight: 700, zIndex: 2 
+            }} 
+          />
+        )}
+
+        {/* Imagen del producto */}
+        <Box 
+          component="img" 
+          src={image || ITEM_IMAGE_FALLBACK} 
           alt={title}
-          sx={{
-            position: 'absolute',
-            top: 0, left: 0,
-            width: '100%', height: '100%',
-            objectFit: 'contain',
-            bgcolor: '#FFFFFF',
-            p: 3,
-            transition: 'transform 0.4s ease-in-out',
-            '&:hover': {
-              transform: 'scale(1.05)'
-            }
-          }}
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = ITEM_IMAGE_FALLBACK; }}
+          className="product-image"
+          onError={(e: any) => { e.currentTarget.src = ITEM_IMAGE_FALLBACK; }}
+          sx={{ 
+            width: '100%', height: '100%', objectFit: 'contain', p: 2.5, 
+            transition: 'transform 0.4s ease-out'
+          }} 
         />
-        <Box sx={{ position: 'absolute', top: 12, left: 12, zIndex: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {destacado && (
-            <TechBadge label="Destacado" color="info" variant="solid" />
-          )}
-          {!inStock && (
-            <TechBadge label="Agotado" color="error" variant="solid" />
-          )}
-        </Box>
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1, p: 2, '&:last-child': { pb: 2 } }}>
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 0.5 }}>
-          <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 600, color: 'text.secondary', bgcolor: 'background.paper', px: 1, py: 0.2, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            [{brand || 'OEM'}]
+      {/* Cuerpo Informativo */}
+      <CardContent sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between', p: 2.5, '&:last-child': { pb: 2.5 } }}>
+        <Box>
+          {/* Tags de Marca y Categoría */}
+          <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontFamily: 'monospace', mb: 0.5 }}>
+            [{brand || 'OEM'}] [{category || 'Hardware'}]
           </Typography>
-          <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 600, color: 'text.secondary', bgcolor: 'background.paper', px: 1, py: 0.2, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            [{category || 'Hardware'}]
+
+          {/* Título del Producto */}
+          <Typography variant="subtitle1" sx={{ color: '#0F172A', display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical', WebkitLineClamp: 1, textOverflow: 'ellipsis', fontWeight: 700, lineHeight: 1.3, mb: 1 }}>
+            {title}
           </Typography>
         </Box>
 
-        <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3} sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 1, color: 'text.primary' }}>
-          {title}
-        </Typography>
-
-        <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6" color="text.primary" fontWeight={800} sx={{ fontFamily: 'monospace', fontSize: '1.25rem', letterSpacing: -0.5 }}>
+        {/* Fila Inferior: Precio y Botón de Carrito */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, pt: 2, borderTop: '1px solid #F1F5F9' }}>
+          <Typography variant="h6" sx={{ color: '#0F172A', fontSize: '1.15rem', fontWeight: 800 }}>
             ${Number(price).toFixed(2)}
           </Typography>
-          
-          <Button 
-            variant="contained" 
+
+          <IconButton 
+            aria-label="Agregar al carrito" 
             onClick={handleAddToCart}
             disabled={!inStock}
             sx={{ 
-              minWidth: 0, 
+              bgcolor: inStock ? '#0F172A' : '#E2E8F0', 
+              color: inStock ? '#FFFFFF' : '#94A3B8', 
+              borderRadius: 2, 
               p: 1, 
-              bgcolor: 'primary.main', 
-              color: 'primary.contrastText',
-              borderRadius: 1,
-              '&:hover': {
-                bgcolor: 'primary.main',
-                opacity: 0.9,
-              }
+              transition: 'all 0.2s', 
+              '&:hover': { 
+                bgcolor: inStock ? '#2563EB' : '#E2E8F0', 
+                transform: inStock ? 'scale(1.05)' : 'none' 
+              }, 
+              '&:active': { 
+                transform: inStock ? 'scale(0.95)' : 'none' 
+              } 
             }}
           >
-            <AddShoppingCartIcon fontSize="small" />
-          </Button>
+            <ShoppingCartOutlinedIcon fontSize="small"/>
+          </IconButton>
         </Box>
       </CardContent>
     </Card>

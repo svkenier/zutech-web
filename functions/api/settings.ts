@@ -1,34 +1,24 @@
-import { getFileWithETag, putFile, SHELTER_INFO_PATH } from '../../src/core/github/github.js';
 import { getAuthPayload } from '../../src/core/auth/auth.js';
 import { ROLE_LEVEL, type UserRole } from '../../src/core/types/user.js';
 import type { Env } from '../../src/core/auth/auth.js';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { request, env } = context;
+  const { env } = context;
 
   try {
-    const ifNoneMatch = request.headers.get('if-none-match') || undefined;
-    const ghRes = await getFileWithETag(SHELTER_INFO_PATH, env, ifNoneMatch);
-
-    const headers = new Headers();
-    if (ghRes.notModified) {
-      return new Response(null, { status: 304, headers });
-    }
+    const row = await env.DB.prepare(`SELECT data FROM settings WHERE id = 'general'`).first<{ data: string }>();
     
-    if (ghRes.etag) headers.set('ETag', ghRes.etag);
+    const headers = new Headers();
     headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
     headers.set('Content-Type', 'application/json');
 
-    if (!ghRes.data) {
-      // Return empty object fallback (HTTP 200) instead of throwing an error when file doesn't exist.
+    if (!row || !row.data) {
       return new Response(JSON.stringify({}), { status: 200, headers });
     }
 
-    const content = atob(ghRes.data.content);
-    return new Response(content, { status: 200, headers });
+    return new Response(row.data, { status: 200, headers });
   } catch (err) {
-    console.warn('[settings.ts] Error o repositorio vacío, devolviendo fallback vacío.', err);
-    // Devuelve objeto vacío con 200 OK para que el frontend no colapse
+    console.warn('[settings.ts] Error querying D1, devolviendo fallback vacío.', err);
     return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 };
@@ -45,19 +35,13 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
   try {
     const body = await request.json();
+    const contentStr = JSON.stringify(body);
     
-    const current = await getFileWithETag(SHELTER_INFO_PATH, env);
-    
-    // Convert to string and base64
-    const contentStr = JSON.stringify(body, null, 2);
-    
-    await putFile(
-      SHELTER_INFO_PATH, 
-      contentStr, 
-      'Update shelter settings', 
-      env, 
-      current.data?.sha
-    );
+    await env.DB.prepare(`
+      INSERT INTO settings (id, data, updated_at) 
+      VALUES ('general', ?, datetime('now'))
+      ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at
+    `).bind(contentStr).run();
 
     return new Response(JSON.stringify({ ok: true, data: body }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err) {

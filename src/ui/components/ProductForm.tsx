@@ -285,9 +285,9 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           : {}),
       };
       if (isEdit) {
-        return put(`/collections/${collectionName}`, payload);
+        return put(`/admin/${collectionName}/${initial?.id}`, payload);
       }
-      return post(`/collections/${collectionName}`, payload);
+      return post(`/admin/${collectionName}`, payload);
     },
     onSuccess: () => {
       clearEtagCache(collectionName);
