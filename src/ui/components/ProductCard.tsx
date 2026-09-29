@@ -43,13 +43,15 @@ export default function ProductCard({ id, title, brand, category, price, inStock
         height: '100%',
         textDecoration: 'none',
         color: 'inherit',
+        opacity: inStock ? 1 : 0.6,
+        filter: inStock ? 'none' : 'grayscale(1)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
-          boxShadow: '0 12px 24px -8px rgba(0, 0, 0, 0.08)',
-          borderColor: '#CBD5E1',
-          transform: 'translateY(-3px)',
+          boxShadow: inStock ? '0 12px 24px -8px rgba(0, 0, 0, 0.08)' : 'none',
+          borderColor: inStock ? '#CBD5E1' : '#E2E8F0',
+          transform: inStock ? 'translateY(-3px)' : 'none',
           '& .product-image': {
-            transform: 'scale(1.05)'
+            transform: inStock ? 'scale(1.05)' : 'none'
           }
         },
       }}

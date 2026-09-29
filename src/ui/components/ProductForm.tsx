@@ -49,7 +49,7 @@ interface ProductFormProps {
 
 const EMPTY = {
   title: '', brand: '', category: '', price: '',
-  description: '', status: 'active',
+  description: '',
   in_stock: true, featured: false,
 };
 
@@ -59,7 +59,6 @@ const validationSchema = Yup.object({
   category: Yup.string().required('La categoría es obligatoria'),
   price: Yup.number().typeError('Debe ser un número').min(0, 'No puede ser negativo').required('El precio es obligatorio'),
   description: Yup.string(),
-  status: Yup.string().required('El estado es obligatorio'),
   in_stock: Yup.boolean(),
   featured: Yup.boolean(),
 });
@@ -202,7 +201,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
       ? {
           title:           initial.title,
           description:     initial.description     ?? '',
-          status:          initial.status          ?? 'active',
+          status:          'active',
           brand:           (initial.attributes?.['brand'] as string) ?? '',
           category:        (initial.attributes?.['category'] as string) ?? '',
           price:           initial.attributes?.['price'] !== undefined ? String(initial.attributes?.['price']) : '',
@@ -403,20 +402,11 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           Estado y descripción
         </Typography>
         <Grid container spacing={2} mb={2}>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <FormControl fullWidth size="small" error={formik.touched.status && Boolean(formik.errors.status)}>
-              <InputLabel>Estado interno</InputLabel>
-              <Select name="status" value={formik.values.status} label="Estado interno" onChange={formik.handleChange} onBlur={formik.handleBlur}>
-                <MenuItem value="active">Activo</MenuItem>
-                <MenuItem value="inactive">Inactivo</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 8 }}>
+          <Grid size={{ xs: 12 }}>
             <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
               <FormControlLabel
                 control={<Switch name="in_stock" checked={formik.values.in_stock} onChange={formik.handleChange} color="primary" />}
-                label="En Stock"
+                label="En Stock / Disponible"
               />
               <FormControlLabel
                 control={<Switch name="featured" checked={formik.values.featured} onChange={formik.handleChange} color="warning" />}

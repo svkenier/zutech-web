@@ -63,13 +63,13 @@ export default function ProductDetailPage() {
         <Navbar />
         <Container maxWidth="lg" sx={{ py: 6, flexGrow: 1 }}>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12, md: 7 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Skeleton variant="rounded" height={420} />
               <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                 {[1, 2, 3].map((n) => <Skeleton key={n} variant="rounded" width={80} height={60} />)}
               </Box>
             </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Skeleton variant="text" width="70%" height={40} />
               <Skeleton variant="text" width="40%" />
               <Skeleton variant="rounded" height={120} sx={{ mt: 2 }} />
@@ -138,16 +138,21 @@ export default function ProductDetailPage() {
           </Button>
 
           <Grid container spacing={{ xs: 3, md: 5 }}>
-            <Grid size={{ xs: 12, md: 7 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <AnimatedSection direction="left">
                 <Box
                   sx={{
-                    borderRadius: 0,
-                    overflow:     'hidden',
-                    border:       '1px solid',
-                    borderColor:  'divider',
-                    bgcolor:      'grey.100',
-                    aspectRatio:  '4/3',
+                    width: '100%',
+                    bgcolor: 'background.paper',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    borderRadius: 2,
+                    maxHeight: { xs: 350, md: 480 },
+                    p: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
                   }}
                 >
                   {allImages.length > 0 ? (
@@ -160,9 +165,12 @@ export default function ProductDetailPage() {
                         e.currentTarget.parentElement?.querySelector('.fallback-icon')?.removeAttribute('hidden');
                       }}
                       sx={{
-                        width:      '100%',
-                        height:     '100%',
-                        objectFit:  'cover',
+                        width: '100%',
+                        height: 'auto',
+                        maxHeight: '100%',
+                        maxWidth: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
                         transition: 'opacity 250ms',
                       }}
                     />
@@ -215,7 +223,7 @@ export default function ProductDetailPage() {
               </AnimatedSection>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 5 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <AnimatedSection direction="right">
                 <Chip
                   label={inStock ? '✅ En Stock' : '❌ Agotado'}

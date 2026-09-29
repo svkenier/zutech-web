@@ -68,19 +68,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const placeholders = productIds.map(() => '?').join(', ');
     
     const { results } = await env.DB.prepare(`
-      SELECT id, title, price FROM products WHERE id IN (${placeholders})
-    `).bind(...productIds).all<{ id: string, title: string, price: number }>();
+      SELECT id, title, price, in_stock FROM products WHERE id IN (${placeholders})
+    `).bind(...productIds).all<{ id: string, title: string, price: number, in_stock: number }>();
     
-    const dbProducts = new Map<string, { title: string, price: number }>();
+    const dbProducts = new Map<string, { title: string, price: number, in_stock: number }>();
     for (const row of results) {
-      dbProducts.set(row.id, { title: row.title, price: row.price });
+      dbProducts.set(row.id, { title: row.title, price: row.price, in_stock: row.in_stock });
     }
 
     let realTotal = 0;
     const validatedItems = [];
     for (const clientItem of validData.items) {
       const dbProd = dbProducts.get(clientItem.id);
-      if (!dbProd) {
+      if (!dbProd || dbProd.in_stock === 0) {
         return new Response(JSON.stringify({ error: `Producto no válido o fuera de stock (ID: ${clientItem.id})` }), { 
           status: 400, 
           headers: { 'Content-Type': 'application/json' } 

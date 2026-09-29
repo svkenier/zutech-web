@@ -98,10 +98,16 @@ export default function ProductsPage() {
     });
 
     return results.sort((a, b) => {
+      const aStock = Boolean(a.attributes?.in_stock);
+      const bStock = Boolean(b.attributes?.in_stock);
+      if (aStock && !bStock) return -1;
+      if (!aStock && bStock) return 1;
+
       const aDest = Boolean(a.attributes?.featured || a.attributes?.destacado);
       const bDest = Boolean(b.attributes?.featured || b.attributes?.destacado);
       if (aDest && !bDest) return -1;
       if (!aDest && bDest) return 1;
+      
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   }, [data, filters]);

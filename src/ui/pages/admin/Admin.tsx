@@ -6,7 +6,16 @@
  * 2. Usuarios: Gestión de usuarios del sistema (solo encargado/superadmin).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import SearchIcon from '@mui/icons-material/Search';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -128,6 +137,38 @@ export default function Admin() {
     staleTime: 60000,
   });
 
+  // Filtros de Productos
+  const [productSearch, setProductSearch] = useState('');
+  const [stockFilter, setStockFilter] = useState('Todos'); // 'Todos', 'En Stock', 'Agotados'
+  const [categoryFilter, setCategoryFilter] = useState('Todas');
+
+  const { filteredProducts, uniqueCategories } = useMemo(() => {
+    if (!productsData?.records) return { filteredProducts: [], uniqueCategories: [] };
+    
+    let records = [...productsData.records];
+    const cats = new Set<string>();
+    
+    productsData.records.forEach(p => {
+      if (p.attributes?.category) cats.add(p.attributes.category as string);
+    });
+
+    if (productSearch) {
+      const term = productSearch.toLowerCase();
+      records = records.filter(p => p.title.toLowerCase().includes(term));
+    }
+
+    if (stockFilter !== 'Todos') {
+      const wantsStock = stockFilter === 'En Stock';
+      records = records.filter(p => Boolean(p.attributes?.in_stock) === wantsStock);
+    }
+
+    if (categoryFilter !== 'Todas') {
+      records = records.filter(p => p.attributes?.category === categoryFilter);
+    }
+
+    return { filteredProducts: records, uniqueCategories: Array.from(cats).sort() };
+  }, [productsData, productSearch, stockFilter, categoryFilter]);
+
   // Eliminar producto (API)
   const deleteProductMutation = useMutation({
     mutationFn: (id: string) => del(`/admin/products/${id}`),
@@ -241,6 +282,47 @@ export default function Admin() {
             </Button>
           </Box>
 
+          <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 0, bgcolor: 'background.paper' }}>
+            <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" width="100%">
+              <TextField
+                placeholder="Buscar producto, marca..."
+                variant="outlined"
+                size="small"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment>,
+                }}
+                sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 200 } }}
+              />
+              <FormControl size="small" sx={{ minWidth: 160, flexGrow: { xs: 1, sm: 0 } }}>
+                <InputLabel>Stock</InputLabel>
+                <Select
+                  value={stockFilter}
+                  label="Stock"
+                  onChange={(e) => setStockFilter(e.target.value)}
+                >
+                  <MenuItem value="Todos">Todos</MenuItem>
+                  <MenuItem value="En Stock">En Stock</MenuItem>
+                  <MenuItem value="Agotados">Agotados</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 160, flexGrow: { xs: 1, sm: 0 } }}>
+                <InputLabel>Categoría</InputLabel>
+                <Select
+                  value={categoryFilter}
+                  label="Categoría"
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                >
+                  <MenuItem value="Todas">Todas</MenuItem>
+                  {uniqueCategories.map(cat => (
+                    <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </Paper>
+
           {productsError && (
             <Alert severity="warning" sx={{ mb: 3 }}>
               No se pudo cargar el índice. Verifica la configuración de GitHub.
@@ -255,7 +337,7 @@ export default function Admin() {
                   <CardContent><Skeleton variant="rectangular" height={100} /></CardContent>
                 </Card>
               ))
-            ) : productsData?.records.map((product) => (
+            ) : filteredProducts.map((product) => (
               <Card key={product.id} variant="outlined" sx={{ borderRadius: 0 }}>
                 <CardContent sx={{ display: 'flex', gap: 2, pb: 1 }}>
                   {product.main_image ? (
@@ -333,11 +415,11 @@ export default function Admin() {
                 </CardActions>
               </Card>
             ))}
-            {(!productsData || productsData.records.length === 0) && !productsLoading && (
+            {(!filteredProducts || filteredProducts.length === 0) && !productsLoading && (
               <AdminEmptyState 
                 iconType="inventory"
-                title="No hay productos registrados aún"
-                subtitle="Comienza agregando el primer producto al catálogo."
+                title="No hay productos para mostrar"
+                subtitle="Ajusta los filtros o agrega nuevos productos."
                 actionButton={
                   <Button variant="outlined" onClick={() => { setProductToEdit(null); setProductFormOpen(true); }} startIcon={<AddIcon />}>
                     Registrar Producto
@@ -368,7 +450,7 @@ export default function Admin() {
                         ))}
                       </TableRow>
                     ))
-                  : productsData?.records.map((product) => (
+                  : filteredProducts.map((product) => (
                       <TableRow key={product.id} hover>
                         <TableCell>
                           {product.main_image ? (
@@ -439,13 +521,13 @@ export default function Admin() {
                         </TableCell>
                       </TableRow>
                     ))}
-                {(!productsData || productsData.records.length === 0) && !productsLoading && (
+                {(!filteredProducts || filteredProducts.length === 0) && !productsLoading && (
                   <TableRow>
                     <TableCell colSpan={6} sx={{ p: 0, borderBottom: 0 }}>
                       <AdminEmptyState 
                         iconType="inventory"
-                        title="No hay productos registrados aún"
-                        subtitle="Comienza agregando el primer producto al catálogo."
+                        title="No hay productos para mostrar"
+                        subtitle="Ajusta los filtros o agrega nuevos productos."
                         actionButton={
                           <Button variant="outlined" onClick={() => { setProductToEdit(null); setProductFormOpen(true); }} startIcon={<AddIcon />}>
                             Registrar Producto
