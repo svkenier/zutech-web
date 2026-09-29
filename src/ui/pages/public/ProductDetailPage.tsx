@@ -143,13 +143,18 @@ export default function ProductDetailPage() {
                 <Box
                   sx={{
                     width: '100%',
-                    bgcolor: 'transparent',
+                    bgcolor: 'background.paper',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
                     borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: 'divider',
                     aspectRatio: { xs: '1 / 1', sm: '4 / 3' },
+                    maxHeight: { xs: 320, sm: 400, md: 520 },
+                    p: 2,
+                    mx: 'auto'
                   }}
                 >
                   {allImages.length > 0 ? (
@@ -164,10 +169,10 @@ export default function ProductDetailPage() {
                       sx={{
                         width: '100%',
                         height: '100%',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
                         objectFit: 'contain',
                         display: 'block',
-                        filter: !inStock ? 'grayscale(1)' : 'none',
-                        opacity: !inStock ? 0.6 : 1,
                         transition: 'transform 0.25s ease-in-out',
                         '&:hover': {
                           transform: 'scale(1.03)',
