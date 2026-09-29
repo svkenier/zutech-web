@@ -137,22 +137,19 @@ export default function ProductDetailPage() {
             Volver
           </Button>
 
-          <Grid container spacing={{ xs: 3, md: 5 }}>
+          <Grid container spacing={{ xs: 3, md: 4 }} alignItems="flex-start">
             <Grid size={{ xs: 12, md: 6 }}>
               <AnimatedSection direction="left">
                 <Box
                   sx={{
                     width: '100%',
-                    bgcolor: 'background.paper',
+                    bgcolor: 'transparent',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    borderRadius: 2,
-                    maxHeight: { xs: 350, md: 480 },
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
+                    borderRadius: 3,
+                    aspectRatio: { xs: '1 / 1', sm: '4 / 3' },
                   }}
                 >
                   {allImages.length > 0 ? (
@@ -166,12 +163,15 @@ export default function ProductDetailPage() {
                       }}
                       sx={{
                         width: '100%',
-                        height: 'auto',
-                        maxHeight: '100%',
-                        maxWidth: '100%',
+                        height: '100%',
                         objectFit: 'contain',
                         display: 'block',
-                        transition: 'opacity 250ms',
+                        filter: !inStock ? 'grayscale(1)' : 'none',
+                        opacity: !inStock ? 0.6 : 1,
+                        transition: 'transform 0.25s ease-in-out',
+                        '&:hover': {
+                          transform: 'scale(1.03)',
+                        }
                       }}
                     />
                   ) : null}
