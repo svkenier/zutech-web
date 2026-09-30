@@ -83,9 +83,11 @@ export function extractPathFromCdnUrl(url: string): string | null {
     return relative;
   }
   // Fallback para imágenes antiguas en github
-  const oldPrefix = `https://cdn.jsdelivr.net/gh/${cfg.GITHUB_OWNER}/${cfg.GITHUB_REPO}@main/`;
-  if (url.startsWith(oldPrefix)) {
-     return url.replace(oldPrefix, '');
+  if (url.includes('cdn.jsdelivr.net/gh/')) {
+    const match = url.match(/cdn\.jsdelivr\.net\/gh\/[^/]+\/[^/]+@[^/]+\/(.*)/);
+    if (match && match[1]) {
+      return match[1];
+    }
   }
   return null;
 }

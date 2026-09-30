@@ -1,22 +1,15 @@
 /**
  * Configuración global de la aplicación.
  *
- * Variables de entorno VITE_* requeridas en .env (no son secretas —
- * el repositorio de datos es público y se consume vía CDN):
- *   VITE_GITHUB_OWNER  — usuario u organización de GitHub
- *   VITE_GITHUB_REPO   — nombre del repositorio de datos
+ * Variables de entorno VITE_* requeridas en .env:
  *   VITE_WHATSAPP_PHONE — número institucional (definido en utils/whatsapp.ts)
  */
 
 const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : ({} as any);
 
-const OWNER  = metaEnv['VITE_GITHUB_OWNER']  as string | undefined ?? '';
-const REPO   = metaEnv['VITE_GITHUB_REPO']   as string | undefined ?? '';
 const R2_PUB = metaEnv['VITE_R2_PUBLIC_URL'] as string | undefined ?? 'https://pub-zutech.r2.dev';
 
 export const cfg = {
-  GITHUB_OWNER: OWNER,
-  GITHUB_REPO: REPO,
   R2_PUBLIC_URL: R2_PUB,
 };
 

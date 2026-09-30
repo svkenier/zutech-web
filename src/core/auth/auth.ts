@@ -11,7 +11,6 @@ export interface Env {
   JWT_SECRET: string;
   UPSTASH_REDIS_REST_URL: string;
   UPSTASH_REDIS_REST_TOKEN: string;
-  GITHUB_TOKEN: string;
   ADMIN_USER?: string;
   ADMIN_PASSWORD?: string;
   DB: any; // Cloudflare D1 Binding

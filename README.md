@@ -11,7 +11,7 @@ Bienvenido al repositorio oficial de **ZUTECH**. Este proyecto comprende tanto l
 - **Backend / Edge Functions:** Cloudflare Pages Functions.
 - **Base de Datos Relacional:** Cloudflare D1 (SQLite distribuido en el Edge).
 - **Caché, Sesiones y Rate-Limiting:** Upstash Redis (REST API).
-- **Almacenamiento de Multimedia:** Repositorio externo de assets vía GitHub API + entrega optimizada mediante jsDelivr CDN.
+- **Almacenamiento de Multimedia:** Almacenamiento optimizado y entrega vía CDN (Cloudflare R2).
 - **Validación de Datos:** Zod.
 
 ---
@@ -41,12 +41,6 @@ El sistema implementa una arquitectura modular con separación estricta de respo
 Crea un archivo `.dev.vars` en la raíz del proyecto tomando como base `.dev.vars.example`:
 
 ```ini
-# CDN de Imágenes (GitHub API)
-GITHUB_OWNER="organizacion"
-GITHUB_REPO="repositorio-assets"
-GITHUB_BRANCH="main"
-GITHUB_TOKEN="ghp_token_aqui"
-
 # Upstash Redis (Sesiones y Rate Limit)
 UPSTASH_REDIS_REST_URL="https://tu-endpoint.upstash.io"
 UPSTASH_REDIS_REST_TOKEN="tu-token-upstash"

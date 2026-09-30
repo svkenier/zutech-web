@@ -59,8 +59,7 @@
 
 - **Hosting Frontend:** SPA en React + Vite alojada en Cloudflare Pages (Plan Hobby Gratuito).
 - **Cliente API Centralizado (`src/api/client.ts`):** Instancia de Axios con interceptores para inyección de token JWT y redirección automática ante respuestas `401`.
-- **Serverless Functions (`/api/*`):** Endpoints seguros en Node.js que aíslan los secretos (`GITHUB_TOKEN`, `JWT_SECRET`, `SUPERADMIN_USERNAME`, `MASTER_RESCUE_KEY`).
-- **Seguridad y Credenciales:** El `GITHUB_TOKEN` **NUNCA** baja al cliente. Vive exclusivamente en las variables de entorno de Cloudflare Pages.
+- **Serverless Functions (`/api/*`):** Endpoints seguros en Node.js que aíslan los secretos (`JWT_SECRET`, `SUPERADMIN_USERNAME`, `MASTER_RESCUE_KEY`).
 - **Autenticación y Usuarios Privados (Upstash Redis / Upstash Redis):**
   - Los usuarios **NUNCA** se guardan en GitHub público. Se almacenan 100% privados en Upstash Redis.
   - Identificación mediante **Username simple alfanumérico** en minúsculas (`user:{username}`).
@@ -136,12 +135,6 @@
 ## 🔒 VARIABLES DE ENTORNO REQUERIDAS (Cloudflare Pages)
 
 ```env
-# GitHub API (Base de datos de mascotas e imágenes)
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-GITHUB_OWNER=usuario-u-organizacion
-GITHUB_REPO=refugio-mascotas-data
-GITHUB_BRANCH=main
-
 # Autenticación y Seguridad
 JWT_SECRET=clave_secreta_super_larga_para_firmar_jwt
 SUPERADMIN_USERNAME=sbk

@@ -23,15 +23,9 @@ Esta plantilla es una base modular, agnóstica y 100% reutilizable para aplicaci
 ```env
 # Configuración del frontend (Vite)
 VITE_SITE_URL=http://localhost:5173
-VITE_GITHUB_OWNER=mi-organizacion
-VITE_GITHUB_REPO=repo-datos
 VITE_WHATSAPP_PHONE=5491112345678
 
 # Configuración del Backend (Cloudflare Pages Functions - no llevan prefijo VITE_)
-GITHUB_TOKEN=ghp_tuto...
-GITHUB_OWNER=mi-organizacion
-GITHUB_REPO=repo-datos
-GITHUB_BRANCH=main
 
 UPSTASH_REDIS_REST_URL=https://...
 UPSTASH_REDIS_REST_TOKEN=...
@@ -58,7 +52,7 @@ En el dashboard de Cloudflare Pages:
   2. Recursos gráficos y base en `/public`.
   3. Las plantillas y reglas de negocio específicas en `/src/config/` (ej. `whatsapp.config.ts`). Aquí es donde ajustas todos los textos de contacto.
 
-- **Configuración obligatoria:** Variables de entorno necesarias en Cloudflare Pages (`GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`, URLs/Tokens de Upstash Redis, JWT_SECRET).
+- **Configuración obligatoria:** Variables de entorno necesarias en Cloudflare Pages (URLs/Tokens de Upstash Redis, JWT_SECRET).
 
 ## Tests y Mantenimiento
 

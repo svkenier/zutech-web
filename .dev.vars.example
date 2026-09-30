@@ -17,18 +17,6 @@
 # ==============================================================================
 
 # ==========================================
-# Configuración de GitHub
-# ==========================================
-# 🟢 [Cloudflare: Plain text] - Nombre de usuario u organización dueña del repo
-GITHUB_OWNER=""
-# 🟢 [Cloudflare: Plain text] - Nombre del repositorio
-GITHUB_REPO=""
-# 🟢 [Cloudflare: Plain text] - Rama principal a utilizar (ej. main)
-GITHUB_BRANCH=""
-# 🔴 [Cloudflare: SECRET / Encrypt] - Token personal de acceso (Classic o Fine-grained)
-GITHUB_TOKEN=""
-
-# ==========================================
 # Configuración de Redis / Upstash
 # ==========================================
 # 🟢 [Cloudflare: Plain text] - URL REST proporcionada por Upstash

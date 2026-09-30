@@ -25,7 +25,6 @@ if (fs.existsSync(devVarsPath)) {
 }
 
 const reqVars = [
-  'GITHUB_TOKEN', 'GITHUB_OWNER', 'GITHUB_REPO', 
   'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 
   'ADMIN_USER', 'ADMIN_PASSWORD'
 ];
