@@ -99,6 +99,33 @@ export function getVolunteerUrl(phone: string): string {
   return getWhatsAppUrl('volunteer', {}, phone);
 }
 
+// ─── Wrappers de Servicios Técnicos Zutech ────────────────────────────────────
+
+/** Genera el enlace de WhatsApp para agendar un Mantenimiento Preventivo. */
+export function getServicioMantenimientoUrl(phone: string): string {
+  return getWhatsAppUrl('service_mantenimiento', {}, phone);
+}
+
+/** Genera el enlace de WhatsApp para solicitar diagnóstico y Reparación. */
+export function getServicioReparacionUrl(phone: string): string {
+  return getWhatsAppUrl('service_reparacion', {}, phone);
+}
+
+/** Genera el enlace de WhatsApp para Asesoría de Compra de hardware. */
+export function getServicioAsesoriaUrl(phone: string): string {
+  return getWhatsAppUrl('service_asesoria', {}, phone);
+}
+
+/** Genera el enlace de WhatsApp para coordinar un Upgrade de hardware. */
+export function getServicioUpgradesUrl(phone: string): string {
+  return getWhatsAppUrl('service_upgrades', {}, phone);
+}
+
+/** Genera el enlace de WhatsApp para una consulta técnica general (caso especial). */
+export function getServicioGeneralUrl(phone: string): string {
+  return getWhatsAppUrl('service_general', {}, phone);
+}
+
 // ─── Utilidad ─────────────────────────────────────────────────────────────────
 
 /**

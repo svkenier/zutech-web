@@ -20,6 +20,7 @@ import ConfigErrorBanner from '@ui/components/ConfigErrorBanner';
 import Home from '@ui/pages/public/Home';
 const ProductsPage = lazy(() => import('@ui/pages/public/ProductsPage'));
 const ProductDetailPage = lazy(() => import('@ui/pages/public/ProductDetailPage'));
+const ServicesPage  = lazy(() => import('@ui/pages/public/ServicesPage'));
 const Requirements = lazy(() => import('@ui/pages/utility/Requirements'));
 const Terms        = lazy(() => import('@ui/pages/utility/Terms'));
 const Privacy      = lazy(() => import('@ui/pages/utility/Privacy'));
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/"           element={<Home />} />
             <Route path="/productos"   element={<ProductsPage />} />
             <Route path="/productos/:id" element={<ProductDetailPage />} />
+            <Route path="/servicios"   element={<ServicesPage />} />
             <Route path="/requisitos" element={<Requirements />} />
             <Route path="/terminos"   element={<Terms />} />
             <Route path="/privacidad" element={<Privacy />} />

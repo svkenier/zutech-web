@@ -62,7 +62,53 @@ Me gustaría recibir información sobre:
   volunteer: 
 `¡Hola! Me gustaría postularme para colaborar y formar parte de su equipo.
 
-¿Cuáles son los requisitos o cómo puedo enviar mis credenciales?`
+¿Cuáles son los requisitos o cómo puedo enviar mis credenciales?`,
+
+  // ─── Servicios Técnicos Zutech ─────────────────────────────────────────────
+
+  /**
+   * Plantilla para agendar un mantenimiento preventivo de PC en el taller.
+   */
+  service_mantenimiento:
+`Hola Zutech 👋 Quiero agendar un *Mantenimiento Preventivo* para mi equipo.
+
+¿Cuándo puedo llevarlo al taller?`,
+
+  /**
+   * Plantilla para solicitar diagnóstico y reparación de PC.
+   */
+  service_reparacion:
+`Hola Zutech 👋 Necesito *reparación* de mi PC.
+
+El problema que presenta es: [describe brevemente el fallo]
+
+¿Cuándo puedo llevarlo para diagnóstico?`,
+
+  /**
+   * Plantilla para solicitar asesoría de compra / armado de equipo.
+   */
+  service_asesoria:
+`Hola Zutech 👋 Me gustaría recibir *asesoría de compra* para armar/renovar mi equipo.
+
+Mi presupuesto aproximado es: $___`,
+
+  /**
+   * Plantilla para coordinar un upgrade de hardware (RAM, SSD, GPU, etc.).
+   */
+  service_upgrades:
+`Hola Zutech 👋 Quiero hacer un *upgrade* a mi equipo.
+
+Estoy pensando en mejorar: [RAM / SSD / GPU / otro]
+
+¿Me pueden asesorar y hacer la instalación?`,
+
+  /**
+   * Plantilla para consultas técnicas especiales no cubiertas por los 4 servicios principales.
+   */
+  service_general:
+`Hola Zutech 👋 Tengo una consulta técnica especial:
+
+`
 
 } as const;
 

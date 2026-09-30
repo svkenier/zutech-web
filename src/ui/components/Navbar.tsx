@@ -52,7 +52,7 @@ interface NavLink {
 const PUBLIC_LINKS: NavLink[] = [
   { label: 'Inicio',     to: '/' },
   { label: 'Tienda',     to: '/productos' },
-  { label: 'Servicios',  to: '/contacto' },
+  { label: 'Servicios',  to: '/servicios' },
 ];
 
 // ─── Componente ───────────────────────────────────────────────────────────────
