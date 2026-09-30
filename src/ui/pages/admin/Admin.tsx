@@ -42,6 +42,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import AdminEmptyState from '@ui/components/AdminEmptyState';
+import QuotaAlertBanner from '@ui/components/QuotaAlertBanner';
 import AddIcon       from '@mui/icons-material/Add';
 import EditIcon      from '@mui/icons-material/Edit';
 import DeleteIcon    from '@mui/icons-material/Delete';
@@ -223,6 +224,9 @@ export default function Admin() {
             )}
           </Box>
         </Box>
+
+        {/* Alerta de Cuota R2/KV */}
+        <QuotaAlertBanner totalProducts={products.length} />
 
         {/* Tabs de Escritorio */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: { xs: 'none', md: 'block' } }}>

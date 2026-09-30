@@ -15,6 +15,7 @@ export interface Env {
   ADMIN_USER?: string;
   ADMIN_PASSWORD?: string;
   DB: any; // Cloudflare D1 Binding
+  BUCKET: R2Bucket; // Cloudflare R2 Binding
   [key: string]: any;
 }
 

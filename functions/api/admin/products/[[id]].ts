@@ -1,6 +1,6 @@
 import { getAuthPayload } from '../../../../src/core/auth/auth.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
-import { putFile, cdnImageUrl, deleteFile, extractPathFromCdnUrl } from '../../../../src/core/github/github.js';
+import { putFile, cdnImageUrl, deleteFile, extractPathFromCdnUrl } from '../../../../src/core/storage/r2.js';
 
 export const onRequestOptions: PagesFunction<Env> = async () => {
   return new Response(null, { status: 204 });
@@ -23,12 +23,27 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     if (body.main_image_base64) {
       try {
         const uniqueSuffix = Math.random().toString(36).substring(7);
-        const ghPath = `products/${id}-${uniqueSuffix}.webp`;
-        await putFile(ghPath, body.main_image_base64, `Upload image for ${id}`, env);
-        finalImageUrl = cdnImageUrl(ghPath, env);
+        const r2Path = `products/${id}-${uniqueSuffix}.webp`;
+        
+        let fileContent: ArrayBuffer | string = body.main_image_base64;
+        let mimeType = 'image/webp';
+        if (typeof fileContent === 'string' && fileContent.startsWith('data:')) {
+          const arr = fileContent.split(',');
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          if (mimeMatch) mimeType = mimeMatch[1];
+          const bstr = atob(arr[1]);
+          const u8arr = new Uint8Array(bstr.length);
+          for (let i = 0; i < bstr.length; i++) {
+            u8arr[i] = bstr.charCodeAt(i);
+          }
+          fileContent = u8arr.buffer;
+        }
+
+        await putFile(env, r2Path, fileContent, mimeType);
+        finalImageUrl = cdnImageUrl(r2Path);
       } catch (err: any) {
-        console.error('[Admin Products POST] GitHub Upload Error:', err);
-        return new Response(JSON.stringify({ error: `Error al subir la imagen al repositorio de GitHub: ${err.message}` }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+        console.error('[Admin Products POST] R2 Upload Error:', err);
+        return new Response(JSON.stringify({ error: `Error al subir la imagen a R2: ${err.message}` }), { status: 502, headers: { 'Content-Type': 'application/json' } });
       }
     }
 
@@ -93,20 +108,35 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     if (body.main_image_base64) {
       try {
         const uniqueSuffix = Math.random().toString(36).substring(7);
-        const ghPath = `products/${prodId}-${Date.now()}-${uniqueSuffix}.webp`;
-        await putFile(ghPath, body.main_image_base64, `Update image for ${prodId}`, env);
-        finalImageUrl = cdnImageUrl(ghPath, env);
+        const r2Path = `products/${prodId}-${Date.now()}-${uniqueSuffix}.webp`;
         
-        // 2. Eliminar la imagen antigua de GitHub
+        let fileContent: ArrayBuffer | string = body.main_image_base64;
+        let mimeType = 'image/webp';
+        if (typeof fileContent === 'string' && fileContent.startsWith('data:')) {
+          const arr = fileContent.split(',');
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          if (mimeMatch) mimeType = mimeMatch[1];
+          const bstr = atob(arr[1]);
+          const u8arr = new Uint8Array(bstr.length);
+          for (let i = 0; i < bstr.length; i++) {
+            u8arr[i] = bstr.charCodeAt(i);
+          }
+          fileContent = u8arr.buffer;
+        }
+
+        await putFile(env, r2Path, fileContent, mimeType);
+        finalImageUrl = cdnImageUrl(r2Path);
+        
+        // 2. Eliminar la imagen antigua de R2
         if (existingImageUrl && existingImageUrl !== finalImageUrl) {
-          const oldPath = extractPathFromCdnUrl(existingImageUrl, env);
+          const oldPath = extractPathFromCdnUrl(existingImageUrl);
           if (oldPath) {
-            await deleteFile(oldPath, `Cleanup old image for ${prodId} after update`, env);
+            await deleteFile(env, oldPath);
           }
         }
       } catch (err: any) {
-        console.error('[Admin Products PUT] GitHub Upload Error:', err);
-        return new Response(JSON.stringify({ error: `Error al subir la imagen al repositorio de GitHub: ${err.message}` }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+        console.error('[Admin Products PUT] R2 Upload Error:', err);
+        return new Response(JSON.stringify({ error: `Error al subir la imagen a R2: ${err.message}` }), { status: 502, headers: { 'Content-Type': 'application/json' } });
       }
     }
 
@@ -154,12 +184,12 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     
     if (!prodId) return new Response(JSON.stringify({ error: 'ID requerido' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-    // 1. Recolección de basura: Borrar imagen en GitHub antes de borrar el registro
+    // 1. Recolección de basura: Borrar imagen en R2 antes de borrar el registro
     const product = await env.DB.prepare(`SELECT image_url FROM products WHERE id = ?`).bind(prodId).first<{ image_url: string }>();
     if (product && product.image_url) {
-      const path = extractPathFromCdnUrl(product.image_url, env);
+      const path = extractPathFromCdnUrl(product.image_url);
       if (path) {
-        await deleteFile(path, `Delete orphaned image for deleted product ${prodId}`, env);
+        await deleteFile(env, path);
       }
     }
 

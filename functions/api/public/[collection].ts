@@ -1,4 +1,4 @@
-import { getFileWithETag } from '../../../src/core/github/github.js';
+import { getFileWithETag } from '../../../src/core/storage/r2.js';
 import { getPublicRateLimit, checkRateLimit } from '../../../src/core/auth/rate-limit.js';
 import type { Env } from '../../../src/core/auth/auth.js';
 
@@ -27,21 +27,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return new Response(JSON.stringify({ error: 'Demasiadas peticiones. Intenta más tarde.' }), { status: 429, headers });
     }
 
-    const ifNoneMatch = request.headers.get('if-none-match') || undefined;
-    const ghRes = await getFileWithETag(path, env, ifNoneMatch);
+    const r2Res = await getFileWithETag(env, path, ifNoneMatch);
 
-    if (ghRes.notModified) {
+    if (r2Res.status === 304) {
       return new Response(null, { status: 304, headers });
     }
     
-    if (ghRes.etag) headers.set('ETag', ghRes.etag);
+    if (r2Res.etag) headers.set('ETag', r2Res.etag);
     headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
     headers.set('Content-Type', 'application/json');
 
     let records: any[] = [];
-    if (ghRes.data) {
+    if (r2Res.data) {
       try {
-        const parsed = JSON.parse(atob(ghRes.data.content));
+        const parsed = typeof r2Res.data === 'string' ? JSON.parse(r2Res.data) : r2Res.data;
         if (Array.isArray(parsed)) records = parsed;
         else {
           const firstArray = Object.values(parsed).find(Array.isArray);

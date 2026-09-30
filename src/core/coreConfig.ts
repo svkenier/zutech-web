@@ -10,16 +10,19 @@
 
 const OWNER  = import.meta.env['VITE_GITHUB_OWNER']  as string | undefined ?? '';
 const REPO   = import.meta.env['VITE_GITHUB_REPO']   as string | undefined ?? '';
-const BRANCH = 'main';
+const R2_PUB = import.meta.env['VITE_R2_PUBLIC_URL'] as string | undefined ?? 'https://pub-zutech.r2.dev';
+
+export const cfg = {
+  GITHUB_OWNER: OWNER,
+  GITHUB_REPO: REPO,
+  R2_PUBLIC_URL: R2_PUB,
+};
 
 /**
- * Base URL del CDN jsDelivr para el repositorio público de datos.
- * Ejemplo: https://cdn.jsdelivr.net/gh/miorg/refugio-data@main
+ * Base URL del CDN.
+ * Se migró de jsDelivr a Cloudflare R2 público.
  */
-export const CDN_BASE =
-  OWNER && REPO
-    ? `https://cdn.jsdelivr.net/gh/${OWNER}/${REPO}@${BRANCH}`
-    : '';
+export const CDN_BASE = R2_PUB;
 
 /** URL del índice compilado de items (generado por GitHub Actions). */
 export const ITEMS_INDEX_URL = `${CDN_BASE}/dist/items-index.json`;

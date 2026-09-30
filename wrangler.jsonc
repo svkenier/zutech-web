@@ -15,5 +15,12 @@
       "database_name": "zetech-d1",
       "database_id": "xxx-xxx-xxx"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "zutech-storage-prod",
+      "preview_bucket_name": "zutech-storage-dev"
+    }
   ]
 }
