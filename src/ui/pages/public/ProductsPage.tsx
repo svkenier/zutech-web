@@ -134,17 +134,18 @@ export default function ProductsPage() {
         sx={{
           position: 'relative',
           overflow: 'hidden',
-          bgcolor: 'background.paper',
-          borderBottom: '1px solid rgba(15, 23, 42, 0.08)',
-          py: { xs: 4, md: 6 },
+          bgcolor: '#060D17',
+          borderBottom: '1px solid rgba(0, 229, 255, 0.18)',
+          boxShadow: 'inset 0 -1px 0 rgba(0, 229, 255, 0.10)',
+          py: { xs: 8, md: 10 },
           '&::before': {
             content: '""',
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
             backgroundImage: [
-              'linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px)',
-              'linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px)',
+              'linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px)',
+              'linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px)',
             ].join(', '),
             backgroundSize: '36px 36px',
             zIndex: 0,
@@ -154,17 +155,17 @@ export default function ProductsPage() {
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            background: 'radial-gradient(ellipse 70% 80% at 50% -10%, rgba(0, 229, 255, 0.12) 0%, rgba(0, 229, 255, 0.04) 40%, transparent 70%)',
+            background: 'radial-gradient(ellipse 80% 65% at 50% -10%, rgba(0, 229, 255, 0.22) 0%, rgba(0, 229, 255, 0.06) 45%, transparent 70%)',
             zIndex: 0,
           },
         }}
       >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <AnimatedSection>
-            <Typography variant="overline" color="primary" fontWeight={700} letterSpacing="0.12em">
+            <Typography variant="overline" color="secondary.main" fontWeight={700} letterSpacing="0.14em" fontSize="0.85rem">
               Nuestro Inventario
             </Typography>
-            <Typography variant="h2" fontWeight={800} mt={0.5} mb={1}>
+            <Typography variant="h2" fontWeight={800} mt={0.5} mb={1} color="#FFFFFF">
               Catálogo de Hardware
             </Typography>
             {data && (
@@ -173,11 +174,11 @@ export default function ProductsPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 1,
-                  bgcolor: 'rgba(0, 229, 255, 0.06)',
-                  border: '1px solid rgba(0, 229, 255, 0.25)',
+                  bgcolor: 'rgba(0, 229, 255, 0.08)',
+                  border: '1px solid rgba(0, 229, 255, 0.28)',
                   borderRadius: '16px',
-                  px: 1.5,
-                  py: 0.5,
+                  px: 2,
+                  py: 0.6,
                   mt: 2,
                 }}
               >
@@ -187,7 +188,7 @@ export default function ProductsPage() {
                     height: 6,
                     borderRadius: '50%',
                     bgcolor: 'secondary.main',
-                    boxShadow: '0 0 8px rgba(0, 229, 255, 0.8)',
+                    boxShadow: '0 0 8px #00E5FF',
                     '@keyframes pulse-dot': {
                       '0%': { opacity: 1 },
                       '50%': { opacity: 0.4 },
@@ -199,9 +200,10 @@ export default function ProductsPage() {
                 <Typography
                   sx={{
                     fontFamily: 'monospace',
-                    fontWeight: 600,
-                    fontSize: '0.75rem',
-                    color: 'text.primary',
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    color: '#FFFFFF',
+                    letterSpacing: '0.06em',
                     textTransform: 'uppercase',
                   }}
                 >
