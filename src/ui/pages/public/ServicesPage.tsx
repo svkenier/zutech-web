@@ -163,14 +163,12 @@ export default function ServicesPage() {
 
       {/* ── 1. HERO ─────────────────────────────────────────────────────── */}
       {/*
-       * Composición de fondo — 5 capas CSS puras (0 assets externos):
-       *  1. bgcolor #060D17          → base oscura ZUTECH
-       *  2. ::before (grid técnica)  → rejilla de líneas 36 × 36 px en rgba blanco 0.04
-       *                                textura de ingeniería discreta, visible pero sobria
-       *  3. ::before ruido (merged)  → noise SVG encima de la rejilla (opacity 0.045)
-       *  4. ::after (top halo)       → halo radial cyan amplificado (0.28) desde arriba
-       *                                profundidad ambiental z-axis perceptible
-       *  5. borderTop glowing        → borde 1px + inset glow reforzados
+       * Composición de fondo — 3 capas CSS puras (0 assets externos):
+       *  1. bgcolor #060D17      → base oscura ZUTECH
+       *  2. ::before (grid)      → rejilla de líneas 36 × 36 px rgba blanco 0.04
+       *                             textura técnica discreta, sin ruido ni estática
+       *  3. ::after  (halo)      → halo radial cyan doble desde arriba (0.28 núcleo)
+       *  + borderTop glowing     → borde 1px + inset glow estilo Linear.app
        */}
       <Box
         component="section"
@@ -184,30 +182,21 @@ export default function ServicesPage() {
           textAlign:  'center',
           py:         { xs: 10, md: 14 },
           overflow:   'hidden',
-          // Borde superior glowing reforzado — técnica Linear.app
+          // Borde superior glowing — técnica Linear.app
           borderTop:  '1px solid rgba(0, 229, 255, 0.30)',
           boxShadow:  'inset 0 1px 0 rgba(0, 229, 255, 0.22), inset 0 2px 24px rgba(0, 229, 255, 0.06)',
 
-          // Capa 1: Grid técnica + ruido SVG combinados en ::before
-          // Grid: líneas de 36×36 px en blanco 4% — textura de ingeniería discreta
-          // Noise: SVG fractal encima, opacity 0.045 — rompe la sintética uniformidad del grid
+          // Grid técnica limpia — sin ruido SVG ni estática
           '&::before': {
             content:         '""',
             position:        'absolute',
             inset:           0,
             zIndex:          1,
-            // Grid técnica base
             backgroundImage: [
-              // Líneas verticales
-              'linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px)',
-              // Líneas horizontales
+              'linear-gradient(to right,  rgba(255,255,255,0.04) 1px, transparent 1px)',
               'linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
-              // Ruido SVG fractal encima del grid
-              `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
             ].join(', '),
-            backgroundSize:  '36px 36px, 36px 36px, 200px 200px',
-            opacity:         0.9, // controla el grid; el noise SVG lleva su propio opacity inline
-            mixBlendMode:    'screen',
+            backgroundSize:  '36px 36px',
             pointerEvents:   'none',
           },
 
@@ -470,66 +459,46 @@ export default function ServicesPage() {
             </Box>
           </AnimatedSection>
 
-          {/* Pasos */}
+          {/* Pasos — tarjetas independientes, sin conectores */}
           <Grid container spacing={3} alignItems="stretch">
             {PASOS.map((p, i) => (
               <Grid key={p.n} size={{ xs: 12, md: 4 }}>
                 <AnimatedSection delay={i * 120}>
-                  <Box sx={{ position: 'relative', height: '100%' }}>
-                    {/* Conector horizontal (solo md+) */}
-                    {i < PASOS.length - 1 && (
-                      <Box
-                        aria-hidden
-                        sx={{
-                          display:  { xs: 'none', md: 'block' },
-                          position: 'absolute',
-                          top:      28,
-                          right:    -16,
-                          width:    32,
-                          height:   1,
-                          bgcolor:  'divider',
-                          zIndex:   1,
-                        }}
-                      />
-                    )}
-
-                    <Card
+                  <Card
+                    sx={{
+                      height:  '100%',
+                      bgcolor: 'background.default',
+                      p:       3.5,
+                    }}
+                  >
+                    <Typography
                       sx={{
-                        height:  '100%',
-                        bgcolor: 'background.default',
-                        p:       3.5,
-                        '&:last-child': { pb: 3.5 },
+                        fontFamily: 'monospace',
+                        fontSize:   '2.5rem',
+                        fontWeight: 900,
+                        lineHeight: 1,
+                        color:      'secondary.main',
+                        mb:         1.5,
                       }}
                     >
-                      <Typography
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontSize:   '2.5rem',
-                          fontWeight: 900,
-                          lineHeight: 1,
-                          color:      'secondary.main',
-                          mb:         1.5,
-                        }}
-                      >
-                        {p.n}
-                      </Typography>
+                      {p.n}
+                    </Typography>
 
-                      <Typography
-                        variant="h6"
-                        component="h3"
-                        sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}
-                      >
-                        {p.title}
-                      </Typography>
+                    <Typography
+                      variant="h6"
+                      component="h3"
+                      sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}
+                    >
+                      {p.title}
+                    </Typography>
 
-                      <Typography
-                        variant="body2"
-                        sx={{ color: 'text.secondary', lineHeight: 1.7 }}
-                      >
-                        {p.desc}
-                      </Typography>
-                    </Card>
-                  </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: '#334155', lineHeight: 1.7 }}
+                    >
+                      {p.desc}
+                    </Typography>
+                  </Card>
                 </AnimatedSection>
               </Grid>
             ))}
