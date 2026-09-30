@@ -225,8 +225,6 @@ export default function Admin() {
           </Box>
         </Box>
 
-        {/* Alerta de Cuota R2/KV */}
-        <QuotaAlertBanner totalProducts={productsData?.records?.length || 0} />
 
         {/* Tabs de Escritorio */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: { xs: 'none', md: 'block' } }}>
@@ -274,6 +272,9 @@ export default function Admin() {
 
         {/* ── PANEL PRODUCTOS ──────────────────────────────────────────────── */}
         <TabPanel value={tabIndex} index={0}>
+          {/* Alerta de Cuota R2/KV */}
+          <QuotaAlertBanner totalProducts={productsData?.records?.length || 0} />
+
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" fontWeight={700}>Gestión de Productos</Typography>
             <Button
