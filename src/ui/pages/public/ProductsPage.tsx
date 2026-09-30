@@ -132,13 +132,34 @@ export default function ProductsPage() {
 
       <Box
         sx={{
-          bgcolor:    'background.paper',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          py:         { xs: 4, md: 6 },
+          position: 'relative',
+          overflow: 'hidden',
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid rgba(15, 23, 42, 0.08)',
+          py: { xs: 4, md: 6 },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            backgroundImage: [
+              'linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px)',
+              'linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '36px 36px',
+            zIndex: 0,
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background: 'radial-gradient(ellipse 70% 80% at 50% -10%, rgba(0, 229, 255, 0.12) 0%, rgba(0, 229, 255, 0.04) 40%, transparent 70%)',
+            zIndex: 0,
+          },
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <AnimatedSection>
             <Typography variant="overline" color="primary" fontWeight={700} letterSpacing="0.12em">
               Nuestro Inventario
@@ -147,9 +168,46 @@ export default function ProductsPage() {
               Catálogo de Hardware
             </Typography>
             {data && (
-              <Typography variant="body1" color="text.secondary">
-                {data.total} producto{data.total !== 1 ? 's' : ''} disponibles
-              </Typography>
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  bgcolor: 'rgba(0, 229, 255, 0.06)',
+                  border: '1px solid rgba(0, 229, 255, 0.25)',
+                  borderRadius: '16px',
+                  px: 1.5,
+                  py: 0.5,
+                  mt: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    bgcolor: 'secondary.main',
+                    boxShadow: '0 0 8px rgba(0, 229, 255, 0.8)',
+                    '@keyframes pulse-dot': {
+                      '0%': { opacity: 1 },
+                      '50%': { opacity: 0.4 },
+                      '100%': { opacity: 1 },
+                    },
+                    animation: 'pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontFamily: 'monospace',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    color: 'text.primary',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {data.total} PRODUCTOS DISPONIBLES
+                </Typography>
+              </Box>
             )}
           </AnimatedSection>
         </Container>
