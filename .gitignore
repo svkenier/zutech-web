@@ -33,3 +33,4 @@ dist-ssr
 /tests/playwright-report/
 /tests/test-results/
 docs/audits/*.json
+.code-graph.json
