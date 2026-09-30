@@ -27,6 +27,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return new Response(JSON.stringify({ error: 'Demasiadas peticiones. Intenta más tarde.' }), { status: 429, headers });
     }
 
+    const ifNoneMatch = request.headers.get('if-none-match') || undefined;
     const r2Res = await getFileWithETag(env, path, ifNoneMatch);
 
     if (r2Res.status === 304) {

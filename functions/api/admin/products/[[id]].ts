@@ -81,7 +81,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
   try {
     const idParam = context.params.id;
-    let prodId = Array.isArray(idParam) ? idParam[0] : idParam;
+    let prodId: string | undefined = Array.isArray(idParam) ? idParam[0] : (idParam as string | undefined);
     
     if (!prodId) {
       const url = new URL(request.url);
@@ -96,7 +96,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     // 1. Obtener imagen actual para recolección de basura si se sube una nueva
     let existingImageUrl: string | null = null;
     if (body.main_image_base64) {
-      const product = await env.DB.prepare(`SELECT image_url FROM products WHERE id = ?`).bind(prodId).first<{ image_url: string }>();
+      const product = (await env.DB.prepare(`SELECT image_url FROM products WHERE id = ?`).bind(prodId).first()) as { image_url: string } | null;
       existingImageUrl = product?.image_url || null;
     }
 
@@ -174,7 +174,7 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
 
   try {
     const idParam = context.params.id;
-    let prodId = Array.isArray(idParam) ? idParam[0] : idParam;
+    let prodId: string | undefined = Array.isArray(idParam) ? idParam[0] : (idParam as string | undefined);
     
     if (!prodId) {
       const url = new URL(request.url);
@@ -185,7 +185,7 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     if (!prodId) return new Response(JSON.stringify({ error: 'ID requerido' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
     // 1. Recolección de basura: Borrar imagen en R2 antes de borrar el registro
-    const product = await env.DB.prepare(`SELECT image_url FROM products WHERE id = ?`).bind(prodId).first<{ image_url: string }>();
+    const product = (await env.DB.prepare(`SELECT image_url FROM products WHERE id = ?`).bind(prodId).first()) as { image_url: string } | null;
     if (product && product.image_url) {
       const path = extractPathFromCdnUrl(product.image_url);
       if (path) {

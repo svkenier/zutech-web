@@ -226,7 +226,7 @@ export default function Admin() {
         </Box>
 
         {/* Alerta de Cuota R2/KV */}
-        <QuotaAlertBanner totalProducts={products.length} />
+        <QuotaAlertBanner totalProducts={productsData?.records?.length || 0} />
 
         {/* Tabs de Escritorio */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: { xs: 'none', md: 'block' } }}>
