@@ -459,30 +459,61 @@ export default function ServicesPage() {
             </Box>
           </AnimatedSection>
 
-          {/* Pasos — tarjetas independientes, sin conectores */}
+          {/* Pasos — Alt. 1: Pill técnico + microinteracción Linear-style */}
           <Grid container spacing={3} alignItems="stretch">
             {PASOS.map((p, i) => (
               <Grid key={p.n} size={{ xs: 12, md: 4 }}>
                 <AnimatedSection delay={i * 120}>
                   <Card
                     sx={{
-                      height:  '100%',
-                      bgcolor: 'background.default',
-                      p:       3.5,
+                      height:     '100%',
+                      bgcolor:    '#FFFFFF',
+                      border:     '1px solid #E2E8F0',
+                      borderRadius: 3,            // 12px via theme (1 unit = 4px)
+                      p:          3.5,
+                      boxShadow:  'none',
+                      transition: 'transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease',
+                      // Microinteracción de la card
+                      '&:hover': {
+                        transform:   'translateY(-2px)',
+                        boxShadow:   '0 8px 24px -8px rgba(10, 19, 34, 0.08)',
+                        borderColor: '#CBD5E1',
+                        // El Pill interno reacciona al hover del Card padre
+                        '& .step-pill': {
+                          bgcolor:     'rgba(0, 229, 255, 0.14)',
+                          borderColor: 'rgba(0, 229, 255, 0.38)',
+                        },
+                      },
                     }}
                   >
-                    <Typography
+                    {/* Pill técnico del número de paso */}
+                    <Box
+                      className="step-pill"
                       sx={{
-                        fontFamily: 'monospace',
-                        fontSize:   '2.5rem',
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        color:      'secondary.main',
-                        mb:         1.5,
+                        display:        'inline-flex',
+                        alignItems:     'center',
+                        justifyContent: 'center',
+                        width:          52,
+                        height:         52,
+                        borderRadius:   '10px',
+                        bgcolor:        'rgba(0, 229, 255, 0.07)',
+                        border:         '1px solid rgba(0, 229, 255, 0.20)',
+                        mb:             2,
+                        transition:     'background-color 220ms ease, border-color 220ms ease',
                       }}
                     >
-                      {p.n}
-                    </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize:   '1.5rem',
+                          fontWeight: 900,
+                          lineHeight: 1,
+                          color:      'secondary.main',
+                        }}
+                      >
+                        {p.n}
+                      </Typography>
+                    </Box>
 
                     <Typography
                       variant="h6"
@@ -539,11 +570,30 @@ export default function ServicesPage() {
       </Box>
 
       {/* ── 4. CTA DE RESPALDO ──────────────────────────────────────────── */}
+      {/*
+       * Opción B — Fusión unificada con el Footer:
+       * bgcolor: #060D17 (mismo Hero) ≈ Footer #03060A (ΔL* < 6 → imperceptible)
+       * El halo radial desde abajo actua de puente ambiental cyan.
+       */}
       <Box
         component="section"
-        sx={{ bgcolor: 'primary.main', py: { xs: 8, md: 10 } }}
+        sx={{
+          position: 'relative',
+          bgcolor:  '#060D17',
+          py:       { xs: 8, md: 10 },
+          overflow: 'hidden',
+          // Halo radial desde abajo — puente ambiental suave hacia el Footer
+          '&::before': {
+            content:    '""',
+            position:   'absolute',
+            inset:      0,
+            zIndex:     0,
+            background: 'radial-gradient(ellipse 60% 80% at 50% 100%, rgba(0, 229, 255, 0.08) 0%, transparent 60%)',
+            pointerEvents: 'none',
+          },
+        }}
       >
-        <Container maxWidth="md" sx={{ textAlign: 'center' }}>
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
           <AnimatedSection>
             <Typography
               variant="h4"
