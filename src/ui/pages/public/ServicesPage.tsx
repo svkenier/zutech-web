@@ -31,6 +31,8 @@ import ShoppingCartOutlinedIcon   from '@mui/icons-material/ShoppingCartOutlined
 import TrendingUpOutlinedIcon     from '@mui/icons-material/TrendingUpOutlined';
 import WhatsAppIcon               from '@mui/icons-material/WhatsApp';
 import CheckCircleOutlineIcon     from '@mui/icons-material/CheckCircleOutline';
+import Navbar                     from '@ui/components/Navbar';
+import Footer                     from '@ui/components/Footer';
 import AnimatedSection            from '@ui/components/AnimatedSection';
 import { get }                    from '@core/api/client';
 import { DEFAULT_SETTINGS }       from '@core/types/settings';
@@ -151,18 +153,24 @@ export default function ServicesPage() {
   const phone = settings?.whatsapp || DEFAULT_SETTINGS.whatsapp || '';
 
   return (
-    <Box component="main" sx={{ bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── Navbar ───────────────────────────────────────────────────────── */}
+      <Navbar />
+
+      {/* ── Contenido principal ──────────────────────────────────────────── */}
+      <Box component="main" sx={{ bgcolor: 'background.default', flexGrow: 1 }}>
 
       {/* ── 1. HERO ─────────────────────────────────────────────────────── */}
       {/*
        * Composición de fondo — 5 capas CSS puras (0 assets externos):
        *  1. bgcolor #060D17          → base oscura ZUTECH
-       *  2. ::before                 → ruido SVG data-URI (fractal noise, opacidad 0.025)
-       *                                elimina la "smoothness" sintética de un fondo plano
-       *  3. ::after (top halo)       → halo radial cyan muy tenue desde arriba
-       *                                profundidad ambiental de z-axis (estilo Vercel dark)
-       *  4. borderTop glowing        → borde superior 1px con glow interno (técnica Linear.app)
-       *  5. Fade inferior            → degradado bottom → white para transición armónica a las cards
+       *  2. ::before (grid técnica)  → rejilla de líneas 36 × 36 px en rgba blanco 0.04
+       *                                textura de ingeniería discreta, visible pero sobria
+       *  3. ::before ruido (merged)  → noise SVG encima de la rejilla (opacity 0.045)
+       *  4. ::after (top halo)       → halo radial cyan amplificado (0.28) desde arriba
+       *                                profundidad ambiental z-axis perceptible
+       *  5. borderTop glowing        → borde 1px + inset glow reforzados
        */}
       <Box
         component="section"
@@ -176,38 +184,48 @@ export default function ServicesPage() {
           textAlign:  'center',
           py:         { xs: 10, md: 14 },
           overflow:   'hidden',
-          // Borde superior glowing — técnica Linear.app
-          borderTop:  '1px solid rgba(0, 229, 255, 0.18)',
-          boxShadow:  'inset 0 1px 0 rgba(0, 229, 255, 0.10)',
+          // Borde superior glowing reforzado — técnica Linear.app
+          borderTop:  '1px solid rgba(0, 229, 255, 0.30)',
+          boxShadow:  'inset 0 1px 0 rgba(0, 229, 255, 0.22), inset 0 2px 24px rgba(0, 229, 255, 0.06)',
 
-          // Capa 1: Ruido SVG inline — textura de grano fotográfico ultra-sutil
-          // El SVG usa feTurbulence (fractal noise) encodeado en data-URI.
-          // Opacidad 0.028 → visible solo en pantallas de alta densidad, imperceptible en contraste.
+          // Capa 1: Grid técnica + ruido SVG combinados en ::before
+          // Grid: líneas de 36×36 px en blanco 4% — textura de ingeniería discreta
+          // Noise: SVG fractal encima, opacity 0.045 — rompe la sintética uniformidad del grid
           '&::before': {
-            content:    '""',
-            position:   'absolute',
-            inset:      0,
-            zIndex:     1,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat',
-            backgroundSize:   '200px 200px',
-            opacity:    0.028,
-            pointerEvents: 'none',
+            content:         '""',
+            position:        'absolute',
+            inset:           0,
+            zIndex:          1,
+            // Grid técnica base
+            backgroundImage: [
+              // Líneas verticales
+              'linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px)',
+              // Líneas horizontales
+              'linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
+              // Ruido SVG fractal encima del grid
+              `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+            ].join(', '),
+            backgroundSize:  '36px 36px, 36px 36px, 200px 200px',
+            opacity:         0.9, // controla el grid; el noise SVG lleva su propio opacity inline
+            mixBlendMode:    'screen',
+            pointerEvents:   'none',
           },
 
-          // Capa 2: Halo radial cyan — luz ambiental desde el centro-top
-          // Simula una fuente de luz de acento sin revelar geometría concreta.
-          // radio 70%×55% → elipse achatada que irradia desde arriba del viewport.
+          // Capa 2: Halo radial cyan amplificado + fade inferior armónico
+          // Núcleo al 0.28 → perceptible como fuente de luz ambiental real
+          // Elipse 90%×70% → cubre más superficie lateral para mayor presencia
           '&::after': {
             content:    '""',
             position:   'absolute',
             inset:      0,
             zIndex:     2,
             background: [
-              // Halo ambiental cyan desde arriba
-              'radial-gradient(ellipse 72% 52% at 50% -8%, rgba(0, 229, 255, 0.13) 0%, transparent 68%)',
-              // Fade inferior hacia blanco — transición armónica con la sección siguiente
-              'linear-gradient(to bottom, transparent 55%, rgba(255, 255, 255, 0.06) 100%)',
+              // Halo principal: núcleo 0.28, desvanece a 0 en 65%
+              'radial-gradient(ellipse 90% 70% at 50% -10%, rgba(0, 229, 255, 0.28) 0%, rgba(0, 229, 255, 0.08) 40%, transparent 65%)',
+              // Halo secundario más pequeño: punto caliente de mayor intensidad en el centro
+              'radial-gradient(ellipse 40% 30% at 50% 0%, rgba(0, 229, 255, 0.15) 0%, transparent 60%)',
+              // Fade inferior: transición a blanco para la sección de cards siguiente
+              'linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.07) 100%)',
             ].join(', '),
             pointerEvents: 'none',
           },
@@ -606,6 +624,10 @@ export default function ServicesPage() {
           </AnimatedSection>
         </Container>
       </Box>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      </Box>
+      <Footer />
 
     </Box>
   );

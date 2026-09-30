@@ -252,7 +252,7 @@ export default function Home() {
                 </Typography>
                 <Button 
                   component={RouterLink}
-                  to="/contacto"
+                  to="/servicios"
                   variant="outlined"
                   size="large"
                   sx={{
