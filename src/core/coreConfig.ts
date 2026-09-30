@@ -8,9 +8,11 @@
  *   VITE_WHATSAPP_PHONE — número institucional (definido en utils/whatsapp.ts)
  */
 
-const OWNER  = import.meta.env['VITE_GITHUB_OWNER']  as string | undefined ?? '';
-const REPO   = import.meta.env['VITE_GITHUB_REPO']   as string | undefined ?? '';
-const R2_PUB = import.meta.env['VITE_R2_PUBLIC_URL'] as string | undefined ?? 'https://pub-zutech.r2.dev';
+const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : ({} as any);
+
+const OWNER  = metaEnv['VITE_GITHUB_OWNER']  as string | undefined ?? '';
+const REPO   = metaEnv['VITE_GITHUB_REPO']   as string | undefined ?? '';
+const R2_PUB = metaEnv['VITE_R2_PUBLIC_URL'] as string | undefined ?? 'https://pub-zutech.r2.dev';
 
 export const cfg = {
   GITHUB_OWNER: OWNER,
