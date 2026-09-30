@@ -63,6 +63,10 @@ import UserManagement from '@ui/pages/admin/UserManagement';
 import SettingsManager from '@ui/pages/admin/SettingsManager';
 import OrdersTab from '@ui/pages/admin/OrdersTab';
 import FacturacionTab from '@ui/pages/admin/FacturacionTab';
+import BulkImportModal from '@ui/components/BulkImportModal';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import DownloadIcon from '@mui/icons-material/Download';
+import { exportCatalogToExcel } from '@core/excel/catalogExporter';
 import { useAuth } from '@ui/context/AuthContext';
 import { get, del, formatApiError } from '@core/api/client';
 import { ROLE_LEVEL } from '@core/types/user';
@@ -100,6 +104,7 @@ export default function Admin() {
 
   // Estados Productos
   const [productFormOpen, setProductFormOpen] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen]     = useState(false);
   const [productToEdit, setProductToEdit]     = useState<BaseRecord | null>(null);
   const [productToDelete, setProductToDelete] = useState<BaseRecord | null>(null);
 
@@ -275,14 +280,25 @@ export default function Admin() {
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" fontWeight={700}>Gestión de Productos</Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => { setProductToEdit(null); setProductFormOpen(true); }}
-              sx={{ borderRadius: 0 }}
-            >
-              Registrar Producto
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<UploadFileIcon />}
+                onClick={() => setBulkModalOpen(true)}
+                sx={{ borderRadius: 0 }}
+              >
+                Carga Masiva
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => { setProductToEdit(null); setProductFormOpen(true); }}
+                sx={{ borderRadius: 0 }}
+              >
+                Registrar Producto
+              </Button>
+            </Box>
           </Box>
 
           <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 0, bgcolor: 'background.paper' }}>
@@ -323,6 +339,15 @@ export default function Admin() {
                   ))}
                 </Select>
               </FormControl>
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<DownloadIcon />}
+                onClick={() => exportCatalogToExcel(filteredProducts)}
+                sx={{ ml: 'auto' }}
+              >
+                Exportar
+              </Button>
             </Box>
           </Paper>
 
@@ -579,6 +604,13 @@ export default function Admin() {
             handleCloseForm();
             showToast(isEdit ? 'Producto actualizado' : 'Producto registrado exitosamente');
           }}
+        />
+      )}
+
+      {bulkModalOpen && (
+        <BulkImportModal
+          open={bulkModalOpen}
+          onClose={() => setBulkModalOpen(false)}
         />
       )}
 
