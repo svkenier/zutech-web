@@ -283,7 +283,7 @@ export default function Admin() {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 variant="outlined"
-                color="secondary"
+                color="primary"
                 startIcon={<UploadFileIcon />}
                 onClick={() => setBulkModalOpen(true)}
                 sx={{ borderRadius: 0 }}
