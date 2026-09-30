@@ -154,19 +154,67 @@ export default function ServicesPage() {
     <Box component="main" sx={{ bgcolor: 'background.default' }}>
 
       {/* ── 1. HERO ─────────────────────────────────────────────────────── */}
+      {/*
+       * Composición de fondo — 5 capas CSS puras (0 assets externos):
+       *  1. bgcolor #060D17          → base oscura ZUTECH
+       *  2. ::before                 → ruido SVG data-URI (fractal noise, opacidad 0.025)
+       *                                elimina la "smoothness" sintética de un fondo plano
+       *  3. ::after (top halo)       → halo radial cyan muy tenue desde arriba
+       *                                profundidad ambiental de z-axis (estilo Vercel dark)
+       *  4. borderTop glowing        → borde superior 1px con glow interno (técnica Linear.app)
+       *  5. Fade inferior            → degradado bottom → white para transición armónica a las cards
+       */}
       <Box
         component="section"
         aria-label="Servicios técnicos Zutech"
         sx={{
+          position:   'relative',
           bgcolor:    '#060D17',
           minHeight:  { xs: '44vh', md: '50vh' },
           display:    'flex',
           alignItems: 'center',
           textAlign:  'center',
           py:         { xs: 10, md: 14 },
+          overflow:   'hidden',
+          // Borde superior glowing — técnica Linear.app
+          borderTop:  '1px solid rgba(0, 229, 255, 0.18)',
+          boxShadow:  'inset 0 1px 0 rgba(0, 229, 255, 0.10)',
+
+          // Capa 1: Ruido SVG inline — textura de grano fotográfico ultra-sutil
+          // El SVG usa feTurbulence (fractal noise) encodeado en data-URI.
+          // Opacidad 0.028 → visible solo en pantallas de alta densidad, imperceptible en contraste.
+          '&::before': {
+            content:    '""',
+            position:   'absolute',
+            inset:      0,
+            zIndex:     1,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize:   '200px 200px',
+            opacity:    0.028,
+            pointerEvents: 'none',
+          },
+
+          // Capa 2: Halo radial cyan — luz ambiental desde el centro-top
+          // Simula una fuente de luz de acento sin revelar geometría concreta.
+          // radio 70%×55% → elipse achatada que irradia desde arriba del viewport.
+          '&::after': {
+            content:    '""',
+            position:   'absolute',
+            inset:      0,
+            zIndex:     2,
+            background: [
+              // Halo ambiental cyan desde arriba
+              'radial-gradient(ellipse 72% 52% at 50% -8%, rgba(0, 229, 255, 0.13) 0%, transparent 68%)',
+              // Fade inferior hacia blanco — transición armónica con la sección siguiente
+              'linear-gradient(to bottom, transparent 55%, rgba(255, 255, 255, 0.06) 100%)',
+            ].join(', '),
+            pointerEvents: 'none',
+          },
         }}
       >
-        <Container maxWidth="md">
+        {/* z-index 3 garantiza que el texto queda sobre las dos capas pseudo */}
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 3 }}>
           <AnimatedSection delay={0}>
             <Typography
               variant="overline"
@@ -204,11 +252,11 @@ export default function ServicesPage() {
           <AnimatedSection delay={160}>
             <Typography
               sx={{
-                color:     'rgba(255,255,255,0.68)',
-                fontSize:  { xs: '1rem', md: '1.1rem' },
+                color:      'rgba(255,255,255,0.68)',
+                fontSize:   { xs: '1rem', md: '1.1rem' },
                 lineHeight: 1.75,
-                maxWidth:  520,
-                mx:        'auto',
+                maxWidth:   520,
+                mx:         'auto',
               }}
             >
               Diagnóstico preciso, piezas originales y garantía escrita.
@@ -217,6 +265,7 @@ export default function ServicesPage() {
           </AnimatedSection>
         </Container>
       </Box>
+
 
       {/* ── 2. MATRIZ DE SERVICIOS ──────────────────────────────────────── */}
       <Box
