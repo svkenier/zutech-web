@@ -169,16 +169,17 @@ export default function Navbar() {
               selected={isActive(link.to)}
               onClick={() => setDrawerOpen(false)}
               sx={{
-                borderRadius: '8px',
+                borderRadius: '20px',
+                border:       isActive(link.to) ? '1px solid rgba(0, 229, 255, 0.45)' : '1px solid transparent',
                 transition: 'all 180ms ease',
-                // Estado activo — cápsula cyan ghost
+                // Estado activo — cápsula cyan ghost con texto oscuro
                 '&.Mui-selected': {
-                  bgcolor:     'rgba(0, 229, 255, 0.09)',
+                  bgcolor:     'rgba(0, 229, 255, 0.10)',
                   '& .MuiListItemText-primary': {
-                    color:      '#00E5FF',
+                    color:      'text.primary',
                     fontWeight: 600,
                   },
-                  '& svg': { color: '#00E5FF' },
+                  '& svg': { color: 'text.primary' },
                 },
                 '&.Mui-selected:hover': {
                   bgcolor: 'rgba(0, 229, 255, 0.13)',
@@ -195,7 +196,7 @@ export default function Navbar() {
                   sx={{
                     mr:       1,
                     fontSize: '1.1rem',
-                    color:    isActive(link.to) ? '#00E5FF' : 'text.secondary',
+                    color:    isActive(link.to) ? 'text.primary' : 'text.secondary',
                     transition: 'color 180ms ease',
                   }}
                 />
@@ -204,7 +205,7 @@ export default function Navbar() {
                 primary={link.label}
                 primaryTypographyProps={{
                   fontWeight: isActive(link.to) ? 600 : 500,
-                  color:      isActive(link.to) ? '#00E5FF' : 'text.primary',
+                  color:      isActive(link.to) ? 'text.primary' : 'text.secondary',
                   fontSize:   '0.9rem',
                 }}
               />
@@ -316,12 +317,13 @@ export default function Navbar() {
                   startIcon={link.to === '/admin' ? <AdminPanelSettingsIcon fontSize="small" /> : undefined}
                   sx={{
                     // Base — inactivo
-                    color:        isActive(link.to) ? 'secondary.main' : 'text.secondary',
+                    color:        isActive(link.to) ? 'text.primary' : 'text.secondary',
                     fontWeight:   isActive(link.to) ? 600 : 500,
-                    bgcolor:      isActive(link.to) ? 'rgba(0, 229, 255, 0.09)' : 'transparent',
-                    borderRadius: '8px',
-                    px:           1.5,
-                    py:           0.6,
+                    bgcolor:      isActive(link.to) ? 'rgba(0, 229, 255, 0.10)' : 'transparent',
+                    border:       isActive(link.to) ? '1px solid rgba(0, 229, 255, 0.45)' : '1px solid transparent',
+                    borderRadius: '20px',
+                    px:           2,
+                    py:           0.75,
                     minWidth:     0,
                     textTransform: 'none',
                     fontSize:     '0.875rem',
@@ -332,7 +334,7 @@ export default function Navbar() {
                       bgcolor: isActive(link.to)
                         ? 'rgba(0, 229, 255, 0.13)'
                         : 'rgba(0, 0, 0, 0.04)',
-                      color:   isActive(link.to) ? 'secondary.main' : 'text.primary',
+                      color:   'text.primary',
                     },
                   }}
                 >
