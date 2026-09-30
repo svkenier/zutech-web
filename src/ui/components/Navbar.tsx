@@ -26,7 +26,7 @@ import Divider from '@mui/material/Divider';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme, alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -162,38 +162,52 @@ export default function Navbar() {
 
       <List disablePadding>
         {links.map((link) => (
-          <ListItem key={link.to} disablePadding>
+          <ListItem key={link.to} disablePadding sx={{ px: 1, py: 0.25 }}>
             <ListItemButton
               component={RouterLink}
               to={link.to}
               selected={isActive(link.to)}
               onClick={() => setDrawerOpen(false)}
               sx={{
-                borderRadius: 0,
-                mx: 1,
-                '&.Mui-selected, &.Mui-selected:hover, &:active': {
-                  bgcolor: 'primary.main',
-                  color: 'primary.contrastText !important',
-                  borderBottom: '2px solid',
-                  borderColor: 'primary.main',
-                  borderRadius: 0,
-                  '& .MuiListItemText-primary, & .MuiTypography-root, & span': {
-                    color: 'primary.contrastText !important',
+                borderRadius: '8px',
+                transition: 'all 180ms ease',
+                // Estado activo — cápsula cyan ghost
+                '&.Mui-selected': {
+                  bgcolor:     'rgba(0, 229, 255, 0.09)',
+                  '& .MuiListItemText-primary': {
+                    color:      '#00E5FF',
                     fontWeight: 600,
                   },
-                  '& .MuiListItemText-secondary': {
-                    color: (theme) => `${alpha(theme.palette.primary.contrastText, 0.8)} !important`,
-                  },
-                  '& .MuiListItemIcon-root, & svg': {
-                    color: 'primary.contrastText !important',
-                  },
+                  '& svg': { color: '#00E5FF' },
+                },
+                '&.Mui-selected:hover': {
+                  bgcolor: 'rgba(0, 229, 255, 0.13)',
+                },
+                // Hover inactivo
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.04)',
+                  '& .MuiListItemText-primary': { color: 'text.primary' },
                 },
               }}
             >
               {link.to === '/admin' && (
-                <AdminPanelSettingsIcon sx={{ mr: 1, fontSize: '1.1rem', color: isActive(link.to) ? 'primary.contrastText' : 'inherit' }} />
+                <AdminPanelSettingsIcon
+                  sx={{
+                    mr:       1,
+                    fontSize: '1.1rem',
+                    color:    isActive(link.to) ? '#00E5FF' : 'text.secondary',
+                    transition: 'color 180ms ease',
+                  }}
+                />
               )}
-              <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 500 }} />
+              <ListItemText
+                primary={link.label}
+                primaryTypographyProps={{
+                  fontWeight: isActive(link.to) ? 600 : 500,
+                  color:      isActive(link.to) ? '#00E5FF' : 'text.primary',
+                  fontSize:   '0.9rem',
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
@@ -301,14 +315,25 @@ export default function Navbar() {
                   size="small"
                   startIcon={link.to === '/admin' ? <AdminPanelSettingsIcon fontSize="small" /> : undefined}
                   sx={{
-                    color:      'text.secondary',
-                    fontWeight: isActive(link.to) ? 700 : 500,
-                    bgcolor:    isActive(link.to) ? alpha(theme.palette.primary.main, 0.12) : 'transparent',
-                    borderBottom: isActive(link.to) ? '2px solid' : 'none',
-                    borderColor: isActive(link.to) ? 'primary.main' : 'transparent',
-                    borderRadius: 0,
-                    px:         1.5,
-                    '&:hover':  { bgcolor: 'action.hover' },
+                    // Base — inactivo
+                    color:        isActive(link.to) ? 'secondary.main' : 'text.secondary',
+                    fontWeight:   isActive(link.to) ? 600 : 500,
+                    bgcolor:      isActive(link.to) ? 'rgba(0, 229, 255, 0.09)' : 'transparent',
+                    borderRadius: '8px',
+                    px:           1.5,
+                    py:           0.6,
+                    minWidth:     0,
+                    textTransform: 'none',
+                    fontSize:     '0.875rem',
+                    letterSpacing: '0.01em',
+                    transition:   'all 180ms ease',
+                    // Hover — fondo tenue, texto primario
+                    '&:hover': {
+                      bgcolor: isActive(link.to)
+                        ? 'rgba(0, 229, 255, 0.13)'
+                        : 'rgba(0, 0, 0, 0.04)',
+                      color:   isActive(link.to) ? 'secondary.main' : 'text.primary',
+                    },
                   }}
                 >
                   {link.label}
