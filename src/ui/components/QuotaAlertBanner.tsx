@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert, AlertTitle, Box } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-const FORCE_PREVIEW = true; // Activo temporalmente para revisión visual
+const FORCE_PREVIEW = false; // Desactivado para producción
 const DISMISS_KEY = 'zutech_quota_banner_dismissed';
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
