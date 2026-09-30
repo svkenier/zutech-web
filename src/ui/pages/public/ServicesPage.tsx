@@ -585,12 +585,13 @@ export default function ServicesPage() {
           py:     { xs: 8, md: 10 },
         }}
       >
-        <Container maxWidth="md">
+        <Container maxWidth="lg">
           <AnimatedSection>
-            {/* ── Tarjeta flotante ────────────────────────────────────────── */}
+            {/* ── Tarjeta flotante — ancho completo del contenedor lg ─────── */}
             <Box
               sx={{
                 position:     'relative',
+                width:        '100%',           // borde a borde del Container lg
                 bgcolor:      '#060D17',
                 borderRadius: '24px',
                 border:       '1px solid rgba(0, 229, 255, 0.15)',
@@ -641,10 +642,10 @@ export default function ServicesPage() {
                 <Typography
                   variant="body1"
                   sx={{
-                    color:    'rgba(255,255,255,0.72)',
-                    mb:       4,
-                    maxWidth: 460,
-                    mx:       'auto',
+                    color:      'rgba(255,255,255,0.72)',
+                    mb:         4,
+                    maxWidth:   520,
+                    mx:         'auto',
                     lineHeight: 1.75,
                   }}
                 >
