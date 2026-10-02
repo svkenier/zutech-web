@@ -69,7 +69,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     
     const { results } = await env.DB.prepare(`
       SELECT id, title, price, in_stock FROM products WHERE id IN (${placeholders})
-    `).bind(...productIds).all<{ id: string, title: string, price: number, in_stock: number }>();
+    `).bind(...productIds).all() as any;
     
     const dbProducts = new Map<string, { title: string, price: number, in_stock: number }>();
     for (const row of results) {

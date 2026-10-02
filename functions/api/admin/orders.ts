@@ -65,7 +65,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       // Retornar solo órdenes activas (sin closure_id asignado)
       const { results } = await env.DB.prepare(`
         SELECT * FROM orders WHERE closure_id IS NULL ORDER BY created_at DESC
-      `).all<Record<string, unknown>>();
+      `).all() as any;
 
       return new Response(
         JSON.stringify({ records: results.map(mapOrderRow) }),
@@ -107,7 +107,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
       // Acción: revertir (solo si sin closure_id)
       if (action === 'revertir') {
-        const existing = await env.DB.prepare(`SELECT closure_id FROM orders WHERE id = ?`).bind(orderId).first<{ closure_id: string | null }>();
+        const existing = await env.DB.prepare(`SELECT closure_id FROM orders WHERE id = ?`).bind(orderId).first() as { closure_id: string | null } | null;
         if (!existing) {
           return new Response(JSON.stringify({ error: 'Orden no encontrada' }), { status: 404 });
         }

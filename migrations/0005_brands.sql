@@ -1,0 +1,6 @@
+-- migrations/0005_brands.sql
+CREATE TABLE IF NOT EXISTS brands (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

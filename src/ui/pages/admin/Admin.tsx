@@ -481,43 +481,37 @@ export default function Admin() {
                   : filteredProducts.map((product) => (
                       <TableRow key={product.id} hover>
                         <TableCell>
-                          {product.main_image ? (
-                            <Box
-                              component="img"
-                              src={product.main_image}
-                              alt={product.title ? `Miniatura de ${product.title}` : 'Miniatura'}
-                              width="40"
-                              height="40"
-                              loading="lazy"
-                              sx={{ width: 40, height: 40, borderRadius: 0, objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <Box sx={{ 
-                              width: 40, height: 40, 
-                              bgcolor: 'background.default', 
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                            }}>
-                              <InventoryIcon sx={{ color: 'primary.main', opacity: 0.5, fontSize: 24 }} />
-                            </Box>
-                          )}
+                          <Box sx={{ position: 'relative', width: 40, height: 40, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <InventoryIcon sx={{ color: 'primary.main', opacity: 0.5, fontSize: 24, position: 'absolute' }} />
+                            {product.main_image && (
+                              <Box
+                                component="img"
+                                src={product.main_image}
+                                alt={product.title ? `Miniatura de ${product.title}` : 'Miniatura'}
+                                width="40"
+                                height="40"
+                                loading="lazy"
+                                onError={(e: any) => { e.currentTarget.style.display = 'none'; }}
+                                sx={{ width: 40, height: 40, borderRadius: 0, objectFit: 'cover', position: 'relative', zIndex: 1 }}
+                              />
+                            )}
+                          </Box>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ minWidth: 200 }}>
                           <Typography variant="body2" fontWeight={600} color="text.primary">
                             {product.title} {product.attributes?.destacado && '⭐'}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">{product.id}</Typography>
+                          <Typography variant="caption" color="text.secondary">{product.sku || product.id}</Typography>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
+                        <TableCell sx={{ minWidth: 140, whiteSpace: 'nowrap' }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
                             {(product.attributes?.brand as string) || 'Sin Marca'}
                           </Typography>
                           <Typography variant="caption" color="text.disabled">
                             {(product.attributes?.category as string) || 'Sin Categoría'}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ minWidth: 100 }}>
                           <Typography variant="body2" fontWeight={700} color="text.primary">
                             ${Number(product.attributes?.price).toFixed(2)}
                           </Typography>
@@ -611,6 +605,7 @@ export default function Admin() {
         <BulkImportModal
           open={bulkModalOpen}
           onClose={() => setBulkModalOpen(false)}
+          onSuccess={() => qc.invalidateQueries({ queryKey: ['products-index'] })}
         />
       )}
 

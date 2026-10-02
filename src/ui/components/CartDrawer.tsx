@@ -286,9 +286,9 @@ export default function CartDrawer() {
                 fullWidth 
                 startIcon={formik.isSubmitting ? <CircularProgress size={20} color="inherit" /> : <WhatsAppIcon />}
                 disabled={!canCheckout || formik.isSubmitting}
-                onClick={(e) => {
+                onClick={() => {
                   if (!formik.isValid) {
-                    formik.handleSubmit(e);
+                    formik.submitForm();
                   }
                 }}
               >

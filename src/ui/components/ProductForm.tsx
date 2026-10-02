@@ -49,7 +49,7 @@ interface ProductFormProps {
 
 const EMPTY = {
   title: '', brand: '', category: '', price: '',
-  description: '',
+  description: '', status: 'active',
   in_stock: true, featured: false,
 };
 

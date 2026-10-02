@@ -57,15 +57,23 @@ export async function optimizeImage(
     img.onload = () => {
       URL.revokeObjectURL(objectUrl); // liberar memoria inmediatamente
 
-      // 2. Calcular dimensiones manteniendo la proporción.
-      const scale   = img.width > maxWidth ? maxWidth / img.width : 1;
-      const width   = Math.round(img.width  * scale);
-      const height  = Math.round(img.height * scale);
+      // Bypass: si ya es webp y mide exactamente 700x700, no hacer nada
+      if (file.type === 'image/webp' && img.width === maxWidth && img.height === maxWidth) {
+        const previewUrl = URL.createObjectURL(file);
+        resolve({
+          blob: file,
+          sizeBytes: file.size,
+          width: img.width,
+          height: img.height,
+          previewUrl,
+        });
+        return;
+      }
 
-      // 3. Dibujar en canvas.
+      // 2. Crear canvas cuadrado
       const canvas  = document.createElement('canvas');
-      canvas.width  = width;
-      canvas.height = height;
+      canvas.width  = maxWidth;
+      canvas.height = maxWidth;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
@@ -73,10 +81,21 @@ export async function optimizeImage(
         return;
       }
 
+      // Fondo blanco sólido
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 3. Calcular dimensiones y posición para "contain" centrado
+      const scale = Math.min(maxWidth / img.width, maxWidth / img.height);
+      const drawWidth = img.width * scale;
+      const drawHeight = img.height * scale;
+      const x = (maxWidth - drawWidth) / 2;
+      const y = (maxWidth - drawHeight) / 2;
+
       // Activar suavizado de alta calidad para escalado.
       ctx.imageSmoothingEnabled  = true;
       ctx.imageSmoothingQuality  = 'high';
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, x, y, drawWidth, drawHeight);
 
       // 4. Exportar a WebP.
       canvas.toBlob(
@@ -89,8 +108,8 @@ export async function optimizeImage(
           resolve({
             blob,
             sizeBytes: blob.size,
-            width,
-            height,
+            width: maxWidth,
+            height: maxWidth,
             previewUrl,
           });
         },

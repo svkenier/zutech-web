@@ -26,26 +26,38 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     headers.set('Content-Type', 'application/json');
 
     const { results } = await env.DB.prepare(`
-      SELECT * FROM products ORDER BY created_at DESC
+      SELECT products.*, brands.name as brand_name 
+      FROM products 
+      LEFT JOIN brands ON products.brand = brands.id 
+      ORDER BY products.created_at DESC
     `).all();
 
+    const publicUrl = (env as any).R2_PUBLIC_URL || (env as any).VITE_R2_PUBLIC_URL;
+
     // Map to frontend expected format
-    const records = results.map((row: any) => ({
+    const records = results.map((row: any) => {
+      let finalImageUrl = row.image_url;
+      if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+        finalImageUrl = publicUrl ? `${publicUrl}/${finalImageUrl}` : `/api/media/${finalImageUrl}`;
+      }
+      return {
       id: row.id,
+      sku: row.sku,
       title: row.title,
-      main_image: row.image_url,
+      main_image: finalImageUrl,
       description: row.description,
       created_at: row.created_at,
       updated_at: row.updated_at,
       attributes: {
-        brand: row.brand,
+        brand: row.brand_name || row.brand || 'Sin Marca',
         category: row.category,
         price: row.price,
         in_stock: Boolean(row.in_stock),
         featured: Boolean(row.featured),
         specs: row.specs,
       }
-    }));
+    };
+    });
 
     return new Response(JSON.stringify(records), { status: 200, headers });
   } catch (err: any) {
