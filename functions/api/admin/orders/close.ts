@@ -49,7 +49,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const { results: openOrders } = (await env.DB.prepare(`
       SELECT id, total, payment_method
       FROM orders
-      WHERE (status = 'aprobado' OR status = 'approved')
+      WHERE status = 'approved'
         AND closure_id IS NULL
     `).all()) as unknown as { results: { id: string; total: number; payment_method: string | null }[] };
 
@@ -95,7 +95,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       ),
       env.DB.prepare(`
         UPDATE orders SET closure_id = ?
-        WHERE (status = 'aprobado' OR status = 'approved') AND closure_id IS NULL
+        WHERE status = 'approved' AND closure_id IS NULL
       `).bind(closureId),
     ]);
 
@@ -139,8 +139,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const endDate = url.searchParams.get('endDate');
     const search = url.searchParams.get('search')?.trim();
     const paymentMethod = url.searchParams.get('paymentMethod')?.trim();
-    const page = parseInt(url.searchParams.get('page') || '0', 10);
-    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+    const page = Math.max(0, parseInt(url.searchParams.get('page') || '0', 10));
+    const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit') || '10', 10)));
     const offset = page * limit;
 
     let query = `SELECT DISTINCT c.* FROM cash_closures c `;

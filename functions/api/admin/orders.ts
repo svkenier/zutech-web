@@ -5,9 +5,9 @@ import type { Env } from '../../../src/core/auth/auth.js';
 // ─── Status mapping ───────────────────────────────────────────────────────────
 // Compatibilidad con registros legacy en inglés (pending/approved/discarded)
 function normalizeStatus(s: string): string {
-  if (s === 'pending')   return 'pendiente';
-  if (s === 'approved')  return 'aprobado';
-  if (s === 'discarded') return 'descartado';
+  if (s === 'pending')   return 'pending';
+  if (s === 'approved')  return 'approved';
+  if (s === 'discarded') return 'discarded';
   return s; // ya está en español
 }
 
@@ -57,7 +57,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       // Purga silenciosa: eliminar pendientes con más de 7 días sin cerrar
       await env.DB.prepare(`
         DELETE FROM orders
-        WHERE (status = 'pendiente' OR status = 'pending')
+        WHERE status = 'pending'
           AND closure_id IS NULL
           AND created_at < datetime('now', '-7 days')
       `).run();
@@ -99,8 +99,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
         await env.DB.prepare(`
           UPDATE orders
-          SET status = 'aprobado', payment_method = ?, updated_at = ?
-          WHERE id = ? AND (status = 'pendiente' OR status = 'pending')
+          SET status = 'approved', payment_method = ?, updated_at = ?
+          WHERE id = ? AND status = 'pending'
         `).bind(body.payment_method, now, orderId).run();
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
@@ -118,7 +118,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           );
         }
         await env.DB.prepare(`
-          UPDATE orders SET status = 'pendiente', payment_method = NULL, updated_at = ?
+          UPDATE orders SET status = 'pending', payment_method = NULL, updated_at = ?
           WHERE id = ? AND closure_id IS NULL
         `).bind(now, orderId).run();
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });

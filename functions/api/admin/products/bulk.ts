@@ -93,11 +93,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
       statements.push(
         env.DB.prepare(`
-          INSERT INTO products (id, sku, title, brand, category, price, in_stock, featured, image_url, specs, description, created_at, updated_at)
+          INSERT INTO products (id, sku, title, brand_id, category, price, in_stock, featured, image_url, specs, description, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(sku) DO UPDATE SET
             title = excluded.title,
-            brand = excluded.brand,
+            brand_id = excluded.brand_id,
             category = excluded.category,
             price = excluded.price,
             in_stock = excluded.in_stock,

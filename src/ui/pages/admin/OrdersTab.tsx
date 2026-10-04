@@ -62,9 +62,9 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
   const visibleOrders = orders.filter(o => {
     if (filter === 'all') return true;
     if (filter === 'pending') {
-      return (o.status === 'pendiente' || o.status === 'pending') && pendingApproval !== o.id;
+      return (o.status === 'pending') && pendingApproval !== o.id;
     } else {
-      return (o.status === 'aprobado' || o.status === 'approved') || pendingApproval === o.id;
+      return (o.status === 'approved') || pendingApproval === o.id;
     }
   });
 
@@ -141,7 +141,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
 
 
   // Calculate live box summary (orders approved and not closed)
-  const openBoxOrders = orders.filter(o => o.status === 'aprobado' || o.status === 'approved');
+  const openBoxOrders = orders.filter(o => o.status === 'approved');
   const boxSummary = openBoxOrders.reduce((acc, o) => {
     acc.total += o.totalUSD;
     acc.count += 1;
@@ -229,8 +229,8 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
       ) : (
         <Stack spacing={2}>
           {visibleOrders.map(order => {
-            const isPending = (order.status === 'pendiente' || order.status === 'pending') && pendingApproval !== order.id;
-            const isApproved = (order.status === 'aprobado' || order.status === 'approved') || pendingApproval === order.id;
+            const isPending = order.status === 'pending' && pendingApproval !== order.id;
+            const isApproved = order.status === 'approved' || pendingApproval === order.id;
 
             return (
               <Card key={order.id} variant="outlined" sx={{ borderRadius: 0 }}>
@@ -408,7 +408,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setViewOrder(null)}>Cerrar</Button>
-          {(viewOrder?.status === 'pendiente' || viewOrder?.status === 'pending') && pendingApproval !== viewOrder?.id && (
+          {viewOrder?.status === 'pending' && pendingApproval !== viewOrder?.id && (
             <Button variant="contained" color="success" onClick={() => {
               setApproveOrder(viewOrder);
               setPaymentMethod(viewOrder.payment_method || '');

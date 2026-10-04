@@ -28,7 +28,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const { results } = await env.DB.prepare(`
       SELECT products.*, brands.name as brand_name 
       FROM products 
-      LEFT JOIN brands ON products.brand = brands.id 
+      LEFT JOIN brands ON products.brand_id = brands.id 
       ORDER BY products.created_at DESC
     `).all();
 
@@ -49,7 +49,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       created_at: row.created_at,
       updated_at: row.updated_at,
       attributes: {
-        brand: row.brand_name || row.brand || 'Sin Marca',
+        brand: row.brand_name || 'Sin Marca',
         category: row.category,
         price: row.price,
         in_stock: Boolean(row.in_stock),

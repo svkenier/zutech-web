@@ -47,13 +47,21 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       }
     }
 
+    let brandId: string | null = null;
+    if (body.attributes?.brand) {
+      const bName = body.attributes.brand.trim();
+      await env.DB.prepare(`INSERT OR IGNORE INTO brands (id, name) VALUES (?, ?)`).bind(crypto.randomUUID(), bName).run();
+      const bRow = await env.DB.prepare(`SELECT id FROM brands WHERE name = ?`).bind(bName).first() as {id:string} | null;
+      if (bRow) brandId = bRow.id;
+    }
+
     await env.DB.prepare(`
-      INSERT INTO products (id, title, brand, category, price, in_stock, featured, image_url, specs, description, created_at, updated_at)
+      INSERT INTO products (id, title, brand_id, category, price, in_stock, featured, image_url, specs, description, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       body.title,
-      body.attributes?.brand || '',
+      brandId,
       body.attributes?.category || '',
       Number(body.attributes?.price) || 0,
       body.attributes?.in_stock ? 1 : 0,
@@ -141,7 +149,17 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     }
 
     if (body.title !== undefined) { updates.push("title = ?"); values.push(body.title); }
-    if (body.attributes?.brand !== undefined) { updates.push("brand = ?"); values.push(body.attributes.brand); }
+    if (body.attributes?.brand !== undefined) { 
+      let brandId: string | null = null;
+      if (body.attributes.brand) {
+        const bName = body.attributes.brand.trim();
+        await env.DB.prepare(`INSERT OR IGNORE INTO brands (id, name) VALUES (?, ?)`).bind(crypto.randomUUID(), bName).run();
+        const bRow = await env.DB.prepare(`SELECT id FROM brands WHERE name = ?`).bind(bName).first() as {id:string} | null;
+        if (bRow) brandId = bRow.id;
+      }
+      updates.push("brand_id = ?"); 
+      values.push(brandId); 
+    }
     if (body.attributes?.category !== undefined) { updates.push("category = ?"); values.push(body.attributes.category); }
     if (body.attributes?.price !== undefined) { updates.push("price = ?"); values.push(Number(body.attributes.price)); }
     if (body.attributes?.in_stock !== undefined) { updates.push("in_stock = ?"); values.push(body.attributes.in_stock ? 1 : 0); }

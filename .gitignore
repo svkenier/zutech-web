@@ -34,3 +34,6 @@ dist-ssr
 /tests/test-results/
 docs/audits/*.json
 .code-graph.json
+
+# Vuerd Database Diagrams
+*.vuerd.json

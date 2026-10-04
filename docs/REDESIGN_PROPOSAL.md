@@ -80,3 +80,4 @@ Para reemplazar las aburridas "3 tarjetas centradas con íconos", propongo estas
 ---
 
 > Por favor, revisa estas alternativas y la dirección visual general. Una vez confirmes qué alternativa prefieres para la sección de valor (Bento Grid o Panel Comparativo), procederemos con la implementación en código del nuevo diseño Clean High-End.
+
