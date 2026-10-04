@@ -34,7 +34,12 @@ export const SKU_CATEGORY_MAP: Record<string, string> = {
   'redes': 'NET',
   'conectividad': 'NET',
   'wi-fi': 'NET',
-  'wifi': 'NET'
+  'wifi': 'NET',
+  'laptops': 'LAP',
+  'portatiles': 'LAP',
+  'pcs': 'PC',
+  'computadoras': 'PC',
+  'pc': 'PC'
 };
 
 export function getSkuPrefix(categoria: string): string {

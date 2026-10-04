@@ -79,14 +79,14 @@ export default function InvoiceModal({ open, order, onClose }: InvoiceModalProps
               left: 0;
               top: 0;
               width: 100%;
-              padding: 0 !important;
+              padding: 0;
             }
             @page {
               margin: 1.5cm;
               size: A4 portrait;
             }
             .no-print {
-              display: none !important;
+              display: none;
             }
           }
         `}} />

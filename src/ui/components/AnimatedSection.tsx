@@ -94,9 +94,9 @@ export default function AnimatedSection({
         transition: `opacity 400ms ease-out ${delay}ms, transform 400ms ease-out ${delay}ms`,
         willChange: finished ? 'auto' : 'opacity, transform',
         '@media (prefers-reduced-motion: reduce)': {
-          transition: 'none !important',
-          transform: 'translate(0, 0) !important',
-          opacity: '1 !important',
+          transition: 'none',
+          transform: 'translate(0, 0)',
+          opacity: 1,
         },
         ...sx,
       }}

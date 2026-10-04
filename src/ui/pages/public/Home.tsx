@@ -219,13 +219,35 @@ export default function Home() {
               )}
 
               {!isLoading && !hasProducts && (
-                <AnimatedSection>
                   <EmptyState 
                     icon={<InventoryIcon />}
-                    title="No hay productos destacados aún"
-                    description="Pronto añadiremos los mejores componentes a esta sección."
+                    title="Próximamente nuevos destacados"
+                    description="Estamos actualizando nuestro inventario élite. Explora todos nuestros componentes disponibles actualmente."
+                    action={
+                      <Button
+                        component={RouterLink}
+                        to="/productos"
+                        variant="contained"
+                        sx={{
+                          bgcolor: '#00F0FF',
+                          color: '#060D17',
+                          fontWeight: 700,
+                          borderRadius: 2,
+                          px: 4,
+                          py: 1,
+                          boxShadow: '0 0 15px rgba(0,240,255,0.2)',
+                          transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
+                          '&:hover': {
+                            bgcolor: '#33F5FF',
+                            boxShadow: '0 0 25px rgba(0,240,255,0.4)',
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        Ver Catálogo Completo
+                      </Button>
+                    }
                   />
-                </AnimatedSection>
               )}
             </>
           )}

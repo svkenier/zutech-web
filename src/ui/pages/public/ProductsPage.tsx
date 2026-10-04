@@ -1,4 +1,5 @@
 import { useMemo, useState, useDeferredValue, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -22,6 +23,7 @@ import Navbar     from '@ui/components/Navbar';
 import Footer     from '@ui/components/Footer';
 import ProductCard from '@ui/components/ProductCard';
 import AnimatedSection from '@ui/components/AnimatedSection';
+import EmptyState from '@ui/components/EmptyState';
 import SEO from '@core/media/SEO';
 import Skeleton from '@mui/material/Skeleton';
 import Card from '@mui/material/Card';
@@ -58,7 +60,13 @@ const ProductCardSkeleton = () => (
 );
 
 export default function ProductsPage() {
-  const [filters, setFilters] = useState<RecordFilters>(INITIAL_FILTERS);
+  const [searchParams] = useSearchParams();
+  const initialCategory = searchParams.get('category') || searchParams.get('categoria') || '';
+  
+  const [filters, setFilters] = useState<RecordFilters>({
+    ...INITIAL_FILTERS,
+    category: initialCategory,
+  });
   const [visibleCount, setVisibleCount] = useState(8);
 
   useEffect(() => {
@@ -253,8 +261,11 @@ export default function ProductsPage() {
                 <MenuItem value="Almacenamiento">Almacenamiento</MenuItem>
                 <MenuItem value="Fuentes de Poder">Fuentes de Poder</MenuItem>
                 <MenuItem value="Chasis / Cases">Chasis / Cases</MenuItem>
+                <MenuItem value="Refrigeración">Refrigeración</MenuItem>
                 <MenuItem value="Periféricos">Periféricos</MenuItem>
                 <MenuItem value="Servicio Técnico / Software">Servicio Técnico / Software</MenuItem>
+                <MenuItem value="Laptops">Laptops</MenuItem>
+                <MenuItem value="PCs / Computadoras">PCs / Computadoras</MenuItem>
               </Select>
             </FormControl>
 
@@ -384,23 +395,37 @@ export default function ProductsPage() {
           )}
 
           {!isLoading && !isError && deferredFiltered.length === 0 && (
-            <Box sx={{ textAlign: 'center', py: 10 }}>
-              <ViewModuleIcon sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                {hasActiveFilters
-                  ? 'Sin resultados con esos filtros'
-                  : 'No hay productos disponibles en el catálogo en este momento.'}
-              </Typography>
-              <Typography variant="body2" color="text.disabled" mb={3}>
-                {hasActiveFilters
-                  ? 'Prueba combinaciones diferentes o limpia los filtros.'
-                  : 'Vuelve pronto.'}
-              </Typography>
-              {hasActiveFilters && (
-                <Button variant="outlined" color="primary" onClick={clearFilters}>
-                  Limpiar filtros
-                </Button>
-              )}
+            <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
+              <EmptyState
+                icon={<ViewModuleIcon />}
+                title={hasActiveFilters ? 'No hay resultados' : 'Catálogo vacío'}
+                description={hasActiveFilters ? 'No se encontraron productos que coincidan con los filtros aplicados. Intenta ajustarlos o buscar otra palabra clave.' : 'Actualmente no hay productos disponibles en esta sección del catálogo.'}
+                action={
+                  hasActiveFilters ? (
+                    <Button
+                      variant="outlined"
+                      onClick={clearFilters}
+                      startIcon={<ClearIcon />}
+                      sx={{ 
+                        mt: 1, 
+                        color: '#00F0FF', 
+                        borderColor: 'rgba(0, 240, 255, 0.3)',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        transition: 'transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 240, 255, 0.08)',
+                          borderColor: '#00F0FF',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
+                      Restablecer filtros
+                    </Button>
+                  ) : undefined
+                }
+              />
             </Box>
           )}
 

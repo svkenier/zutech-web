@@ -105,7 +105,7 @@ export default function LaptopFeature() {
               {/* Botón CTA */}
               <Button
                 component={RouterLink}
-                to="/productos?category=laptops"
+                to="/productos?category=Laptops"
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon />}

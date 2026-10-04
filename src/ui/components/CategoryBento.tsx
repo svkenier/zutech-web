@@ -134,7 +134,7 @@ export default function CategoryBento() {
             {/* GPU — Grande, abarca 2 filas */}
             <Box
               component={RouterLink}
-              to="/productos?category=gpu"
+              to="/productos?category=Tarjetas Gráficas"
               sx={{ ...cardBase, height: { xs: 320, md: '100%' }, minHeight: { md: 500 } }}
             >
               <CardImage src={GPU_IMG} alt="Tarjetas Gráficas" />
@@ -154,7 +154,7 @@ export default function CategoryBento() {
               {/* CPU — Ancho completo del bloque derecho */}
               <Box
                 component={RouterLink}
-                to="/productos?category=cpu"
+                to="/productos?category=Procesadores"
                 sx={{ ...cardBase, minHeight: { xs: 200, md: 'auto' } }}
               >
                 <CardImage src={CPU_IMG} alt="Procesadores" />
@@ -174,7 +174,7 @@ export default function CategoryBento() {
                 {/* Placas Base */}
                 <Box
                   component={RouterLink}
-                  to="/productos?category=motherboard"
+                  to="/productos?category=Tarjetas Madre"
                   sx={{ ...cardBase, minHeight: { xs: 180, md: 'auto' } }}
                 >
                   <CardImage src={MOBO_IMG} alt="Placas Base" />
@@ -190,7 +190,7 @@ export default function CategoryBento() {
                 {/* Memorias RAM */}
                 <Box
                   component={RouterLink}
-                  to="/productos?category=ram"
+                  to="/productos?category=Memorias RAM"
                   sx={{ ...cardBase, minHeight: { xs: 180, md: 'auto' } }}
                 >
                   <CardImage src={RAM_IMG} alt="Memorias RAM" />
@@ -210,10 +210,10 @@ export default function CategoryBento() {
           {/* ── Fila Inferior: 4 tarjetas iguales ── */}
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
             {[
-              { label: 'Almacenamiento', slug: 'storage', img: SSD_IMG },
-              { label: 'Refrigeración',  slug: 'cooling',  img: COOL_IMG },
-              { label: 'Chasis & Energía', slug: 'psu', img: PSU_IMG },
-              { label: 'Periféricos',    slug: 'peripherals', img: PERI_IMG },
+              { label: 'Almacenamiento', slug: 'Almacenamiento', img: SSD_IMG },
+              { label: 'Refrigeración',  slug: 'Refrigeración',  img: COOL_IMG },
+              { label: 'Chasis & Energía', slug: 'Fuentes de Poder', img: PSU_IMG },
+              { label: 'Periféricos',    slug: 'Periféricos', img: PERI_IMG },
             ].map(({ label, slug, img }) => (
               <Box
                 key={slug}

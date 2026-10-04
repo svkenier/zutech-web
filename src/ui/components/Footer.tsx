@@ -92,7 +92,7 @@ export default function Footer() {
           {/* Columna 1: Marca + misión + Redes Sociales */}
           <Grid size={{ xs: 12, md: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-              <Box component="img" src="/logo-white.svg" alt="ZUTECH" {...({ width: 60, height: 60 } as any)} sx={{ height: { xs: 54, md: 60 }, width: 'auto', objectFit: 'contain' }} />
+              <Box component="img" src="/logo.webp" alt="ZUTECH" {...({ width: 60, height: 60 } as any)} sx={{ height: { xs: 54, md: 60 }, width: 'auto', objectFit: 'contain' }} />
             </Box>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.92)' }} lineHeight={1.8}>
               Todo en software y hardware para tu PC. Visítanos en nuestra tienda física ubicada en Gran bazar local # 326 y 327.
@@ -171,7 +171,7 @@ export default function Footer() {
                   component={RouterLink}
                   to={l.to}
                   underline="none"
-                  sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', transition: 'color 0.2s ease-in-out', '&:hover': { color: 'primary.main' } }}
+                  sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', display: 'inline-block', '&:hover': { color: '#00f0ff', textDecoration: 'none' } }}
                 >
                   {l.label}
                 </Link>
@@ -185,13 +185,13 @@ export default function Footer() {
               Contacto
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterSoporteUrl(phone))} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterSoporteUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
                 Soporte Técnico
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterVentasUrl(phone))} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterVentasUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
                 Ventas y Catálogo
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterEstadoUrl(phone))} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterEstadoUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
                 Estado de mi pedido
               </Link>
             </Box>
@@ -208,21 +208,21 @@ export default function Footer() {
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
                 {config.phone && (
-                  <Link href={`tel:${config.phone.replace(/\s+/g, '')}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: 'primary.main', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <PhoneIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: 'primary.main', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
-                    <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.2s ease-in-out' }}>{config.phone}</Typography>
+                  <Link href={`tel:${config.phone.replace(/\s+/g, '')}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, '&:hover .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } }}>
+                    <PhoneIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00f0ff', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
+                    <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.15s ease-in-out' }}>{config.phone}</Typography>
                   </Link>
                 )}
                 {config.email && (
-                  <Link href={`mailto:${config.email}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: 'primary.main', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <EmailIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: 'primary.main', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
-                    <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.2s ease-in-out' }}>{config.email}</Typography>
+                  <Link href={`mailto:${config.email}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, '&:hover .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } }}>
+                    <EmailIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00f0ff', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
+                    <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.15s ease-in-out' }}>{config.email}</Typography>
                   </Link>
                 )}
                 {config.address && (
-                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.2s ease-in-out', cursor: 'pointer', '&:hover': { color: 'primary.main', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <PlaceIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: 'primary.main', flexShrink: 0, mt: 0.3, transition: 'all 0.2s ease-in-out' }} /> 
-                    <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.2s ease-in-out' }}>{config.address}</Typography>
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
+                    <PlaceIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00f0ff', flexShrink: 0, mt: 0.3, transition: 'all 0.2s ease-in-out' }} /> 
+                    <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.15s ease-in-out' }}>{config.address}</Typography>
                   </Box>
                 )}
               </Box>
@@ -274,8 +274,8 @@ export default function Footer() {
                 key={l.to}
                 component={RouterLink}
                 to={l.to}
-                underline="hover"
-                sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.75rem', '&:hover': { color: 'primary.main' } }}
+                underline="none"
+                sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' } }}
               >
                 {l.label}
               </Link>
