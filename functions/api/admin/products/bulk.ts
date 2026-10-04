@@ -101,6 +101,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             category = excluded.category,
             price = excluded.price,
             in_stock = excluded.in_stock,
+            is_active = 1,
             image_url = CASE 
               WHEN excluded.image_url = '__REMOVE__' THEN NULL
               WHEN excluded.image_url IS NOT NULL AND excluded.image_url != '' THEN excluded.image_url 

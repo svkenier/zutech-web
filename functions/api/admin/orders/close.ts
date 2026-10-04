@@ -35,79 +35,67 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const body = await request.json() as { time_open?: string; notes?: string };
     const now = new Date();
-    const vetDate   = getVetDateString(now);
-    const vetTime   = getVetTimeString(now);
+    const vetDate = getVetDateString(now);
+    const vetTime = getVetTimeString(now);
     const yymmdd = now.getFullYear().toString().slice(-2) + 
                    String(now.getMonth() + 1).padStart(2, '0') + 
                    String(now.getDate()).padStart(2, '0');
     const rand = crypto.randomUUID().substring(0, 4).toUpperCase();
     const closureId = `ZC-${yymmdd}-${rand}`;
 
-    // 1. Obtener todas las órdenes aprobadas sin cierre
-    const { results: openOrders } = (await env.DB.prepare(`
-      SELECT id, total, payment_method
-      FROM orders
-      WHERE status = 'approved'
-        AND closure_id IS NULL
-    `).all()) as unknown as { results: { id: string; total: number; payment_method: string | null }[] };
-
-    if (openOrders.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No hay órdenes aprobadas pendientes de cierre.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
-    }
-
-    // 2. Calcular totales por método de pago
-    let totalAmount = 0, totalPagoMovil = 0, totalTransferencia = 0, totalZelle = 0, totalBinance = 0, totalEfectivo = 0;
-    for (const o of openOrders) {
-      totalAmount += o.total;
-      if (o.payment_method === 'pago_movil') totalPagoMovil += o.total;
-      else if (o.payment_method === 'transferencia') totalTransferencia += o.total;
-      else if (o.payment_method === 'zelle') totalZelle += o.total;
-      else if (o.payment_method === 'binance') totalBinance += o.total;
-      else if (o.payment_method === 'efectivo') totalEfectivo += o.total;
-    }
-
-    // 3. Ejecución atómica con D1 batch
+    // Ejecución atómica con D1 batch
     await env.DB.batch([
       env.DB.prepare(`
-        INSERT INTO cash_closures
-          (id, date, time_open, time_closed, total_amount, total_pago_movil,
-           total_transferencia, total_zelle, total_binance, total_efectivo, order_count, closed_by, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        closureId,
-        vetDate,
-        body.time_open ?? vetTime,
-        vetTime,
-        totalAmount,
-        totalPagoMovil,
-        totalTransferencia,
-        totalZelle,
-        totalBinance,
-        totalEfectivo,
-        openOrders.length,
-        auth.sub,
-        body.notes ?? null,
-      ),
+        INSERT INTO cash_closures (
+          id, date, time_closed, closed_by, order_count, total_amount,
+          total_pago_movil, total_transferencia, total_zelle, total_binance, total_efectivo
+        )
+        SELECT
+          ?, ?, ?, ?,
+          COUNT(id),
+          COALESCE(SUM(total), 0),
+          COALESCE(SUM(CASE WHEN payment_method = 'pago_movil' THEN total ELSE 0 END), 0),
+          COALESCE(SUM(CASE WHEN payment_method = 'transferencia' THEN total ELSE 0 END), 0),
+          COALESCE(SUM(CASE WHEN payment_method = 'zelle' THEN total ELSE 0 END), 0),
+          COALESCE(SUM(CASE WHEN payment_method = 'binance' THEN total ELSE 0 END), 0),
+          COALESCE(SUM(CASE WHEN payment_method = 'efectivo' THEN total ELSE 0 END), 0)
+        FROM orders
+        WHERE status = 'approved' AND closure_id IS NULL
+        HAVING COUNT(id) > 0
+      `).bind(closureId, vetDate, vetTime, auth.sub),
+      
       env.DB.prepare(`
         UPDATE orders SET closure_id = ?
         WHERE status = 'approved' AND closure_id IS NULL
       `).bind(closureId),
     ]);
 
+    // Releer el cierre creado
+    const closure = await env.DB.prepare(`SELECT * FROM cash_closures WHERE id = ?`).bind(closureId).first() as any;
+
+    if (!closure) {
+      return new Response(
+        JSON.stringify({ error: 'No hay órdenes aprobadas pendientes de cierre.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        closure_id: closureId,
-        date: vetDate,
-        time_closed: vetTime,
-        order_count: openOrders.length,
-        total_amount: totalAmount,
-        totals: { pago_movil: totalPagoMovil, transferencia: totalTransferencia, zelle: totalZelle, binance: totalBinance, efectivo: totalEfectivo },
+        closure_id: closure.id,
+        date: closure.date,
+        time_closed: closure.time_closed,
+        order_count: closure.order_count,
+        total_amount: closure.total_amount,
+        totals: {
+          pago_movil: closure.total_pago_movil,
+          transferencia: closure.total_transferencia,
+          zelle: closure.total_zelle,
+          binance: closure.total_binance,
+          efectivo: closure.total_efectivo
+        },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
@@ -181,22 +169,43 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     query += ` ORDER BY c.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
-    const { results } = await env.DB.prepare(query).bind(...params).all();
+    const { results } = await env.DB.prepare(query).bind(...params).all() as any;
     
     if (results.length > 0) {
-        const closureIds = results.map((r: any) => r.id);
-        const placeholders = closureIds.map(() => '?').join(',');
-        const { results: orders } = await env.DB.prepare(`SELECT * FROM orders WHERE closure_id IN (${placeholders})`).bind(...closureIds).all();
-        
-        for (const c of results) {
-            c.orders = orders.filter((o: any) => o.closure_id === c.id);
-            if (paymentMethod && paymentMethod !== 'Todos' && paymentMethod !== 'all') {
-              c.orders = c.orders.filter((o: any) => o.payment_method === paymentMethod);
-            }
+      const closureIds = results.map((r: any) => r.id);
+      const placeholders = closureIds.map(() => '?').join(',');
+      
+      const { results: orders } = await env.DB.prepare(`
+        SELECT id, customer_name, customer_phone, delivery_type, total, status, payment_method, closure_id, created_at, updated_at
+        FROM orders 
+        WHERE closure_id IN (${placeholders})
+      `).bind(...closureIds).all() as any;
+      
+      const { results: orderItems } = await env.DB.prepare(`
+        SELECT oi.order_id, oi.product_id AS id, oi.product_title AS title, oi.unit_price AS price, oi.quantity
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.closure_id IN (${placeholders})
+      `).bind(...closureIds).all() as any;
+
+      const itemsByOrder = new Map();
+      for (const item of orderItems) {
+        if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+        itemsByOrder.get(item.order_id).push(item);
+      }
+
+      for (const o of orders) {
+        o.items = itemsByOrder.get(o.id) || [];
+      }
+      
+      for (const c of results) {
+        c.orders = orders.filter((o: any) => o.closure_id === c.id);
+        if (paymentMethod && paymentMethod !== 'Todos' && paymentMethod !== 'all') {
+          c.orders = c.orders.filter((o: any) => o.payment_method === paymentMethod);
         }
+      }
     }
 
-    // Rehydrate totals block format? Not necessary as frontend reads properties.
     return new Response(
       JSON.stringify({ closures: results, totalCount, page, limit }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },

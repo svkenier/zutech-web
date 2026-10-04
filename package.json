@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "concurrently -k \"vite\" \"wrangler pages dev public --port 8788 --compatibility-flags=nodejs_compat\"",
     "db:seed": "wrangler d1 execute zetech-d1 --local --file=scripts/seed-d1.sql",
+    "db:reset": "pwsh -Command \"if (Test-Path .wrangler/state/v3/d1) { Remove-Item -Recurse -Force .wrangler/state/v3/d1 }\" && wrangler d1 migrations apply zetech-d1 --local && npm run db:seed",
     "prebuild": "tsx scripts/seed.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",

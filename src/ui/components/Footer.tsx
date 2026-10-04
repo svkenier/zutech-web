@@ -19,7 +19,7 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import TwitterIcon  from '@mui/icons-material/Twitter';
 import Skeleton     from '@mui/material/Skeleton';
-import { openWhatsApp } from '@ui/utils/whatsapp';
+import { openWhatsApp, getFooterSoporteUrl, getFooterVentasUrl, getFooterEstadoUrl } from '@ui/utils/whatsapp';
 import { get } from '@core/api/client';
 import { DEFAULT_SETTINGS } from '@core/types/settings';
 import type { Settings } from '@core/types/settings';
@@ -185,13 +185,13 @@ export default function Footer() {
               Contacto
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20necesito%20soporte%20técnico`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterSoporteUrl(phone))} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
                 Soporte Técnico
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20quisiera%20información%20sobre%20productos`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterVentasUrl(phone))} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
                 Ventas y Catálogo
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(`https://wa.me/${phone?.replace(/\D/g, '')}?text=Hola,%20quiero%20consultar%20el%20estado%20de%20mi%20pedido`)} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterEstadoUrl(phone))} sx={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem', '&:hover': { color: 'primary.main' }, textAlign: 'left', display: 'block' }}>
                 Estado de mi pedido
               </Link>
             </Box>

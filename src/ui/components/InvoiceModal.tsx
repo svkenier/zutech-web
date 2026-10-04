@@ -131,7 +131,7 @@ export default function InvoiceModal({ open, order, onClose }: InvoiceModalProps
           <Typography variant="body2">Nombre: {order.customer_name || order.client?.name}</Typography>
           <Typography variant="body2">Teléfono: {order.customer_phone || order.client?.phone}</Typography>
           <Typography variant="body2">
-            Entrega: {(order.delivery_type || order.delivery?.method) === 'pickup' ? 'Pick up (Retiro en tienda)' : `Delivery - ${order.delivery_address || order.delivery?.address || ''}`}
+            Entrega: {(order.delivery_type || order.delivery?.method) === 'pickup' ? 'Pick up (Retiro en tienda)' : 'Delivery (se coordina por WhatsApp)'}
           </Typography>
           <Typography variant="body2" fontWeight="bold" sx={{ mt: 1 }}>
             Método de Pago: {getPaymentMethodLabel(order.payment_method)}

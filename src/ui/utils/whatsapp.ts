@@ -21,13 +21,22 @@ export interface WhatsAppPetParams {
 
 // ─── Función interna ──────────────────────────────────────────────────────────
 
+/** Limpia el número de teléfono removiendo caracteres no numéricos (+, espacios, guiones) */
+export function cleanPhoneNumber(phone: string): string {
+  if (!phone) return '';
+  return phone.replace(/\D/g, '');
+}
+
 /** Construye la URL final de WhatsApp aplicando codificación URI segura al mensaje. */
 function buildWaUrl(phone: string, message: string): string {
-  if (!phone) {
+  const cleanPhone = cleanPhoneNumber(phone);
+  if (!cleanPhone) {
     console.warn('[whatsapp.ts] El número de teléfono de destino no está configurado.');
     return '#';
   }
-  return `${WA_BASE}/${phone}?text=${encodeURIComponent(message)}`;
+  // Normalize line endings to standard \n and remove double escaped \n or problematic chars
+  let cleanMessage = message.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
+  return `${WA_BASE}/${cleanPhone}?text=${encodeURIComponent(cleanMessage)}`;
 }
 
 // ─── Función Genérica Centralizada ────────────────────────────────────────────
@@ -78,6 +87,18 @@ export function getGenericInfoUrl(phone: string): string {
   return getWhatsAppUrl('generic', {}, phone);
 }
 
+export function getFooterSoporteUrl(phone: string): string {
+  return getWhatsAppUrl('footer_soporte', {}, phone);
+}
+
+export function getFooterVentasUrl(phone: string): string {
+  return getWhatsAppUrl('footer_ventas', {}, phone);
+}
+
+export function getFooterEstadoUrl(phone: string): string {
+  return getWhatsAppUrl('footer_estado', {}, phone);
+}
+
 /**
  * Genera el enlace de WhatsApp para soporte técnico urgente o incidencias.
  */
@@ -124,6 +145,35 @@ export function getServicioUpgradesUrl(phone: string): string {
 /** Genera el enlace de WhatsApp para una consulta técnica general (caso especial). */
 export function getServicioGeneralUrl(phone: string): string {
   return getWhatsAppUrl('service_general', {}, phone);
+}
+
+// ─── Wrapper para Checkout ────────────────────────────────────────────────────
+
+export interface WhatsAppCheckoutParams {
+  orderId: string;
+  name: string;
+  phone: string;
+  deliveryMethod: string;
+  paymentMethod: string;
+  itemsText: string;
+  total: string;
+  deliveryInstructions: string;
+  paymentInstructions: string;
+}
+
+/** Genera el enlace de WhatsApp para enviar el pedido generado en el carrito. */
+export function getCheckoutUrl(phone: string, params: WhatsAppCheckoutParams): string {
+  return getWhatsAppUrl('checkout', {
+    orderId: params.orderId,
+    name: params.name,
+    phone: params.phone,
+    deliveryMethod: params.deliveryMethod,
+    paymentMethod: params.paymentMethod,
+    items: params.itemsText,
+    total: params.total,
+    deliveryInstructions: params.deliveryInstructions,
+    paymentInstructions: params.paymentInstructions
+  }, phone);
 }
 
 // ─── Utilidad ─────────────────────────────────────────────────────────────────

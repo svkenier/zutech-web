@@ -501,7 +501,7 @@ export default function Admin() {
                           <Typography variant="body2" fontWeight={600} color="text.primary">
                             {product.title} {product.attributes?.destacado && '⭐'}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">{product.sku || product.id}</Typography>
+                          <Typography variant="caption" color="text.secondary">{(product as any).sku || product.id}</Typography>
                         </TableCell>
                         <TableCell sx={{ minWidth: 140, whiteSpace: 'nowrap' }}>
                           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>

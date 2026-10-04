@@ -114,7 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { id: item.id, quantity }];
     });
-    setIsCartOpen(true);
+    setToastMsg('Producto añadido al carrito');
   };
 
   const removeFromCart = (id: string) => {

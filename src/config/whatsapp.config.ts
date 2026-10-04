@@ -30,7 +30,7 @@ Vi su ficha aquí: {fichaUrl}
    * Plantilla para pedir información general o contacto genérico.
    */
   generic: 
-`¡Hola! Me gustaría recibir información general y conocer el catálogo disponible.`,
+`Hola ZUTECH, me gustaría obtener más información sobre sus productos y servicios.`,
 
   /**
    * Plantilla para reportes de casos urgentes, soporte técnico o incidencias.
@@ -64,51 +64,76 @@ Me gustaría recibir información sobre:
 
 ¿Cuáles son los requisitos o cómo puedo enviar mis credenciales?`,
 
+  // ─── Enlaces de Footer ───────────────────────────────────────────────────────
+  footer_soporte: `Hola ZUTECH, necesito comunicarme con el área de soporte técnico.`,
+  footer_ventas: `Hola ZUTECH, tengo una duda sobre un producto de la tienda.`,
+  footer_estado: `Hola, quiero consultar el estado de mi pedido.`,
+
   // ─── Servicios Técnicos Zutech ─────────────────────────────────────────────
 
   /**
    * Plantilla para agendar un mantenimiento preventivo de PC en el taller.
    */
   service_mantenimiento:
-`Hola Zutech 👋 Quiero agendar un *Mantenimiento Preventivo* para mi equipo.
-
-¿Cuándo puedo llevarlo al taller?`,
+`Hola ZUTECH, me gustaría agendar un mantenimiento preventivo para mi equipo (limpieza/pasta térmica). ¿Qué disponibilidad tienen?`,
 
   /**
    * Plantilla para solicitar diagnóstico y reparación de PC.
    */
   service_reparacion:
-`Hola Zutech 👋 Necesito *reparación* de mi PC.
-
-El problema que presenta es: [describe brevemente el fallo]
-
-¿Cuándo puedo llevarlo para diagnóstico?`,
+`Hola ZUTECH, necesito una revisión para mi computadora.
+*Falla:* [Describe brevemente qué le ocurre]
+¿Cuándo podría llevarla para un diagnóstico?`,
 
   /**
    * Plantilla para solicitar asesoría de compra / armado de equipo.
    */
   service_asesoria:
-`Hola Zutech 👋 Me gustaría recibir *asesoría de compra* para armar/renovar mi equipo.
-
-Mi presupuesto aproximado es: $___`,
+`Hola ZUTECH, quiero armar o mejorar mi PC. Me gustaría recibir asesoría sobre componentes compatibles y presupuesto.`,
 
   /**
    * Plantilla para coordinar un upgrade de hardware (RAM, SSD, GPU, etc.).
    */
   service_upgrades:
-`Hola Zutech 👋 Quiero hacer un *upgrade* a mi equipo.
+`Hola ZUTECH, quiero armar o mejorar mi PC. Me gustaría recibir asesoría sobre componentes compatibles y presupuesto.`,
 
-Estoy pensando en mejorar: [RAM / SSD / GPU / otro]
+  /**
+   * Plantilla para Instalación de Software / Sistema
+   */
+  service_software:
+`Hola ZUTECH, necesito asistencia con la instalación de sistema operativo o programas en mi equipo.`,
 
-¿Me pueden asesorar y hacer la instalación?`,
+  /**
+   * Plantilla para Soporte a Empresas / Redes
+   */
+  service_empresas:
+`Hola ZUTECH, requiero soporte técnico para la infraestructura o equipos de mi oficina/negocio.`,
 
   /**
    * Plantilla para consultas técnicas especiales no cubiertas por los 4 servicios principales.
    */
   service_general:
-`Hola Zutech 👋 Tengo una consulta técnica especial:
+`Hola ZUTECH, requiero soporte técnico para la infraestructura o equipos de mi oficina/negocio.`,
 
-`
+  /**
+   * Plantilla para notificar un nuevo pedido realizado desde el carrito de compras.
+   */
+  checkout:
+`*NUEVO PEDIDO ZUTECH*
+*REFERENCIA:* {orderId}
+--------------------------------
+*Cliente:* {name}
+*Teléfono:* {phone}
+*Modalidad:* {deliveryMethod}
+*Pago:* {paymentMethod}
+--------------------------------
+*PRODUCTOS:*
+{items}
+--------------------------------
+*TOTAL:* \${total}
+--------------------------------
+{deliveryInstructions}
+{paymentInstructions}`
 
 } as const;
 

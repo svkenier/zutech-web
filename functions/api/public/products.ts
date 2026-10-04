@@ -29,6 +29,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       SELECT products.*, brands.name as brand_name 
       FROM products 
       LEFT JOIN brands ON products.brand_id = brands.id 
+      WHERE products.is_active = 1
       ORDER BY products.created_at DESC
     `).all();
 

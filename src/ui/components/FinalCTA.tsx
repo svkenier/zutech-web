@@ -4,7 +4,24 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
+import { useQuery } from '@tanstack/react-query';
+import { get } from '@core/api/client';
+import { DEFAULT_SETTINGS, type Settings } from '@core/types/settings';
+import { openWhatsApp, getGenericInfoUrl } from '@ui/utils/whatsapp';
+
 export default function FinalCTA() {
+  const { data: settings } = useQuery<Settings>({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const res = await get<Settings | {}>('/settings');
+      if (Object.keys(res).length === 0) return DEFAULT_SETTINGS;
+      return { ...DEFAULT_SETTINGS, ...res } as Settings;
+    },
+    initialData: DEFAULT_SETTINGS,
+  });
+
+  const phone = settings?.whatsapp || DEFAULT_SETTINGS.whatsapp || '';
+
   return (
     <Box
       component="section"
@@ -39,9 +56,7 @@ export default function FinalCTA() {
           variant="contained"
           size="large"
           startIcon={<WhatsAppIcon />}
-          href="https://wa.me/1234567890" // TODO: Add real WhatsApp number
-          target="_blank"
-          rel="noopener noreferrer"
+          onClick={() => openWhatsApp(getGenericInfoUrl(phone))}
           sx={{
             bgcolor: '#25D366',
             color: '#FFFFFF',

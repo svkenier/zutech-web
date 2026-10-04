@@ -30,6 +30,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useTheme, alpha } from '@mui/material/styles';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { getCheckoutUrl, openWhatsApp } from '@ui/utils/whatsapp';
 
 const validationSchema = Yup.object({
   name: Yup.string().min(3, 'El nombre completo es requerido').required('El nombre completo es requerido'),
@@ -38,8 +39,11 @@ const validationSchema = Yup.object({
   paymentMethod: Yup.string().required('Selecciona un método de pago')
 });
 
+import { useQuery } from '@tanstack/react-query';
+
 export default function CartDrawer() {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, subtotal, clearCart, canCheckout, removeUnavailableItems } = useCart();
+  const { data: settings } = useQuery<any>({ queryKey: ['settings'], queryFn: () => get('/settings'), staleTime: 60000 });
   const [checkoutMode, setCheckoutMode] = useState(false);
   const [errorToast, setErrorToast] = useState('');
 
@@ -60,54 +64,58 @@ export default function CartDrawer() {
         const payload = {
           client: { name: values.name, phone: values.phone },
           delivery: { method: values.deliveryMethod, address: '' },
+          payment_method: values.paymentMethod,
           items: cartItems.map(i => ({ id: i.id, title: i.title, quantity: i.quantity, price: i.price })),
           totalUSD: subtotal
         };
 
-        const res = await post<{ ok: boolean, orderId: string }>('/public/orders', payload);
+        const res = await post<{ success?: boolean, ok?: boolean, orderId: string }>('/public/orders', payload);
 
-        if (res.ok && res.orderId) {
-          const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '584121234567';
+        if ((res.success || res.ok) && res.orderId) {
+          const whatsappNumber = settings?.whatsapp || '';
           
-          let message = `🛒 *NUEVO PEDIDO - ZUTECH*\n`;
-          message += `--------------------------------\n`;
-          message += `👤 *Cliente:* ${values.name}\n`;
-          message += `📱 *Teléfono:* ${values.phone}\n`;
-          message += `📍 *Modalidad de Entrega:* ${values.deliveryMethod === 'pickup' ? 'Retiro en Tienda' : 'Delivery'}\n`;
-          message += `💳 *Método de Pago:* ${values.paymentMethod}\n`;
-          message += `--------------------------------\n`;
-          message += `📦 *DETALLE DE PRODUCTOS:*\n`;
-          
+          let itemsText = '';
           cartItems.forEach(item => {
-            message += `- ${item.quantity}x ${item.title} ($${(item.price * item.quantity).toFixed(2)})\n`;
+            itemsText += `- ${item.quantity}x ${item.title} ($${(item.price * item.quantity).toFixed(2)})\n`;
+          });
+          itemsText = itemsText.trimEnd();
+          
+          let deliveryInstructions = '';
+          if (values.deliveryMethod === 'delivery') {
+              deliveryInstructions = `*DELIVERY:* El costo se calculará con la tienda vía WhatsApp según tu zona.\n*Por favor, comparte tu ubicación actual por este chat para cotizar el envío.*`;
+          }
+          
+          let paymentInstructions = '';
+          if (values.paymentMethod !== 'Dólares en Efectivo') {
+              paymentInstructions = `*Por favor, adjunta tu comprobante de pago por aquí para procesar tu orden.*`;
+          } else {
+              paymentInstructions = `*Pago en efectivo al retirar en tienda.*`;
+          }
+
+          const whatsappUrl = getCheckoutUrl(whatsappNumber, {
+            orderId: res.orderId,
+            name: values.name,
+            phone: values.phone,
+            deliveryMethod: values.deliveryMethod === 'pickup' ? 'Retiro en Tienda' : 'Delivery',
+            paymentMethod: values.paymentMethod,
+            itemsText,
+            total: subtotal.toFixed(2),
+            deliveryInstructions,
+            paymentInstructions
           });
           
-          message += `--------------------------------\n`;
-          message += `💰 *TOTAL PRODUCTOS:* $${subtotal.toFixed(2)}\n`;
-          message += `--------------------------------\n`;
-          
-          if (values.deliveryMethod === 'delivery') {
-              message += `🛵 *DELIVERY:* El costo se calculará con la tienda vía WhatsApp según tu zona.\n`;
-              message += `📍 *Por favor, comparte tu ubicación actual por este chat para cotizar el envío.*\n`;
-          }
-          
-          if (values.paymentMethod !== 'Dólares en Efectivo') {
-              message += `📸 *Por favor, adjunta tu comprobante de pago por aquí para procesar tu orden.*`;
-          } else {
-              message += `💵 *Pago en efectivo al retirar en tienda.*`;
-          }
-
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-          
-          window.open(whatsappUrl, '_blank');
+          openWhatsApp(whatsappUrl);
           clearCart();
           setIsCartOpen(false);
           setCheckoutMode(false);
           formik.resetForm();
         }
-      } catch (err) {
-        setErrorToast(formatApiError(err, 'Error procesando la orden'));
+      } catch (err: any) {
+        if (err?.status === 409 || err?.message?.includes('409') || err?.message?.includes('precio')) {
+          setErrorToast('⚠️ Los precios del catálogo han cambiado. Por favor recarga la página para ver los precios actualizados.');
+        } else {
+          setErrorToast(formatApiError(err, 'Error procesando la orden'));
+        }
       } finally {
         setSubmitting(false);
       }

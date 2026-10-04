@@ -16,10 +16,30 @@ import type { Settings } from '@core/types/settings';
 
 const validationSchema = Yup.object({
   store_name: Yup.string().nullable(),
-  rif: Yup.string().nullable(),
-  phone: Yup.string().nullable(),
-  whatsapp: Yup.string().matches(/^\d*$/, 'Solo números, sin espacios ni símbolos').nullable(),
-  email: Yup.string().email('Debe ser un correo válido').nullable(),
+  rif: Yup.string()
+    .matches(
+      /^[VEJGPCLvejgpc][\s-]?\d{7,8}[\s-]??\d$/,
+      'Ingresa un RIF válido (ej. J-12345678-9 o J123456789).'
+    )
+    .nullable(),
+  phone: Yup.string()
+    .matches(
+      /^[0-9+\s\-()]{7,25}$/,
+      'Ingresa un número de teléfono válido (ej. +58 412 000 0000)'
+    )
+    .nullable(),
+  whatsapp: Yup.string()
+    .test(
+      'no-starting-zero',
+      'No comiences con 0. Ingresa el código de país (ej. 58 para Venezuela, 57 para Colombia).',
+      (value) => !value || !value.startsWith('0')
+    )
+    .matches(
+      /^\d{8,15}$/,
+      'El número debe contener entre 8 y 15 dígitos numéricos'
+    )
+    .nullable(),
+  email: Yup.string().email('Ingresa un correo electrónico válido').nullable(),
   map_url: Yup.string().url('Debe ser una URL válida').nullable(),
   address: Yup.string().nullable(),
   social_links: Yup.object({
@@ -56,7 +76,28 @@ export default function SettingsManager() {
     enableReinitialize: true,
     validationSchema,
     onSubmit: (values) => {
-      mutation.mutate(values);
+      let normalizedRif = values.rif;
+      if (normalizedRif) {
+        const cleanRif = normalizedRif.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        if (cleanRif.length >= 9) {
+          const letra = cleanRif.charAt(0);
+          const digito = cleanRif.slice(-1);
+          const cuerpo = cleanRif.slice(1, -1);
+          normalizedRif = `${letra}-${cuerpo}-${digito}`;
+        } else if (cleanRif.length === 8) {
+          const letra = cleanRif.charAt(0);
+          const digito = cleanRif.slice(-1);
+          const cuerpo = cleanRif.slice(1, -1);
+          normalizedRif = `${letra}-${cuerpo}-${digito}`;
+        }
+      }
+
+      let normalizedWhatsapp = values.whatsapp;
+      if (normalizedWhatsapp) {
+        normalizedWhatsapp = normalizedWhatsapp.replace(/\D/g, '');
+      }
+
+      mutation.mutate({ ...values, rif: normalizedRif, whatsapp: normalizedWhatsapp });
     },
   });
 

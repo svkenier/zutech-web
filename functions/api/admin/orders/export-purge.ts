@@ -2,16 +2,6 @@ import { getAuthPayload } from '../../../../src/core/auth/auth.js';
 import { ROLE_LEVEL, type UserRole } from '../../../../src/core/types/user.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
 
-/**
- * POST /api/admin/orders/export-purge
- *
- * Flujo de dos pasos para evitar pérdida de datos:
- *   - action = "export"  → Devuelve el JSON como archivo descargable. NO purga.
- *   - action = "purge"   → Borra los datos ya cerrados de D1 (requiere que haya cierres).
- *
- * El frontend debe llamar a "export" primero, confirmar que el archivo fue guardado,
- * y luego llamar a "purge" en un segundo paso explícito con confirmación del usuario.
- */
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
 
@@ -33,20 +23,33 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const body = await request.json() as { action: 'export' | 'purge' };
 
     if (body.action === 'export') {
-      // ── PASO 1: Exportar snapshot JSON (sin tocar la BD) ─────────────────
       const { results: closures } = await env.DB.prepare(
         `SELECT * FROM cash_closures ORDER BY created_at ASC`
-      ).all();
+      ).all() as any;
 
       const { results: closedOrders } = await env.DB.prepare(
-        `SELECT * FROM orders WHERE closure_id IS NOT NULL ORDER BY created_at ASC`
-      ).all();
+        `SELECT id, customer_name, customer_phone, delivery_type, total, status, payment_method, closure_id, created_at, updated_at 
+         FROM orders WHERE closure_id IS NOT NULL ORDER BY created_at ASC`
+      ).all() as any;
+
+      const { results: orderItems } = await env.DB.prepare(
+        `SELECT oi.order_id, oi.product_id AS id, oi.product_title AS title, oi.unit_price AS price, oi.quantity
+         FROM order_items oi
+         JOIN orders o ON oi.order_id = o.id
+         WHERE o.closure_id IS NOT NULL`
+      ).all() as any;
 
       if (closures.length === 0) {
         return new Response(
           JSON.stringify({ error: 'No hay cierres de caja para exportar.' }),
           { status: 400, headers: { 'Content-Type': 'application/json' } },
         );
+      }
+
+      const itemsByOrder = new Map();
+      for (const item of orderItems) {
+        if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+        itemsByOrder.get(item.order_id).push(item);
       }
 
       const now = new Date();
@@ -65,7 +68,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             customer_phone: o.customer_phone,
             payment_method: o.payment_method,
             total_usd: o.total,
-            items: JSON.parse(o.items || '[]')
+            items: itemsByOrder.get(o.id) || []
           }));
           
         return {
@@ -104,7 +107,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     if (body.action === 'purge') {
-      // ── PASO 2: Purgar datos cerrados de D1 (atómico) ─────────────────────
       const closureCount = await env.DB.prepare(
         `SELECT COUNT(*) as cnt FROM cash_closures`
       ).first() as { cnt: number } | null;

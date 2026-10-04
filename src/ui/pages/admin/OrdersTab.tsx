@@ -1,12 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
 import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 import CheckIcon from '@mui/icons-material/Check';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -58,15 +62,52 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
 
   const orders = data?.records || [];
   
-  // Optimistic approval filter: if ID is in pendingApproval, treat it as approved locally
-  const visibleOrders = orders.filter(o => {
-    if (filter === 'all') return true;
-    if (filter === 'pending') {
-      return (o.status === 'pending') && pendingApproval !== o.id;
-    } else {
-      return (o.status === 'approved') || pendingApproval === o.id;
-    }
-  });
+  const [filterDelivery, setFilterDelivery] = useState<'all' | 'pickup' | 'delivery'>('all');
+  const [filterDate, setFilterDate] = useState<'today' | 'last_7_days' | 'all'>('today');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Optimistic approval filter + Search + Date/Delivery filters
+  const visibleOrders = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase();
+    
+    return orders.filter(o => {
+      // 1. Status Filter
+      if (filter === 'pending') {
+        if (o.status !== 'pending' || pendingApproval === o.id) return false;
+      } else if (filter === 'approved') {
+        if (o.status !== 'approved' && pendingApproval !== o.id) return false;
+      }
+
+      // 2. Delivery Filter
+      if (filterDelivery !== 'all' && o.delivery_type !== filterDelivery) return false;
+
+      // 3. Date Filter
+      if (filterDate !== 'all') {
+        const orderDate = new Date(o.created_at);
+        const today = new Date();
+        if (filterDate === 'today') {
+          if (orderDate.toDateString() !== today.toDateString()) return false;
+        } else if (filterDate === 'last_7_days') {
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(today.getDate() - 7);
+          if (orderDate < sevenDaysAgo) return false;
+        }
+      }
+
+      // 4. Search Query
+      if (term) {
+        const idLower = o.id.toLowerCase();
+        const nameLower = (o.customer_name || '').toLowerCase();
+        const phoneLower = (o.customer_phone || '').toLowerCase();
+        
+        if (!idLower.includes(term) && !nameLower.includes(term) && !phoneLower.includes(term)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [orders, filter, filterDelivery, filterDate, searchQuery, pendingApproval]);
 
   const updateMutation = useMutation({
     mutationFn: (args: { id: string, action: string, updates?: any, payment_method?: string }) => put('/admin/orders', args),
@@ -201,13 +242,97 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         </Stack>
       </Box>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={filter} onChange={(_, v) => setFilter(v)}>
-          <Tab value="all" label="Todos" disabled={isMutating} />
-          <Tab value="pending" label="Pendientes" disabled={isMutating} />
-          <Tab value="approved" label="Aprobados" disabled={isMutating} />
-        </Tabs>
-      </Box>
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        {/* Fila 1: Búsqueda y Fecha */}
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+          <TextField
+            size="small"
+            placeholder="Buscar orden, cliente..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ flexGrow: 1, width: { xs: '100%', md: 'auto' } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: 150, width: { xs: '100%', md: 'auto' } }}>
+            <Select
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value as any)}
+              displayEmpty
+            >
+              <MenuItem value="today">Hoy</MenuItem>
+              <MenuItem value="last_7_days">Últimos 7 días</MenuItem>
+              <MenuItem value="all">Todas las fechas</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+
+        {/* Fila 2: Segmentación con Chips */}
+        <Stack 
+          direction="row" 
+          spacing={2} 
+          alignItems="center" 
+          sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}
+        >
+          <Stack direction="row" spacing={1}>
+            <Chip 
+              label="Todos" 
+              clickable 
+              variant={filter === 'all' ? 'filled' : 'outlined'} 
+              color={filter === 'all' ? 'primary' : 'default'} 
+              onClick={() => setFilter('all')} 
+              disabled={isMutating} 
+            />
+            <Chip 
+              label="Pendientes" 
+              clickable 
+              variant={filter === 'pending' ? 'filled' : 'outlined'} 
+              color={filter === 'pending' ? 'warning' : 'default'} 
+              onClick={() => setFilter('pending')} 
+              disabled={isMutating} 
+            />
+            <Chip 
+              label="Aprobados" 
+              clickable 
+              variant={filter === 'approved' ? 'filled' : 'outlined'} 
+              color={filter === 'approved' ? 'success' : 'default'} 
+              onClick={() => setFilter('approved')} 
+              disabled={isMutating} 
+            />
+          </Stack>
+          
+          <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
+          
+          <Stack direction="row" spacing={1}>
+            <Chip 
+              label="Todas entregas" 
+              clickable 
+              variant={filterDelivery === 'all' ? 'filled' : 'outlined'} 
+              color={filterDelivery === 'all' ? 'primary' : 'default'} 
+              onClick={() => setFilterDelivery('all')} 
+            />
+            <Chip 
+              label="Delivery" 
+              clickable 
+              variant={filterDelivery === 'delivery' ? 'filled' : 'outlined'} 
+              color={filterDelivery === 'delivery' ? 'primary' : 'default'} 
+              onClick={() => setFilterDelivery('delivery')} 
+            />
+            <Chip 
+              label="Pick up" 
+              clickable 
+              variant={filterDelivery === 'pickup' ? 'filled' : 'outlined'} 
+              color={filterDelivery === 'pickup' ? 'primary' : 'default'} 
+              onClick={() => setFilterDelivery('pickup')} 
+            />
+          </Stack>
+        </Stack>
+      </Stack>
 
       {pendingApproval && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, p: 2, bgcolor: 'warning.light', color: 'warning.contrastText', borderRadius: 1 }}>
@@ -237,7 +362,10 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
                 <CardContent>
                   <Box display="flex" justifyContent="space-between" mb={1} alignItems="center">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="h6" fontWeight={700}>{order.id}</Typography>
+                      <Typography variant="h6" fontWeight={500} color="text.secondary">
+                        {order.id.slice(0, -4)}
+                        <Box component="span" fontWeight={800} color="primary.main">{order.id.slice(-4)}</Box>
+                      </Typography>
                       {filter === 'all' && (
                         isPending ? (
                           <Chip label="Pendiente" size="small" color="warning" />
@@ -248,7 +376,19 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       {order.payment_method && (
-                        <Chip label={order.payment_method.replace('_', ' ').toUpperCase()} size="small" variant="outlined" color="primary" />
+                        <Chip 
+                          label={
+                            order.payment_method === 'pago_movil' ? 'Pago Móvil' :
+                            order.payment_method === 'transferencia' ? 'Transferencia' :
+                            order.payment_method === 'zelle' ? 'Zelle' :
+                            order.payment_method === 'binance' ? 'Binance' :
+                            order.payment_method === 'efectivo' ? 'Efectivo' :
+                            order.payment_method
+                          } 
+                          size="small" 
+                          variant="outlined" 
+                          color="primary" 
+                        />
                       )}
                       <Typography variant="h6" color="primary.main" fontWeight={800}>${order.totalUSD.toFixed(2)}</Typography>
                     </Stack>
@@ -257,7 +397,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
                     {new Date(order.created_at).toLocaleString()} • {order.client?.name} ({order.client?.phone})
                   </Typography>
                   <Typography variant="body2" mb={1}>
-                    <strong>Entrega:</strong> {order.delivery?.method === 'pickup' ? 'Pick up' : `Delivery: ${order.delivery?.address}`}
+                    <strong>Entrega:</strong> {(order.delivery_type || order.delivery?.method) === 'pickup' ? 'Pick up' : 'Delivery (se coordina por WhatsApp)'}
                   </Typography>
                   <Box bgcolor="background.default" p={1} borderRadius={1} border="1px solid" borderColor="divider">
                     {order.items.slice(0, 3).map((it: any, idx: number) => (
@@ -390,7 +530,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
           <Typography variant="subtitle2" fontWeight={700} mb={1}>Datos del Cliente</Typography>
           <Typography variant="body2" mb={0.5}><strong>Nombre:</strong> {viewOrder?.client?.name}</Typography>
           <Typography variant="body2" mb={0.5}><strong>Teléfono:</strong> {viewOrder?.client?.phone}</Typography>
-          <Typography variant="body2" mb={2}><strong>Entrega:</strong> {viewOrder?.delivery?.method === 'pickup' ? 'Pick up' : `Delivery: ${viewOrder?.delivery?.address}`}</Typography>
+          <Typography variant="body2" mb={2}><strong>Entrega:</strong> {(viewOrder?.delivery_type || viewOrder?.delivery?.method) === 'pickup' ? 'Pick up' : 'Delivery (se coordina por WhatsApp)'}</Typography>
           
           <Typography variant="subtitle2" fontWeight={700} mb={1}>Productos ({viewOrder?.items?.length || 0})</Typography>
           <Box bgcolor="background.default" p={1.5} borderRadius={1} border="1px solid" borderColor="divider">

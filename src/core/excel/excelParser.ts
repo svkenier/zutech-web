@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { optimizeImage } from '../media/imageOptimizer';
+
 
 export interface StagingProduct {
   id: string; // crypto.randomUUID()
@@ -148,7 +148,6 @@ export async function parseExcel(buffer: ArrayBuffer): Promise<StagingProduct[]>
     const colCat = headers.get('CATEGORIA') || 5;
     const colDesc = headers.get('DESCRIPCION') || 6;
     const colStock = headers.get('STOCK') || 7;
-    const colImg = headers.get('IMAGEN') || 8;
 
     const nombreRaw = row.getCell(colNombre).text?.trim() || '';
     const marcaRaw = row.getCell(colMarca).text?.trim() || '';

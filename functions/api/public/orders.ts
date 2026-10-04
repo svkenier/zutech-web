@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getOrderRateLimit, checkRateLimit } from '../../../src/core/auth/rate-limit.js';
 import type { Env } from '../../../src/core/auth/auth.js';
+import { round2 } from '../../../src/core/utils/math.js';
 
 const OrderItemSchema = z.object({
   id: z.string(),
@@ -20,6 +21,7 @@ const OrderSchema = z.object({
   }).optional(),
   items: z.array(OrderItemSchema).min(1),
   totalUSD: z.number().nonnegative(),
+  payment_method: z.string().optional(),
 });
 
 function generateOrderId() {
@@ -64,11 +66,24 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     const validData = validationResult.data;
     
-    const productIds = Array.from(new Set(validData.items.map(item => item.id)));
+    // Fusionar líneas duplicadas enviadas por el cliente
+    const mergedItems = new Map<string, { id: string; title: string; price: number; quantity: number }>();
+    for (const item of validData.items) {
+      if (mergedItems.has(item.id)) {
+        const existing = mergedItems.get(item.id)!;
+        existing.quantity += item.quantity;
+      } else {
+        mergedItems.set(item.id, { ...item });
+      }
+    }
+    const uniqueItems = Array.from(mergedItems.values());
+
+    const productIds = uniqueItems.map(item => item.id);
     const placeholders = productIds.map(() => '?').join(', ');
     
+    // Solo cargamos productos que estén is_active = 1
     const { results } = await env.DB.prepare(`
-      SELECT id, title, price, in_stock FROM products WHERE id IN (${placeholders})
+      SELECT id, title, price, in_stock FROM products WHERE id IN (${placeholders}) AND is_active = 1
     `).bind(...productIds).all() as any;
     
     const dbProducts = new Map<string, { title: string, price: number, in_stock: number }>();
@@ -77,55 +92,80 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     let realTotal = 0;
-    const validatedItems = [];
-    for (const clientItem of validData.items) {
+    const validatedLines = [];
+    const changedPrices = [];
+
+    for (const clientItem of uniqueItems) {
       const dbProd = dbProducts.get(clientItem.id);
+      
       if (!dbProd || dbProd.in_stock === 0) {
-        return new Response(JSON.stringify({ error: `Producto no válido o fuera de stock (ID: ${clientItem.id})` }), { 
+        return new Response(JSON.stringify({ error: `Producto no válido, archivado o fuera de stock (ID: ${clientItem.id})` }), { 
           status: 400, 
           headers: { 'Content-Type': 'application/json' } 
         });
       }
-      realTotal += dbProd.price * clientItem.quantity;
-      validatedItems.push({
-        id: clientItem.id,
-        title: dbProd.title, // blindaje de nombre
-        price: dbProd.price, // blindaje de precio oficial
-        quantity: clientItem.quantity
+      
+      const officialPrice = round2(dbProd.price);
+      const clientPrice = round2(clientItem.price);
+      
+      if (officialPrice !== clientPrice) {
+        changedPrices.push({
+          id: clientItem.id,
+          title: dbProd.title,
+          seen: clientPrice,
+          current: officialPrice
+        });
+      }
+
+      realTotal += round2(dbProd.price * clientItem.quantity);
+      validatedLines.push({
+        product_id: clientItem.id,
+        product_title: dbProd.title, // blindaje de nombre oficial
+        quantity: clientItem.quantity,
+        unit_price: officialPrice
+      });
+    }
+
+    realTotal = round2(realTotal);
+
+    if (changedPrices.length > 0 || realTotal !== round2(validData.totalUSD)) {
+      return new Response(JSON.stringify({
+        error: 'Los precios del catálogo han cambiado',
+        code: 'PRICE_CHANGED',
+        changed: changedPrices
+      }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' }
       });
     }
 
     const orderId = generateOrderId();
     const now = new Date().toISOString();
+    const deliveryType = validData.delivery?.method || 'pickup';
 
-    const orderRecord = {
-      id: orderId,
-      customer_name: validData.client.name,
-      customer_phone: validData.client.phone,
-      delivery_type: validData.delivery?.method || 'pickup',
-      delivery_address: validData.delivery?.address || '',
-      items: JSON.stringify(validatedItems),
-      total: realTotal, // total estrictamente calculado en el server
-      status: 'pending',
-      created_at: now,
-      updated_at: now
-    };
-
-    await env.DB.prepare(`
-      INSERT INTO orders (id, customer_name, customer_phone, delivery_type, delivery_address, items, total, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    const insertOrderStmt = env.DB.prepare(`
+      INSERT INTO orders (id, customer_name, customer_phone, delivery_type, payment_method, total, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      orderRecord.id,
-      orderRecord.customer_name,
-      orderRecord.customer_phone,
-      orderRecord.delivery_type,
-      orderRecord.delivery_address,
-      orderRecord.items,
-      orderRecord.total,
-      orderRecord.status,
-      orderRecord.created_at,
-      orderRecord.updated_at
-    ).run();
+      orderId,
+      validData.client.name,
+      validData.client.phone,
+      deliveryType,
+      validData.payment_method || null,
+      realTotal,
+      'pending',
+      now,
+      now
+    );
+
+    const insertLinesStmts = validatedLines.map(line => 
+      env.DB.prepare(`
+        INSERT INTO order_items (order_id, product_id, product_title, quantity, unit_price)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(orderId, line.product_id, line.product_title, line.quantity, line.unit_price)
+    );
+
+    await env.DB.batch([insertOrderStmt, ...insertLinesStmts]);
 
     return new Response(JSON.stringify({ success: true, orderId }), { 
       status: 201, 

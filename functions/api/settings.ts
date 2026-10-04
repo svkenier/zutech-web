@@ -38,9 +38,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     const contentStr = JSON.stringify(body);
     
     await env.DB.prepare(`
-      INSERT INTO settings (id, data, updated_at) 
-      VALUES ('general', ?, datetime('now'))
-      ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at
+      INSERT INTO settings (id, data) 
+      VALUES ('general', ?)
+      ON CONFLICT(id) DO UPDATE SET data = excluded.data
     `).bind(contentStr).run();
 
     return new Response(JSON.stringify({ ok: true, data: body }), { status: 200, headers: { 'Content-Type': 'application/json' } });

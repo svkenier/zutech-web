@@ -202,8 +202,19 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     
     if (!prodId) return new Response(JSON.stringify({ error: 'ID requerido' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-    // 1. Recolección de basura: Borrar imagen en R2 antes de borrar el registro
+    const count = await env.DB.prepare(`SELECT COUNT(*) as c FROM order_items WHERE product_id = ?`).bind(prodId).first() as {c: number};
+    if (count.c > 0) {
+      await env.DB.prepare(`UPDATE products SET is_active = 0, in_stock = 0 WHERE id = ?`).bind(prodId).run();
+      return new Response(JSON.stringify({ success: true, archived: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // 1. Guardar la URL de la imagen
     const product = (await env.DB.prepare(`SELECT image_url FROM products WHERE id = ?`).bind(prodId).first()) as { image_url: string } | null;
+
+    // 2. Borrar en la base de datos (seguro porque no tiene ventas)
+    await env.DB.prepare(`DELETE FROM products WHERE id = ?`).bind(prodId).run();
+
+    // 3. Recolección de basura en R2
     if (product && product.image_url) {
       const path = extractPathFromCdnUrl(product.image_url);
       if (path) {
@@ -211,8 +222,6 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
       }
     }
 
-    // 2. Borrar en la base de datos
-    await env.DB.prepare(`DELETE FROM products WHERE id = ?`).bind(prodId).run();
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('Error in Admin Products DELETE:', e);
