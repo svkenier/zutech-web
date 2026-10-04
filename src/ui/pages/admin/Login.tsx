@@ -1,5 +1,5 @@
 /**
- * Login — Formulario de acceso para staff del refugio.
+ * Login — Formulario de acceso para staff de Zutech.
  *
  * Diseño: panel centrado sobrio con logo, form de dos campos y feedback de error.
  * Tras login exitoso, redirige a /admin (o a la ruta que intentaba acceder).
@@ -29,6 +29,7 @@ import IconButton from '@mui/material/IconButton';
 import { alpha } from '@mui/material/styles';
 import { useAuth } from '@ui/context/AuthContext';
 import { formatApiError } from '@core/api/client';
+import SEO from '@core/media/SEO';
 
 // Tipo de estado de location que puede contener la ruta de retorno
 interface LocationState {
@@ -85,15 +86,30 @@ export default function Login() {
         p: 2,
       }}
     >
+      <SEO title="Iniciar Sesión · Acceso Seguro" description="Acceso exclusivo para el equipo de Zutech." noIndex />
       <Container maxWidth="xs">
         {/* Logo y Encabezado */}
         <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Box
             component="img"
-            src="/logo.svg"
+            src="/logo.webp"
             alt="ZUTECH"
+            onError={(e: any) => {
+              e.currentTarget.style.display = 'none';
+              if (e.currentTarget.nextElementSibling) {
+                (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block';
+              }
+            }}
             sx={{ height: 56, width: 'auto', objectFit: 'contain', mb: 2 }}
           />
+          <Typography 
+            variant="h4" 
+            fontWeight={900} 
+            color="primary" 
+            sx={{ display: 'none', mb: 2, letterSpacing: '-0.02em' }}
+          >
+            ZUTECH
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             Acceso exclusivo para el equipo de ZUTECH
           </Typography>
@@ -194,7 +210,7 @@ export default function Login() {
         <Divider sx={{ my: 3 }} />
 
         <Typography variant="caption" color="text.disabled" textAlign="center" display="block">
-          ¿Problemas para acceder? Contacta al SuperAdmin del refugio.
+          ¿Problemas para acceder? Contacta al SuperAdmin de Zutech.
         </Typography>
         <Box textAlign="center" mt={1.5}>
           <Link component={RouterLink} to="/" underline="hover" color="primary" variant="body2">

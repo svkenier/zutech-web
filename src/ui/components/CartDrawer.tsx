@@ -23,7 +23,7 @@ import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import { useCart } from '@ui/context/CartContext';
 import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
-import { post, formatApiError } from '@core/api/client';
+import { get, post, formatApiError } from '@core/api/client';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';

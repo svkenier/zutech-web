@@ -34,6 +34,7 @@ import CheckCircleOutlineIcon     from '@mui/icons-material/CheckCircleOutline';
 import Navbar                     from '@ui/components/Navbar';
 import Footer                     from '@ui/components/Footer';
 import AnimatedSection            from '@ui/components/AnimatedSection';
+import SEO                        from '@core/media/SEO';
 import { get }                    from '@core/api/client';
 import { DEFAULT_SETTINGS }       from '@core/types/settings';
 import type { Settings }          from '@core/types/settings';
@@ -154,6 +155,10 @@ export default function ServicesPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <SEO 
+        title="Servicio Técnico y Reparación de Computadoras · Zutech" 
+        description="Diagnóstico preciso, piezas originales y garantía escrita. Mantenimiento, reparación y asesoría para tu PC." 
+      />
 
       {/* ── Navbar ───────────────────────────────────────────────────────── */}
       <Navbar />

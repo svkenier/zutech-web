@@ -2,9 +2,9 @@
  * ContactSection — Tarjetas de contacto por WhatsApp.
  *
  * Canales institucionales (Rules.md §3):
- *  1. Adopción — mensaje pre-armado con nombre y URL de la ficha (o genérico aquí).
- *  2. Rescate / Emergencia — reporte de animal en situación de calle.
- *  3. Donaciones / Ingreso — apadrinamiento y entrega responsable.
+ *  1. Compras — mensaje pre-armado con nombre y URL de producto.
+ *  2. Soporte Técnico — reporte de equipo averiado.
+ *  3. Consultoría — asesoría de ensamblaje o compra.
  *  4. Voluntariado — postulación para voluntariado.
  */
 
@@ -57,7 +57,7 @@ export default function ContactSection({ sx }: ContactSectionProps) {
       action:   'Escribir al refugio',
       iconBg:   'rgba(186, 254, 147, 0.25)', // Verde Menta suave
       iconColor: '#1E1F20',
-      getUrl:   () => getGenericInfoUrl(phone),
+      getUrl:   () => getGenericInfoUrl(phone ?? ''),
     },
     {
       icon:     <CampaignOutlinedIcon sx={{ fontSize: 28 }} />,
@@ -66,7 +66,7 @@ export default function ContactSection({ sx }: ContactSectionProps) {
       action:   'Reportar ahora',
       iconBg:   'rgba(255, 175, 43, 0.20)', // Ámbar cálido suave
       iconColor: '#1E1F20',
-      getUrl:   () => getEmergencyUrl(phone),
+      getUrl:   () => getEmergencyUrl(phone ?? ''),
     },
     {
       icon:     <VolunteerActivismOutlinedIcon sx={{ fontSize: 28 }} />,
@@ -75,7 +75,7 @@ export default function ContactSection({ sx }: ContactSectionProps) {
       action:   'Quiero ayudar',
       iconBg:   'rgba(53, 180, 221, 0.20)', // Cian suave
       iconColor: '#1E1F20',
-      getUrl:   () => getDonationUrl(phone),
+      getUrl:   () => getDonationUrl(phone ?? ''),
     },
     {
       icon:     <HandshakeOutlinedIcon sx={{ fontSize: 28 }} />,
@@ -84,7 +84,7 @@ export default function ContactSection({ sx }: ContactSectionProps) {
       action:   'Ser empleado',
       iconBg:   'rgba(30, 31, 32, 0.08)', // Carbón neutro suave
       iconColor: '#1E1F20',
-      getUrl:   () => getVolunteerUrl(phone),
+      getUrl:   () => getVolunteerUrl(phone ?? ''),
     },
   ];
 

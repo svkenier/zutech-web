@@ -1,6 +1,4 @@
-import React from 'react';
 import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '@core/api/client';

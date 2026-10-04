@@ -12,22 +12,18 @@
 /**
  * Roles del sistema en orden ascendente de privilegios:
  *
- * - `empleado`  (Nivel 1): Crear/editar fichas de mascotas y fotos.
+ * - `empleado`  (Nivel 1): Crear/editar fichas de productos y fotos.
  * - `encargado`   (Nivel 2): Todo lo anterior + gestionar empleados.
  * - `superadmin`  (Nivel 3): Control total. Cuenta permanente (sin TTL).
  */
-export type UserRole = 'empleado' | 'encargado' | 'superadmin' | 'owner';
+export type UserRole = 'owner' | 'superadmin' | 'encargado' | 'empleado';
 
-/**
- * Mapa numérico de nivel para comparaciones de jerarquía.
- * Uso: `ROLE_LEVEL[roleA] > ROLE_LEVEL[roleB]`
- */
-export const ROLE_LEVEL: Record<UserRole, number> = {
-  empleado:  1,
-  encargado:   2,
-  superadmin:  3,
-  owner:       4,
-} as const;
+export const ROLE_HIERARCHY: Record<UserRole, number> = {
+  owner: 4,
+  superadmin: 3,
+  encargado: 2,
+  empleado: 1,
+};
 
 // ─── Interfaz de Usuario en KV ───────────────────────────────────────────────
 
@@ -65,6 +61,9 @@ export interface KVUser {
    * Se actualiza en cada llamada a `POST /api/auth/login`.
    */
   last_login?: string;
+
+  /** Fecha de expiración de la cuenta por inactividad (ISO 8601). */
+  expires_at?: string;
 
   /**
    * Versión del token para invalidación global de sesiones.
@@ -175,19 +174,19 @@ export interface UsersListResponse {
  * - `empleado` no puede gestionar a nadie.
  */
 export function canManage(actorRole: UserRole, targetRole: UserRole): boolean {
-  return ROLE_LEVEL[actorRole] > ROLE_LEVEL[targetRole];
+  return ROLE_HIERARCHY[actorRole] > ROLE_HIERARCHY[targetRole];
 }
 
 /**
  * Devuelve `true` si el `actorRole` puede crear usuarios del `newRole`.
  *
  * Reglas adicionales:
- * - Solo `superadmin` puede crear otros `superadmin`.
- * - `encargado` solo puede crear `encargado` y `empleado`.
+ * - Solo `owner` puede crear `superadmin`.
+ * - `encargado` solo puede crear `empleado`.
  */
 export function canCreateRole(actorRole: UserRole, newRole: UserRole): boolean {
   if (actorRole === 'owner') return true;
-  if (actorRole === 'superadmin') return newRole !== 'owner';
-  if (actorRole === 'encargado')  return newRole === 'empleado' || newRole === 'encargado';
+  if (actorRole === 'superadmin') return newRole !== 'owner' && newRole !== 'superadmin';
+  if (actorRole === 'encargado')  return newRole === 'empleado';
   return false;
 }

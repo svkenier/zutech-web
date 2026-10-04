@@ -1,5 +1,5 @@
 /**
- * UserManagement — Panel de gestión de usuarios del refugio.
+ * UserManagement — Panel de gestión de usuarios del sistema.
  * Refactorizado para usar componentes modulares.
  */
 import Box from '@mui/material/Box';
@@ -14,7 +14,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 import { useAuth } from '@ui/context/AuthContext';
-import { ROLE_LEVEL } from '@core/types/user';
+import { ROLE_HIERARCHY } from '@core/types/user';
 
 import { useUserManagement } from './admin/users/useUserManagement';
 import { UserTable } from './admin/users/UserTable';
@@ -43,7 +43,7 @@ export default function UserManagement() {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h6" fontWeight={700}>Usuarios del sistema</Typography>
-        {currentUser && ROLE_LEVEL[currentUser.role] >= ROLE_LEVEL['encargado'] && (
+        {currentUser && ROLE_HIERARCHY[currentUser.role] >= ROLE_HIERARCHY['encargado'] && (
           <Button
             variant="contained"
             startIcon={<PersonAddIcon />}

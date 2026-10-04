@@ -87,8 +87,8 @@ export default function Home() {
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <SEO 
-        title="ZUTECH | Hardware, Software y Servicio Técnico" 
-        description="Todo en software y hardware para tu PC. Tienda de componentes, equipos y servicio técnico especializado." 
+        title="Zutech · Hardware, Laptops y Servicio Técnico en Maracaibo" 
+        description="Tienda de tecnología y computación en Maracaibo. Venta de componentes, laptops y servicio técnico especializado en reparación de computadoras." 
       />
       
       {/* 1. Header / Navbar */}

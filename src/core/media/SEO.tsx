@@ -7,6 +7,7 @@ interface SEOProps {
   url?: string;
   type?: string;
   schemaType?: string;
+  noIndex?: boolean;
 }
 
 export default function SEO({ 
@@ -15,15 +16,16 @@ export default function SEO({
   image = '/hero-desktop.webp', 
   url, 
   type = 'website',
-  schemaType = 'Organization'
+  schemaType = 'Organization',
+  noIndex = false
 }: SEOProps) {
   let baseUrl = import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://boilerplate.local');
   // Limpiar posible formato Markdown accidental como "[https://...](https://...)"
   baseUrl = baseUrl.replace(/^\[.*\]\((.*)\)$/, '$1');
   const finalUrl = url ? (url.startsWith('http') ? url : `${baseUrl}${url}`) : baseUrl;
 
-  const siteName = import.meta.env.VITE_SITE_NAME || 'Platform Boilerplate';
-  const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
+  const siteName = import.meta.env.VITE_SITE_NAME || 'Zutech';
+  const fullTitle = title.includes('Zutech') ? title : `${title} · Zutech`;
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -45,6 +47,7 @@ export default function SEO({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={finalUrl} />
+      {noIndex && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />

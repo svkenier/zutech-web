@@ -25,17 +25,28 @@ import { get, put } from '@core/api/client';
 import { DEFAULT_SETTINGS } from '@core/types/settings';
 import type { Settings } from '@core/types/settings';
 
+/**
+ * Convierte un string YYYY-MM-DD a un objeto Date en hora local a las 00:00:00,
+ * evitando el desfase de medianoche UTC.
+ */
+const parseLocalDate = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
+};
+
 function getDaysRemaining(targetDate: string) {
   if (!targetDate) return 0;
-  const diff = new Date(targetDate).getTime() - new Date().getTime();
+  const target = parseLocalDate(targetDate);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diff = target.getTime() - now.getTime();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
 function formatDate(dateStr: string) {
   if (!dateStr) return 'No configurado';
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   if (isNaN(date.getTime())) return 'Fecha inválida';
-  date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
   return new Intl.DateTimeFormat('es-VE', { 
     day: '2-digit', month: 'long', year: 'numeric' 
   }).format(date);
@@ -84,14 +95,23 @@ export default function DomainManagement() {
 
   const calculatedNewDate = useMemo(() => {
     if (renewalMode === 'preset') {
-      const date = new Date(currentExpiry);
+      const date = parseLocalDate(currentExpiry);
       date.setFullYear(date.getFullYear() + yearsToAdd);
-      return date.toISOString().split('T')[0];
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
     return manualDate;
   }, [currentExpiry, renewalMode, yearsToAdd, manualDate]);
 
-  const isManualInvalid = renewalMode === 'manual' && manualDate !== '' && new Date(manualDate).getTime() <= new Date().getTime();
+  const isManualInvalid = useMemo(() => {
+    if (renewalMode !== 'manual' || manualDate === '') return false;
+    const target = parseLocalDate(manualDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return target.getTime() <= now.getTime();
+  }, [renewalMode, manualDate]);
 
   const handleSave = () => {
     const newDate = renewalMode === 'preset' ? calculatedNewDate : manualDate;

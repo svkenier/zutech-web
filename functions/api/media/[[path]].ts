@@ -1,4 +1,4 @@
-import type { Env } from '../../../../src/core/auth/auth.js';
+import type { Env } from '../../../src/core/auth/auth.js';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { env, params } = context;

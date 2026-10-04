@@ -132,7 +132,7 @@ export default function ProductsPage() {
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <SEO 
-        title="Catálogo de Productos | ZUTECH" 
+        title="Tienda de Componentes, Laptops y Computadoras · Zutech" 
         description="Explora todo nuestro catálogo de componentes y hardware."
         url="/productos"
       />

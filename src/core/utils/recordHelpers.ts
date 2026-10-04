@@ -1,4 +1,4 @@
-export type AnnouncementType = 'vacunacion' | 'esterilizacion' | 'adopcion' | 'evento' | 'general' | 'perdida' | string;
+export type AnnouncementType = 'general' | 'oferta' | 'tienda' | 'evento' | 'alerta' | 'noticia' | string;
 
 export const TYPE_COLORS: Record<string, string> = {
   vacunacion: '#16A34A',

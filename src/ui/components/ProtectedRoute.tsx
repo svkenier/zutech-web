@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAuth } from '@ui/context/AuthContext';
-import { ROLE_LEVEL, type UserRole } from '@core/types/user';
+import { ROLE_HIERARCHY, type UserRole } from '@core/types/user';
 import { get } from '@core/api/client';
 import type { ReactNode } from 'react';
 
@@ -126,7 +126,7 @@ export default function ProtectedRoute({
   }
 
   // Nivel insuficiente → /login (no revela la existencia de la ruta a roles menores)
-  if (ROLE_LEVEL[user.role] < ROLE_LEVEL[minRole]) {
+  if (ROLE_HIERARCHY[user.role] < ROLE_HIERARCHY[minRole]) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

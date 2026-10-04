@@ -14,7 +14,7 @@ export interface Env {
   ADMIN_USER?: string;
   ADMIN_PASSWORD?: string;
   DB: any; // Cloudflare D1 Binding
-  BUCKET: R2Bucket; // Cloudflare R2 Binding
+  BUCKET: any; // Cloudflare R2 Binding
   [key: string]: any;
 }
 
@@ -63,6 +63,13 @@ export async function getAuthPayload(request: Request, env: Env): Promise<JWTPay
     if (payloadVersion !== dbVersion) {
       return null;
     }
+
+    if (user.role !== 'owner' && user.expires_at) {
+      if (new Date() > new Date(user.expires_at)) {
+        return null; // Deny due to inactivity expiration
+      }
+    }
+
     return payload;
   } catch {
     return null;

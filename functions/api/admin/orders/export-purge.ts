@@ -1,5 +1,5 @@
 import { getAuthPayload } from '../../../../src/core/auth/auth.js';
-import { ROLE_LEVEL, type UserRole } from '../../../../src/core/types/user.js';
+import { ROLE_HIERARCHY, type UserRole } from '../../../../src/core/types/user.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
@@ -13,7 +13,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   // Solo administradores pueden exportar o purgar el histórico
-  if (ROLE_LEVEL[auth.role as UserRole] < ROLE_LEVEL['superadmin']) {
+  if (ROLE_HIERARCHY[auth.role as UserRole] < ROLE_HIERARCHY['superadmin']) {
     return new Response(JSON.stringify({ error: 'Se requiere rol de administrador.' }), {
       status: 403, headers: { 'Content-Type': 'application/json' },
     });

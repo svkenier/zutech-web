@@ -64,6 +64,14 @@ export async function onRequest(context: any) {
         return new Response(JSON.stringify({ error: 'Forbidden: Cannot delete a protected user' }), { status: 403 });
       }
 
+      if (payload.sub === target.username) {
+        return new Response(JSON.stringify({ error: 'Forbidden: Cannot delete yourself' }), { status: 403 });
+      }
+
+      if (target.role === 'owner') {
+        return new Response(JSON.stringify({ error: 'Forbidden: Cannot delete owner account' }), { status: 403 });
+      }
+
       if (!canManage(actorRole, target.role)) {
         return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role to manage this user' }), { status: 403 });
       }
@@ -85,6 +93,9 @@ export async function onRequest(context: any) {
 
       // Can manage?
       if (body.role) {
+        if (payload.sub === target.username) {
+          return new Response(JSON.stringify({ error: 'Forbidden: Cannot promote or change your own role' }), { status: 403 });
+        }
         if (!canManage(actorRole, target.role) || !canCreateRole(actorRole, body.role as UserRole)) {
           return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403 });
         }
@@ -114,7 +125,11 @@ export async function onRequest(context: any) {
       const target = await getUser(body.target_username, env);
       if (!target) return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 });
 
-      if (!canManage(actorRole, target.role) && actorRole !== 'superadmin') {
+      if (target.role === 'owner' && payload.sub !== target.username) {
+        return new Response(JSON.stringify({ error: 'Forbidden: Cannot reset owner password' }), { status: 403 });
+      }
+
+      if (!canManage(actorRole, target.role) && actorRole !== 'superadmin' && payload.sub !== target.username) {
         return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403 });
       }
 
@@ -130,8 +145,8 @@ export async function onRequest(context: any) {
       const target = await getUser(body.username, env);
       if (!target) return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 });
 
-      if (payload.sub !== target.username && !canManage(actorRole, target.role)) {
-        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+      if (actorRole !== 'owner') {
+        return new Response(JSON.stringify({ error: 'Forbidden: Only owner can force-logout' }), { status: 403 });
       }
 
       await updateUserPreservingTTL(body.username, { tokenVersion: (target.tokenVersion || 1) + 1 }, env);

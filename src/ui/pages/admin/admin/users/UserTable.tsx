@@ -28,6 +28,7 @@ const ROLE_COLORS: Record<UserRole, 'error' | 'warning' | 'default'> = {
   superadmin: 'error',
   encargado:  'warning',
   empleado: 'default',
+  owner: 'error',
 };
 
 interface UserTableProps {

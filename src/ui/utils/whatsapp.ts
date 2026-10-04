@@ -11,7 +11,7 @@ const WA_BASE  = 'https://wa.me';
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface WhatsAppPetParams {
-  /** Nombre o título de la mascota o elemento (producto, servicio, registro). */
+  /** Nombre o título del elemento (producto, servicio, registro). */
   petName: string;
   /** Identificador único en la base de datos (ej: "record-1718293049"). */
   petId: string;
@@ -71,10 +71,10 @@ export function getWhatsAppUrl(
 // Traducen firmas de llamadas específicas a la función genérica subyacente.
 
 /**
- * Genera el enlace de WhatsApp para solicitar más información sobre una mascota.
+ * Genera el enlace de WhatsApp para solicitar más información sobre un producto.
  */
 export function getPetUrl(phone: string, params: WhatsAppPetParams): string {
-  const fichaUrl = params.fichaUrl ?? `${window.location.origin}/mascotas/${params.petId}`;
+  const fichaUrl = params.fichaUrl ?? `${window.location.origin}/productos/${params.petId}`;
   const title = params.petName ? params.petName.charAt(0).toUpperCase() + params.petName.slice(1) : '';
   
   return getWhatsAppUrl('item', { title, id: params.petId, fichaUrl }, phone);

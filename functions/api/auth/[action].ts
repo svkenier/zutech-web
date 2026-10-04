@@ -89,7 +89,16 @@ async function handleLogin(request: Request, env: Env) {
     }
 
     const token = signToken(user.username, user.role, user.tokenVersion ?? 1, env);
-    await updateLastLogin(user.username, env);
+    
+    const now = new Date();
+    const expiresAt = new Date(now);
+    if (user.role === 'superadmin') expiresAt.setDate(expiresAt.getDate() + 180);
+    else if (user.role !== 'owner') expiresAt.setDate(expiresAt.getDate() + 30);
+    
+    const updates: any = { last_login: now.toISOString() };
+    if (user.role !== 'owner') updates.expires_at = expiresAt.toISOString();
+
+    await updateUserPreservingTTL(user.username, updates, env);
     await cancelTTL(user.username, env);
 
     const headers = new Headers();

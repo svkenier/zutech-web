@@ -5,7 +5,7 @@
  *   VITE_WHATSAPP_PHONE — número institucional (definido en utils/whatsapp.ts)
  */
 
-const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : ({} as any);
+const metaEnv = typeof import.meta !== 'undefined' && (import.meta as any).env ? (import.meta as any).env : ({} as any);
 
 const R2_PUB = metaEnv['VITE_R2_PUBLIC_URL'] as string | undefined ?? 'https://pub-zutech.r2.dev';
 

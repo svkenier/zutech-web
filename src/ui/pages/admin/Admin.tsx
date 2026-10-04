@@ -6,7 +6,7 @@
  * 2. Usuarios: Gestión de usuarios del sistema (solo encargado/superadmin).
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
@@ -72,8 +72,9 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { exportCatalogToExcel } from '@core/excel/catalogExporter';
 import { useAuth } from '@ui/context/AuthContext';
 import { get, del, formatApiError } from '@core/api/client';
-import { ROLE_LEVEL } from '@core/types/user';
+import { ROLE_HIERARCHY } from '@core/types/user';
 import type { BaseRecord, PaginatedRecords } from '@core/types/record';
+import SEO from '@core/media/SEO';
 
 
 // ─── Pestañas ─────────────────────────────────────────────────────────────────
@@ -97,10 +98,6 @@ function TabPanel(props: TabPanelProps) {
 export default function Admin() {
   const { user } = useAuth();
   const qc = useQueryClient();
-
-  useEffect(() => {
-    document.title = 'Panel de Administración — ZUTECH';
-  }, []);
 
   const [tabIndex, setTabIndex] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -201,12 +198,23 @@ export default function Admin() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
-  const canManageUsers = user && ROLE_LEVEL[user.role] >= ROLE_LEVEL['encargado'];
-  const isSuperadmin   = user && ROLE_LEVEL[user.role] >= ROLE_LEVEL['superadmin'];
-  const isOwner        = user && ROLE_LEVEL[user.role] >= ROLE_LEVEL['owner'];
+  const canManageUsers = user && ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY['encargado'];
+  const isSuperadmin   = user && ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY['superadmin'];
+  const isOwner        = user && ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY['owner'];
+
+  const adminTitle = useMemo(() => {
+    if (tabIndex === 0) return 'Inventario y Productos · Panel Zutech';
+    if (tabIndex === 1) return 'Control de Pedidos · Panel Zutech';
+    if (tabIndex === 2) return 'Facturación · Panel Zutech';
+    if (canManageUsers && tabIndex === 3) return 'Gestión de Usuarios · Panel Zutech';
+    if (isSuperadmin && tabIndex === (canManageUsers ? 4 : 3)) return 'Configuración del Sistema · Panel Zutech';
+    if (isOwner && tabIndex === 5) return 'Gestión de Dominio · Panel Zutech';
+    return 'Panel de Administración · Zutech';
+  }, [tabIndex, canManageUsers, isSuperadmin, isOwner]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
+      <SEO noIndex title={adminTitle} description="Panel de Administración de Zutech" />
       <Navbar />
 
       <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 }, flexGrow: 1 }}>
