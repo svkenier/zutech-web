@@ -50,7 +50,7 @@ export function UserFormModal({ open, actorRole, onClose, onCreated }: UserFormM
     initialValues: {
       username: '',
       password: '',
-      role: 'voluntario' as UserRole,
+      role: 'empleado' as UserRole,
     },
     validationSchema: createUserSchema,
     onSubmit: () => {
@@ -64,7 +64,7 @@ export function UserFormModal({ open, actorRole, onClose, onCreated }: UserFormM
     onError:    (e: unknown) => setError(formatApiError(e, 'Error al crear usuario')),
   });
 
-  const availableRoles: UserRole[] = (['voluntario', 'encargado', 'superadmin'] as UserRole[])
+  const availableRoles: UserRole[] = (['empleado', 'encargado', 'superadmin', 'owner'] as UserRole[])
     .filter((r) => canCreateRole(actorRole, r));
 
   const theme = useTheme();

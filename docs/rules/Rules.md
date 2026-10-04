@@ -86,17 +86,17 @@
 
 - **`superadmin` (Propietario / SBK - Nivel 3):**
   - Control total sobre catálogo de mascotas.
-  - Puede crear cuentas de cualquier rango (`superadmin`, `encargado`, `voluntario`).
-  - **Poder Total de Rescate:** Puede cambiar/restablecer la contraseña de cualquier usuario (`encargado` o `voluntario`) desde el panel si se lo solicitan.
+  - Puede crear cuentas de cualquier rango (`superadmin`, `encargado`, `empleado`).
+  - **Poder Total de Rescate:** Puede cambiar/restablecer la contraseña de cualquier usuario (`encargado` o `empleado`) desde el panel si se lo solicitan.
   - Puede eliminar a cualquier usuario.
   - **Cuenta Permanente:** Inmune a eliminación (`SUPERADMIN_USERNAME`) y no expira jamás por inactividad.
 - **`encargado` (Administradores del Refugio - Nivel 2):**
   - Control total sobre catálogo de mascotas.
-  - Puede crear cuentas con rol `encargado` y `voluntario`.
-  - Puede eliminar cuentas de `voluntarios`.
+  - Puede crear cuentas con rol `encargado` y `empleado`.
+  - Puede eliminar cuentas de `empleados`.
   - **No puede eliminar a otros encargados ni al superadmin** (evita sabotajes).
   - Si olvida su clave, otro compañero le crea un usuario nuevo o acude al SuperAdmin para restablecerla.
-- **`voluntario` (Ayudantes - Nivel 1):**
+- **`empleado` (Ayudantes - Nivel 1):**
   - Permiso para crear y editar fichas de mascotas y fotos.
   - Sin acceso a la administración de usuarios.
 

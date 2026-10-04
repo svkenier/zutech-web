@@ -15,7 +15,7 @@ export async function onRequest(context) {
     const actorRole = payload.role;
     try {
         if (request.method === 'GET' && action === 'list') {
-            if (actorRole === 'voluntario') {
+            if (actorRole === 'empleado') {
                 return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
             }
             const users = await listUsers(env);

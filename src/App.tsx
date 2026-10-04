@@ -2,7 +2,7 @@
  * App.tsx — Enrutamiento principal de petRescue.
  *
  * Rutas públicas: /, /productos, /productos/:id, /requisitos, /terminos, /privacidad, /login
- * Rutas protegidas: /admin (minRole: voluntario)
+ * Rutas protegidas: /admin (minRole: empleado)
  *
  * AuthProvider envuelve toda la app para que useAuth() esté disponible
  * en Navbar, ProtectedRoute y cualquier página que lo necesite.
@@ -64,11 +64,11 @@ export default function App() {
             <Route path="/privacidad" element={<Privacy />} />
             <Route path="/login"      element={<Login />} />
 
-            {/* Ruta protegida — acceso mínimo: voluntario */}
+            {/* Ruta protegida — acceso mínimo: empleado */}
             <Route
               path="/admin/*"
               element={
-                <ProtectedRoute minRole="voluntario">
+                <ProtectedRoute minRole="empleado">
                   <Admin />
                 </ProtectedRoute>
               }

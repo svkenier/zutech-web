@@ -12,20 +12,21 @@
 /**
  * Roles del sistema en orden ascendente de privilegios:
  *
- * - `voluntario`  (Nivel 1): Crear/editar fichas de mascotas y fotos.
- * - `encargado`   (Nivel 2): Todo lo anterior + gestionar voluntarios.
+ * - `empleado`  (Nivel 1): Crear/editar fichas de mascotas y fotos.
+ * - `encargado`   (Nivel 2): Todo lo anterior + gestionar empleados.
  * - `superadmin`  (Nivel 3): Control total. Cuenta permanente (sin TTL).
  */
-export type UserRole = 'voluntario' | 'encargado' | 'superadmin';
+export type UserRole = 'empleado' | 'encargado' | 'superadmin' | 'owner';
 
 /**
  * Mapa numérico de nivel para comparaciones de jerarquía.
  * Uso: `ROLE_LEVEL[roleA] > ROLE_LEVEL[roleB]`
  */
 export const ROLE_LEVEL: Record<UserRole, number> = {
-  voluntario:  1,
+  empleado:  1,
   encargado:   2,
   superadmin:  3,
+  owner:       4,
 } as const;
 
 // ─── Interfaz de Usuario en KV ───────────────────────────────────────────────
@@ -139,7 +140,7 @@ export interface LoginResponse {
 export interface CreateUserRequest {
   username: string;
   password: string;
-  role: Exclude<UserRole, 'superadmin'> | 'superadmin'; // superadmin solo puede ser creado por superadmin
+  role: Exclude<UserRole, 'owner'> | 'owner'; // superadmin/owner logic is handled by canCreateRole
 }
 
 /** Payload para `POST /api/users/reset-password` (solo SuperAdmin). */
@@ -169,9 +170,9 @@ export interface UsersListResponse {
  * para administrar (crear/eliminar) al `targetRole`.
  *
  * Reglas:
- * - `superadmin` puede gestionar a `encargado` y `voluntario`.
- * - `encargado`  puede gestionar solo a `voluntario`.
- * - `voluntario` no puede gestionar a nadie.
+ * - `superadmin` puede gestionar a `encargado` y `empleado`.
+ * - `encargado`  puede gestionar solo a `empleado`.
+ * - `empleado` no puede gestionar a nadie.
  */
 export function canManage(actorRole: UserRole, targetRole: UserRole): boolean {
   return ROLE_LEVEL[actorRole] > ROLE_LEVEL[targetRole];
@@ -182,10 +183,11 @@ export function canManage(actorRole: UserRole, targetRole: UserRole): boolean {
  *
  * Reglas adicionales:
  * - Solo `superadmin` puede crear otros `superadmin`.
- * - `encargado` solo puede crear `encargado` y `voluntario`.
+ * - `encargado` solo puede crear `encargado` y `empleado`.
  */
 export function canCreateRole(actorRole: UserRole, newRole: UserRole): boolean {
-  if (actorRole === 'superadmin') return true;
-  if (actorRole === 'encargado')  return newRole !== 'superadmin';
+  if (actorRole === 'owner') return true;
+  if (actorRole === 'superadmin') return newRole !== 'owner';
+  if (actorRole === 'encargado')  return newRole === 'empleado' || newRole === 'encargado';
   return false;
 }

@@ -13,6 +13,8 @@ export interface Settings {
   address?: string;
   map_url?: string;
   social_links?: SocialLinks;
+  domainExpirationDate?: string;
+  domainAlertEnabled?: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -23,4 +25,6 @@ export const DEFAULT_SETTINGS: Settings = {
   email: '',
   address: '',
   map_url: '',
+  domainExpirationDate: '2027-10-02',
+  domainAlertEnabled: false,
 };

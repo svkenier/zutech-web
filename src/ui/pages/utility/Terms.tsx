@@ -21,7 +21,7 @@ const SECTIONS = [
   },
   {
     title: '2. Sobre el proceso de adopción',
-    body:  `La adopción de mascotas a través de petRescue es un proceso voluntario que requiere
+    body:  `La adopción de mascotas a través de petRescue es un proceso empleado que requiere
             cumplir con los requisitos establecidos por el refugio. El refugio se reserva el
             derecho de rechazar solicitudes que no cumplan los criterios de bienestar animal.
             La entrega de la mascota está sujeta a disponibilidad y evaluación del adoptante.`,

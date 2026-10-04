@@ -81,7 +81,7 @@ export default function ContactSection({ sx }: ContactSectionProps) {
       icon:     <HandshakeOutlinedIcon sx={{ fontSize: 28 }} />,
       title:    'Voluntariado',
       subtitle: 'Únete a nuestro equipo y ayúdanos a salvar más vidas en el refugio.',
-      action:   'Ser voluntario',
+      action:   'Ser empleado',
       iconBg:   'rgba(30, 31, 32, 0.08)', // Carbón neutro suave
       iconColor: '#1E1F20',
       getUrl:   () => getVolunteerUrl(phone),

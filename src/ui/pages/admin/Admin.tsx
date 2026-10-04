@@ -57,10 +57,13 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
 import Stack from '@mui/material/Stack';
+import LanguageIcon from '@mui/icons-material/Language';
 import Navbar from '@ui/components/Navbar';
 import ProductForm from '@ui/components/ProductForm';
 import UserManagement from '@ui/pages/admin/UserManagement';
 import SettingsManager from '@ui/pages/admin/SettingsManager';
+import DomainManagement from '@ui/pages/admin/DomainManagement';
+import DomainAlert from '@ui/components/DomainAlert';
 import OrdersTab from '@ui/pages/admin/OrdersTab';
 import FacturacionTab from '@ui/pages/admin/FacturacionTab';
 import BulkImportModal from '@ui/components/BulkImportModal';
@@ -200,6 +203,7 @@ export default function Admin() {
 
   const canManageUsers = user && ROLE_LEVEL[user.role] >= ROLE_LEVEL['encargado'];
   const isSuperadmin   = user && ROLE_LEVEL[user.role] >= ROLE_LEVEL['superadmin'];
+  const isOwner        = user && ROLE_LEVEL[user.role] >= ROLE_LEVEL['owner'];
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
@@ -228,6 +232,9 @@ export default function Admin() {
           </Box>
         </Box>
 
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
+          <DomainAlert />
+        </Box>
 
         {/* Tabs de Escritorio */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: { xs: 'none', md: 'block' } }}>
@@ -237,6 +244,7 @@ export default function Admin() {
             <Tab label="Facturación" />
             {canManageUsers && <Tab label="Usuarios" />}
             {isSuperadmin && <Tab label="Configuración" />}
+            {isOwner && <Tab icon={<LanguageIcon sx={{ mr: 1, fontSize: 20 }} />} iconPosition="start" label="Dominio" sx={{ minHeight: 48, pt: '12px' }} />}
           </Tabs>
         </Box>
 
@@ -267,6 +275,13 @@ export default function Admin() {
               <ListItem disablePadding>
                 <ListItemButton selected={tabIndex === (canManageUsers ? 4 : 3)} onClick={() => { setTabIndex(canManageUsers ? 4 : 3); setDrawerOpen(false); }}>
                   <ListItemText primary="Configuración" />
+                </ListItemButton>
+              </ListItem>
+            )}
+            {isOwner && (
+              <ListItem disablePadding>
+                <ListItemButton selected={tabIndex === 5} onClick={() => { setTabIndex(5); setDrawerOpen(false); }}>
+                  <ListItemText primary="Dominio" />
                 </ListItemButton>
               </ListItem>
             )}
@@ -585,6 +600,13 @@ export default function Admin() {
         {isSuperadmin && (
           <TabPanel value={tabIndex} index={canManageUsers ? 4 : 3}>
             <SettingsManager />
+          </TabPanel>
+        )}
+
+        {/* ── PANEL INFRAESTRUCTURA ───────────────────────────────────────── */}
+        {isOwner && (
+          <TabPanel value={tabIndex} index={5}>
+            <DomainManagement />
           </TabPanel>
         )}
       </Container>

@@ -116,7 +116,7 @@ test.describe('Invalidación de Sesiones Globales y Seguridad', () => {
       data: {
         username: testUser,
         password: testPassword,
-        role: 'voluntario'
+        role: 'empleado'
       }
     });
     if (!res.ok()) {
@@ -145,8 +145,8 @@ test.describe('Invalidación de Sesiones Globales y Seguridad', () => {
     const userPage = await userContext.newPage();
     
     // Inyectar sesión del usuario de prueba (evita el rate limiter del login)
-    const userToken = await getUserToken(testUser, 'voluntario');
-    await injectSession(userPage, testUser, 'voluntario', userToken);
+    const userToken = await getUserToken(testUser, 'empleado');
+    await injectSession(userPage, testUser, 'empleado', userToken);
 
     // Ir al admin y verificar que el panel cargó
     await userPage.goto('/admin');
@@ -211,8 +211,8 @@ test.describe('Invalidación de Sesiones Globales y Seguridad', () => {
     const userPage = await userContext.newPage();
     
     // Inyectar sesión del usuario de prueba (evita el rate limiter del login)
-    const userToken = await getUserToken(testUser, 'voluntario');
-    await injectSession(userPage, testUser, 'voluntario', userToken);
+    const userToken = await getUserToken(testUser, 'empleado');
+    await injectSession(userPage, testUser, 'empleado', userToken);
 
     // Ir al admin y verificar que el panel cargó
     await userPage.goto('/admin');
@@ -250,8 +250,8 @@ test.describe('Invalidación de Sesiones Globales y Seguridad', () => {
   });
 
   test('Seguridad en Endpoint /api/users/force-logout', async ({ request }) => {
-    // 1. Un voluntario intenta llamar al endpoint (403 Forbidden o 401)
-    const userToken = generateToken(testUser, 'voluntario', 1);
+    // 1. Un empleado intenta llamar al endpoint (403 Forbidden o 401)
+    const userToken = generateToken(testUser, 'empleado', 1);
     const resForbidden = await request.post('/api/users/force-logout', {
       headers: { Authorization: `Bearer ${userToken}` },
       data: { username: SUPERADMIN }
@@ -273,7 +273,7 @@ test.describe('Invalidación de Sesiones Globales y Seguridad', () => {
     const adminToken = await getAdminToken();
     
     // 1. Activar el TTL manualmente enviando logout request para el usuario
-    const userToken = generateToken(testUser, 'voluntario', 1);
+    const userToken = generateToken(testUser, 'empleado', 1);
     await request.post('/api/auth/logout', {
       headers: { Authorization: `Bearer ${userToken}` }
     });

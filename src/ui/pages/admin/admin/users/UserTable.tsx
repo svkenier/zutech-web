@@ -27,7 +27,7 @@ import AdminEmptyState from '@ui/components/AdminEmptyState';
 const ROLE_COLORS: Record<UserRole, 'error' | 'warning' | 'default'> = {
   superadmin: 'error',
   encargado:  'warning',
-  voluntario: 'default',
+  empleado: 'default',
 };
 
 interface UserTableProps {

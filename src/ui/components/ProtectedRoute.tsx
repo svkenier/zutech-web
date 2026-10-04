@@ -20,14 +20,14 @@ interface ProtectedRouteProps {
   children: ReactNode;
   /**
    * Rol mínimo requerido para acceder a la ruta.
-   * @default 'voluntario'
+   * @default 'empleado'
    */
   minRole?: UserRole;
 }
 
 export default function ProtectedRoute({
   children,
-  minRole = 'voluntario',
+  minRole = 'empleado',
 }: ProtectedRouteProps) {
   const { isLoading, isAuthenticated, user } = useAuth();
   const location = useLocation();

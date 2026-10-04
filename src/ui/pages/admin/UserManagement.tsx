@@ -74,7 +74,7 @@ export default function UserManagement() {
 
       <UserFormModal
         open={createOpen}
-        actorRole={currentUser?.role ?? 'voluntario'}
+        actorRole={currentUser?.role ?? 'empleado'}
         onClose={() => setCreateOpen(false)}
         onCreated={onUserCreated}
       />
