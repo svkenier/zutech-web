@@ -1,6 +1,7 @@
 import { getAuthPayload } from '../../../src/core/auth/auth.js';
 import type { Env } from '../../../src/core/auth/auth.js';
 import { round2 } from '../../../src/core/utils/math.js';
+import { ROLE_HIERARCHY, type UserRole } from '../../../src/core/types/user.js';
 
 const PAYMENT_METHODS = ['pago_movil', 'zelle', 'efectivo', 'transferencia', 'binance'] as const;
 type PaymentMethod = typeof PAYMENT_METHODS[number];
@@ -23,14 +24,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   try {
     if (request.method === 'GET') {
-      // Purga silenciosa: eliminar pendientes con más de 7 días sin cerrar
-      await env.DB.prepare(`
-        DELETE FROM orders
-        WHERE status = 'pending'
-          AND closure_id IS NULL
-          AND created_at < datetime('now', '-7 days')
-      `).run();
-
       const { results: ordersRows } = await env.DB.prepare(`
         SELECT id, customer_name, customer_phone, delivery_type, total, status, payment_method, closure_id, created_at, updated_at
         FROM orders 
@@ -74,6 +67,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         JSON.stringify({ records }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       );
+    }
+
+    if (request.method === 'PUT' || request.method === 'DELETE') {
+      if (ROLE_HIERARCHY[auth.role as UserRole] < ROLE_HIERARCHY['encargado']) {
+        return new Response(JSON.stringify({ error: 'Prohibido: Rol insuficiente para gestionar órdenes' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     if (request.method === 'PUT') {
@@ -202,7 +204,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[admin/orders] Error:', msg);
     return new Response(
-      JSON.stringify({ error: 'Error interno del servidor', details: msg }),
+      JSON.stringify({ error: 'Error interno del servidor' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }

@@ -2,14 +2,21 @@ import { getFileWithETag } from '../../../src/core/storage/r2.js';
 import { getPublicRateLimit, checkRateLimit } from '../../../src/core/auth/rate-limit.js';
 import type { Env } from '../../../src/core/auth/auth.js';
 
-export const onRequest: PagesFunction<Env> = async (context) => {
+const ALLOWED_PUBLIC_COLLECTIONS = new Set(['products', 'categories', 'brands']);
+
+export const onRequestOptions: PagesFunction<Env> = async () => {
+  return new Response(null, { status: 204 });
+};
+
+export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { request, env, params } = context;
   const collectionName = params.collection as string;
 
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
-
-  if (request.method !== 'GET') {
-    return new Response(JSON.stringify({ error: 'Método no permitido' }), { status: 405 });
+  if (!ALLOWED_PUBLIC_COLLECTIONS.has(collectionName)) {
+    return new Response(JSON.stringify({ error: 'Colección no encontrada' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   // Abstracción agnóstica de colección
@@ -63,3 +70,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     });
   }
 };
+
+export const onRequest: PagesFunction<Env> = async (context) => {
+  if (context.request.method === 'OPTIONS') return onRequestOptions(context);
+  if (context.request.method === 'GET') return onRequestGet(context);
+  return new Response(JSON.stringify({ error: 'Método no permitido' }), {
+    status: 405,
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+

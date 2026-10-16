@@ -1,0 +1,232 @@
+[
+  {
+    "verdict": "rejected",
+    "fingerprint": "FND-AUTH-TIMING-01",
+    "title": "Revalidación: Enumeración de Usuarios por Discrepancia de Tiempos en Login",
+    "description": "En run-1 se detectó que el endpoint de autenticación omitía bcrypt.compare si el usuario no existía. En run-2, el código ha sido refactorizado para calcular siempre bcrypt contra un hash sintético DUMMY_HASH de tiempo constante.",
+    "claimed_root_cause": "En functions/api/auth/[action].ts:67, la verificación verifyPassword sólo se ejecutaba si user?.password_hash existía.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/auth/[action].ts",
+        "line": 51,
+        "scope": "handleLogin",
+        "description": "Recepción de credenciales de login."
+      },
+      {
+        "kind": "propagation",
+        "file": "functions/api/auth/[action].ts",
+        "line": 67,
+        "scope": "handleLogin",
+        "description": "Asignación de hash sintético DUMMY_HASH si user?.password_hash es nulo."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/auth/[action].ts",
+        "line": 69,
+        "scope": "handleLogin",
+        "description": "Ejecución obligatoria de verifyPassword(password, hashToVerify) en tiempo constante."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 67,
+        "description": "const DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';"
+      },
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 69,
+        "description": "let valid = await verifyPassword(password, hashToVerify);"
+      }
+    ],
+    "reason": "Mitigado y refutado en la versión actual: se implementó verificación constante con DUMMY_HASH y timingSafeEqual en fallback administrativo."
+  },
+  {
+    "verdict": "rejected",
+    "fingerprint": "FND-CSP-FONTS-04",
+    "title": "Revalidación: Violación de CSP en style-src para Google Fonts",
+    "description": "En run-1 la directiva style-src omitía https://fonts.googleapis.com requerido por index.html. En run-2, ambas capas perimetrales (_middleware.ts y public/_headers) fueron actualizadas con el origen autorizado.",
+    "claimed_root_cause": "functions/_middleware.ts y public/_headers restringían style-src a 'self' 'unsafe-inline' bloqueando Google Fonts.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "index.html",
+        "line": 28,
+        "scope": "head",
+        "description": "Importación de Google Fonts Inter."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/_middleware.ts",
+        "line": 20,
+        "scope": "onRequest",
+        "description": "Inyección de cabecera Content-Security-Policy autorizando https://fonts.googleapis.com."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/_middleware.ts",
+        "line": 20,
+        "description": "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"
+      },
+      {
+        "file": "public/_headers",
+        "line": 7,
+        "description": "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"
+      }
+    ],
+    "reason": "Mitigado y refutado en la versión actual: la directiva CSP style-src incluye https://fonts.googleapis.com en middleware y headers estáticos."
+  },
+  {
+    "verdict": "rejected",
+    "fingerprint": "FND-PERF-QUOTA-02",
+    "title": "Revalidación: Agotamiento de Cuota de Upstash Redis por Heartbeat",
+    "description": "En run-1 handleVerify llamaba a ensureSeeder(env) en cada verificación pasiva cada 20s. En run-2, ensureSeeder fue erradicado de handleVerify y la sesión se valida sin consultar innecesariamente a Redis.",
+    "claimed_root_cause": "handleVerify ejecutaba ensureSeeder(env) en functions/api/auth/[action].ts:132 conectado a polling cada 20s.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/auth/[action].ts",
+        "line": 21,
+        "scope": "onRequest",
+        "description": "Ruta GET /api/auth/verify."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/auth/[action].ts",
+        "line": 135,
+        "scope": "handleVerify",
+        "description": "handleVerify procesa la verificación de sesión sin llamadas a ensureSeeder ni Redis."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 136,
+        "description": "const payload = await getAuthPayload(request, env);"
+      },
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 141,
+        "description": "return new Response(JSON.stringify({ user: { username: payload.sub, role: payload.role } }));"
+      }
+    ],
+    "reason": "Mitigado y refutado en la versión actual: se eliminó ensureSeeder de handleVerify, desacoplando el polling del frontend del consumo de cuota de Redis."
+  },
+  {
+    "verdict": "rejected",
+    "fingerprint": "FND-R2-MEM-03",
+    "title": "Revalidación: Agotamiento de Memoria (OOM) por Ingesta Ilimitada de Imágenes Base64",
+    "description": "En run-1 no existía validación de tamaño previo en imágenes base64. En run-2 se implementó un corte de tamaño previo MAX_BASE64_LEN de 10MB antes de invocar atob() o crear buffers en memoria.",
+    "claimed_root_cause": "functions/api/admin/products/[[id]].ts aplicaba atob() sin límite previo de longitud de cadena.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 26,
+        "scope": "onRequestPost",
+        "description": "Inspección de longitud de body.main_image_base64."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 29,
+        "scope": "onRequestPost",
+        "description": "Rechazo temprano con HTTP 413 si la cadena excede 10MB."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 27,
+        "description": "const MAX_BASE64_LEN = 10 * 1024 * 1024; // ~7MB decodificados"
+      },
+      {
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 29,
+        "description": "if (typeof fileContent === 'string' && fileContent.length > MAX_BASE64_LEN) return 413;"
+      }
+    ],
+    "reason": "Mitigado y refutado en la versión actual: se añadieron validaciones de longitud máxima de 10MB con rechazo HTTP 413 en POST, PUT y carga masiva."
+  },
+  {
+    "verdict": "rejected",
+    "fingerprint": "FND-SET-CACHE-05",
+    "title": "Revalidación: Riesgo de Exposición de Claves Arbitrarias en Cache de Settings",
+    "description": "En run-1 SettingsSchema utilizaba .catchall(...) permitiendo campos no auditados expuestos con Cache-Control público. En run-2 SettingsSchema aplica .strict().",
+    "claimed_root_cause": "functions/api/settings.ts definía SettingsSchema con .catchall() aceptando cualquier par clave-valor.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/settings.ts",
+        "line": 12,
+        "scope": "SettingsSchema",
+        "description": "Definición del esquema Zod de configuración general."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/settings.ts",
+        "line": 29,
+        "scope": "SettingsSchema",
+        "description": "Aplicación de .strict() para rechazar claves no autorizadas con HTTP 400."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/settings.ts",
+        "line": 29,
+        "description": "}).strict();"
+      },
+      {
+        "file": "functions/api/settings.ts",
+        "line": 70,
+        "description": "const validationResult = SettingsSchema.safeParse(rawBody);"
+      }
+    ],
+    "reason": "Mitigado y refutado en la versión actual: SettingsSchema aplica .strict() impidiendo la persistencia y distribución accidental de claves internas."
+  },
+  {
+    "verdict": "needs_validation",
+    "fingerprint": "NV-WAF-RATELIMIT-01",
+    "title": "Verificación de Reglas Cloudflare WAF Rate Limiting para Protección Perimetral",
+    "description": "La capa de aplicación implementa intencionalmente Fail-Open en Upstash Redis para garantizar la disponibilidad del negocio comercial en caso de fallos del proveedor. La mitigación estricta contra ataques de denegación de servicio y fuerza bruta reside en Cloudflare WAF Rate Limiting, que debe verificarse en el Cloudflare Dashboard.",
+    "claimed_root_cause": "src/core/auth/rate-limit.ts retorna success: true en caso de fallo de conexión o cuota en Upstash Redis.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 44,
+        "scope": "checkRateLimit",
+        "description": "Evaluación de límite de tasa en el worker."
+      },
+      {
+        "kind": "sink",
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 53,
+        "scope": "checkRateLimit",
+        "description": "Retorno de concesión en bloque catch: return { success: true, ... }."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 35,
+        "description": "POLÍTICA ARQUITECTÓNICA DE SEGURIDAD (SEC-07): Fail-Open por disponibilidad de negocio."
+      },
+      {
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 53,
+        "description": "return { success: true, limit: 10, remaining: 10, reset: Date.now() + 10000 };"
+      }
+    ],
+    "blockers": [
+      "Las reglas de Cloudflare WAF Rate Limiting se gestionan en Cloudflare Dashboard (Security -> WAF -> Rate Limiting) y no están versionadas como código en este repositorio.",
+      "Las pruebas activas de saturación o fuerza bruta contra endpoints perimetrales de producción están prohibidas por la política de ejecución segura y defensiva."
+    ],
+    "validation_plan": {
+      "local": "Simular desconexión de Upstash en entorno local (Miniflare) verificando que el fallback mantenga la disponibilidad y emita alerta en consola.",
+      "deployment": "El operador debe comprobar en Cloudflare Dashboard -> Security -> WAF -> Rate Limiting Rules que existan reglas activas de bloqueo para /api/auth/login (máx 5 req/min) y /api/public/orders (máx 3 req/min)."
+    }
+  }
+]

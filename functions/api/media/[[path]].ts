@@ -15,6 +15,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   const key = pathArray.join('/');
 
+  if (!key.startsWith('products/')) {
+    return new Response('Forbidden: Acceso restringido al catálogo de productos', { status: 403 });
+  }
+
   try {
     const object = await env.BUCKET.get(key);
 

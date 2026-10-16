@@ -19,7 +19,7 @@ const OrderSchema = z.object({
     method: z.enum(['pickup', 'delivery']),
     address: z.string().max(500).optional(),
   }).optional(),
-  items: z.array(OrderItemSchema).min(1),
+  items: z.array(OrderItemSchema).min(1).max(50),
   totalUSD: z.number().nonnegative(),
   payment_method: z.string().optional(),
 });
@@ -173,8 +173,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     });
 
   } catch (err: any) {
-    console.error('Error creating public order:', err);
-    return new Response(JSON.stringify({ error: 'Error interno del servidor', details: err.message }), { 
+    console.error('[Orders Public Error]:', err);
+    return new Response(JSON.stringify({ error: 'Error al procesar la solicitud' }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

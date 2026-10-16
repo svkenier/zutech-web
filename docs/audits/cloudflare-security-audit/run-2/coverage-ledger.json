@@ -1,0 +1,637 @@
+[
+  {
+    "coverage_id": "functions%2F_middleware.ts::perimeter-reverse-proxy-to-browser::http-security-headers::WEB-PROTOCOL-AND-AUTH.md%23Content%20Security%20Policy",
+    "canonical_refs": {
+      "surface": "functions/_middleware.ts",
+      "boundary": "perimeter-reverse-proxy-to-browser",
+      "subsystem": "http-security-headers",
+      "attack_class": "WEB-PROTOCOL-AND-AUTH.md#Content Security Policy"
+    },
+    "surface": "functions/_middleware.ts",
+    "boundary": "perimeter-reverse-proxy-to-browser",
+    "subsystem": "http-security-headers",
+    "attack_class": "WEB-PROTOCOL-AND-AUTH.md#Content Security Policy",
+    "starting_paths": [
+      "functions/_middleware.ts",
+      "public/_headers"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Content Security Policy",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Content Security Policy"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en middleware."
+      }
+    ],
+    "prior_status": "prior_confirmed_changed_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/_middleware.ts",
+      "public/_headers"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/_middleware.ts",
+          "public/_headers"
+        ],
+        "invariant": "La política de seguridad de contenido debe permitir estrictamente todos los orígenes de fuentes tipográficas externas legítimas.",
+        "method": "source",
+        "result": "Inclusión explícita de https://fonts.googleapis.com en directiva style-src de Content-Security-Policy.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fadmin%2Forders%2Fclose.ts::authenticated-admin-to-cash-closure::cash-closure-service::DATA-ISOLATION-AND-LIFECYCLE.md%23Concurrency%20and%20race%20conditions",
+    "canonical_refs": {
+      "surface": "functions/api/admin/orders/close.ts",
+      "boundary": "authenticated-admin-to-cash-closure",
+      "subsystem": "cash-closure-service",
+      "attack_class": "DATA-ISOLATION-AND-LIFECYCLE.md#Concurrency and race conditions"
+    },
+    "surface": "functions/api/admin/orders/close.ts",
+    "boundary": "authenticated-admin-to-cash-closure",
+    "subsystem": "cash-closure-service",
+    "attack_class": "DATA-ISOLATION-AND-LIFECYCLE.md#Concurrency and race conditions",
+    "starting_paths": [
+      "functions/api/admin/orders/close.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Data isolation and lifecycle",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Concurrency and race conditions"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en cierres de caja."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/admin/orders/close.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/admin/orders/close.ts"
+        ],
+        "invariant": "El cierre de caja y la vinculación de órdenes aprobadas deben ejecutarse de forma atómica e indivisible.",
+        "method": "source",
+        "result": "Ejecución atómica vía D1 batch de inserción de cash_closures y asignación de closure_id en órdenes aprobadas.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fadmin%2Forders%2Fexport-purge.ts::authenticated-admin-to-historical-data::financial-history-service::ATTACK-CLASSES.md%23Privilege%20escalation",
+    "canonical_refs": {
+      "surface": "functions/api/admin/orders/export-purge.ts",
+      "boundary": "authenticated-admin-to-historical-data",
+      "subsystem": "financial-history-service",
+      "attack_class": "ATTACK-CLASSES.md#Privilege escalation"
+    },
+    "surface": "functions/api/admin/orders/export-purge.ts",
+    "boundary": "authenticated-admin-to-historical-data",
+    "subsystem": "financial-history-service",
+    "attack_class": "ATTACK-CLASSES.md#Privilege escalation",
+    "starting_paths": [
+      "functions/api/admin/orders/export-purge.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Privilege escalation",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Business logic and invariant enforcement"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en exportación de órdenes."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/admin/orders/export-purge.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/admin/orders/export-purge.ts"
+        ],
+        "invariant": "La purga de histórico financiero solo puede ser ejecutada por el rol propietario inmutable.",
+        "method": "source",
+        "result": "Permisos jerárquicos estrictos: exportación restringida a superadmin/owner y purga restringida exclusivamente a owner.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fadmin%2Forders.ts::authenticated-admin-to-order-management::orders-admin-service::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "functions/api/admin/orders.ts",
+      "boundary": "authenticated-admin-to-order-management",
+      "subsystem": "orders-admin-service",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "functions/api/admin/orders.ts",
+    "boundary": "authenticated-admin-to-order-management",
+    "subsystem": "orders-admin-service",
+    "attack_class": "ATTACK-CLASSES.md#Access control",
+    "starting_paths": [
+      "functions/api/admin/orders.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Business logic and invariant enforcement"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en administración de órdenes."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/admin/orders.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/admin/orders.ts"
+        ],
+        "invariant": "Solo operadores con rol de encargado o superior pueden modificar o descartar órdenes.",
+        "method": "source",
+        "result": "Restricción de rol mínimo (encargado) para actualización y descarte de órdenes; parámetro binding estricto en D1.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fadmin%2Fproducts%2F%5B%5Bid%5D%5D.ts::authenticated-admin-to-worker-r2::media-upload-service::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23Memory%20and%20payload%20limits",
+    "canonical_refs": {
+      "surface": "functions/api/admin/products/[[id]].ts",
+      "boundary": "authenticated-admin-to-worker-r2",
+      "subsystem": "media-upload-service",
+      "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Memory and payload limits"
+    },
+    "surface": "functions/api/admin/products/[[id]].ts",
+    "boundary": "authenticated-admin-to-worker-r2",
+    "subsystem": "media-upload-service",
+    "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Memory and payload limits",
+    "starting_paths": [
+      "functions/api/admin/products/[[id]].ts",
+      "functions/api/admin/products/bulk.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource exhaustion and availability",
+    "selected_companion_blocks": [
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Memory and payload limits"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en catálogo de productos."
+      }
+    ],
+    "prior_status": "prior_confirmed_changed_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/admin/products/[[id]].ts",
+      "functions/api/admin/products/bulk.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/admin/products/[[id]].ts",
+          "functions/api/admin/products/bulk.ts"
+        ],
+        "invariant": "El tamaño del payload en memoria debe validarse antes de la decodificación binaria en isolates de 128MB.",
+        "method": "source",
+        "result": "Restricción de tamaño máximo de 10MB en cadenas base64 previniendo desbordamiento de memoria (OOM) en el isolate.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fauth%2F%5Baction%5D.ts%23verify::browser-polling-heartbeat-to-redis::session-verification::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23Memory%20and%20payload%20limits",
+    "canonical_refs": {
+      "surface": "functions/api/auth/[action].ts#verify",
+      "boundary": "browser-polling-heartbeat-to-redis",
+      "subsystem": "session-verification",
+      "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Memory and payload limits"
+    },
+    "surface": "functions/api/auth/[action].ts#verify",
+    "boundary": "browser-polling-heartbeat-to-redis",
+    "subsystem": "session-verification",
+    "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Memory and payload limits",
+    "starting_paths": [
+      "functions/api/auth/[action].ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource exhaustion and availability",
+    "selected_companion_blocks": [
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Memory and payload limits"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en la sesión."
+      }
+    ],
+    "prior_status": "prior_confirmed_changed_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/auth/[action].ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/auth/[action].ts"
+        ],
+        "invariant": "La verificación pasiva de sesión no debe provocar consumo acumulativo de cuotas de base de datos externa.",
+        "method": "source",
+        "result": "Eliminación completa de ensureSeeder en handleVerify desacoplando el polling pasivo de Upstash Redis.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fauth%2F%5Baction%5D.ts::unauthenticated-internet-to-auth-endpoint::authentication-service::ATTACK-CLASSES.md%23Side-channel%20and%20timing",
+    "canonical_refs": {
+      "surface": "functions/api/auth/[action].ts",
+      "boundary": "unauthenticated-internet-to-auth-endpoint",
+      "subsystem": "authentication-service",
+      "attack_class": "ATTACK-CLASSES.md#Side-channel and timing"
+    },
+    "surface": "functions/api/auth/[action].ts",
+    "boundary": "unauthenticated-internet-to-auth-endpoint",
+    "subsystem": "authentication-service",
+    "attack_class": "ATTACK-CLASSES.md#Side-channel and timing",
+    "starting_paths": [
+      "functions/api/auth/[action].ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Side-channel and timing",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Authentication and session state"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "El repositorio no integra modelos de lenguaje en el flujo de autenticación."
+      }
+    ],
+    "prior_status": "prior_confirmed_changed_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/auth/[action].ts",
+      "src/core/auth/crypto.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/auth/[action].ts",
+          "src/core/auth/crypto.ts"
+        ],
+        "invariant": "El cómputo criptográfico de autenticación debe ser de tiempo constante e independiente de la existencia previa del usuario.",
+        "method": "source",
+        "result": "Verificación de tiempo constante en bcrypt compare mediante DUMMY_HASH y timingSafeEqual en fallback administrativo.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fmedia%2F%5B%5Bpath%5D%5D.ts::public-http-to-r2-storage::media-distribution-service::ATTACK-CLASSES.md%23Path%20traversal",
+    "canonical_refs": {
+      "surface": "functions/api/media/[[path]].ts",
+      "boundary": "public-http-to-r2-storage",
+      "subsystem": "media-distribution-service",
+      "attack_class": "ATTACK-CLASSES.md#Path traversal"
+    },
+    "surface": "functions/api/media/[[path]].ts",
+    "boundary": "public-http-to-r2-storage",
+    "subsystem": "media-distribution-service",
+    "attack_class": "ATTACK-CLASSES.md#Path traversal",
+    "starting_paths": [
+      "functions/api/media/[[path]].ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Path traversal",
+    "selected_companion_blocks": [
+      "CLOUD-AND-DEPLOYMENT.md#Storage bucket access and boundary controls"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en almacenamiento de medios."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/media/[[path]].ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/media/[[path]].ts"
+        ],
+        "invariant": "La resolución de rutas de almacenamiento en R2 debe rechazar traversal y restringirse al directorio products.",
+        "method": "source",
+        "result": "Bloqueo estricto de secuencias de escape (..) y delimitación forzosa al prefijo products/ en el bucket R2.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fpublic%2F%5Bcollection%5D.ts::unauthenticated-internet-to-r2-data::public-collections-service::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "functions/api/public/[collection].ts",
+      "boundary": "unauthenticated-internet-to-r2-data",
+      "subsystem": "public-collections-service",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "functions/api/public/[collection].ts",
+    "boundary": "unauthenticated-internet-to-r2-data",
+    "subsystem": "public-collections-service",
+    "attack_class": "ATTACK-CLASSES.md#Access control",
+    "starting_paths": [
+      "functions/api/public/[collection].ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Business logic and invariant enforcement"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en colecciones públicas."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/public/[collection].ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/public/[collection].ts"
+        ],
+        "invariant": "Las colecciones públicas accesibles mediante parámetros de URL deben limitarse a un conjunto cerrado explícito.",
+        "method": "source",
+        "result": "Lista blanca estricta ALLOWED_PUBLIC_COLLECTIONS impidiendo la lectura no autorizada de colecciones arbitrarias.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fpublic%2Forders.ts::unauthenticated-internet-to-checkout::public-checkout-service::DATA-ISOLATION-AND-LIFECYCLE.md%23Business%20logic%20and%20invariant%20enforcement",
+    "canonical_refs": {
+      "surface": "functions/api/public/orders.ts",
+      "boundary": "unauthenticated-internet-to-checkout",
+      "subsystem": "public-checkout-service",
+      "attack_class": "DATA-ISOLATION-AND-LIFECYCLE.md#Business logic and invariant enforcement"
+    },
+    "surface": "functions/api/public/orders.ts",
+    "boundary": "unauthenticated-internet-to-checkout",
+    "subsystem": "public-checkout-service",
+    "attack_class": "DATA-ISOLATION-AND-LIFECYCLE.md#Business logic and invariant enforcement",
+    "starting_paths": [
+      "functions/api/public/orders.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Data isolation and lifecycle",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Business logic and invariant enforcement"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en pedidos públicos."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/public/orders.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/public/orders.ts"
+        ],
+        "invariant": "Los precios y subtotales de las órdenes deben recalcularse exclusivamente con los datos oficiales de D1 en el servidor.",
+        "method": "source",
+        "result": "Recálculo estricto en servidor del precio oficial desde D1 con descarte del valor del cliente y bloqueo de inyecciones.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fsettings.ts::worker-to-cloudflare-edge-cdn::configuration-service::CLOUD-AND-DEPLOYMENT.md%23Cache%20poisoning%20and%20CDN%20leakage",
+    "canonical_refs": {
+      "surface": "functions/api/settings.ts",
+      "boundary": "worker-to-cloudflare-edge-cdn",
+      "subsystem": "configuration-service",
+      "attack_class": "CLOUD-AND-DEPLOYMENT.md#Cache poisoning and CDN leakage"
+    },
+    "surface": "functions/api/settings.ts",
+    "boundary": "worker-to-cloudflare-edge-cdn",
+    "subsystem": "configuration-service",
+    "attack_class": "CLOUD-AND-DEPLOYMENT.md#Cache poisoning and CDN leakage",
+    "starting_paths": [
+      "functions/api/settings.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Cloud and deployment controls",
+    "selected_companion_blocks": [
+      "CLOUD-AND-DEPLOYMENT.md#Cache poisoning and CDN leakage"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en configuración."
+      }
+    ],
+    "prior_status": "prior_confirmed_changed_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/settings.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/settings.ts"
+        ],
+        "invariant": "Las configuraciones expuestas en caché pública perimetral deben adherirse a un esquema estricto sin propiedades no declaradas.",
+        "method": "source",
+        "result": "Aplicación de SettingsSchema.strict() previniendo persistencia y cacheo de claves arbitrarias no validadas.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "functions%2Fapi%2Fusers%2F%5Baction%5D.ts::authenticated-admin-to-user-management::rbac-user-service::ATTACK-CLASSES.md%23Vertical%20and%20horizontal%20authorization",
+    "canonical_refs": {
+      "surface": "functions/api/users/[action].ts",
+      "boundary": "authenticated-admin-to-user-management",
+      "subsystem": "rbac-user-service",
+      "attack_class": "ATTACK-CLASSES.md#Vertical and horizontal authorization"
+    },
+    "surface": "functions/api/users/[action].ts",
+    "boundary": "authenticated-admin-to-user-management",
+    "subsystem": "rbac-user-service",
+    "attack_class": "ATTACK-CLASSES.md#Vertical and horizontal authorization",
+    "starting_paths": [
+      "functions/api/users/[action].ts",
+      "src/core/types/user.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Authentication and session state"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en usuarios."
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "functions/api/users/[action].ts",
+      "src/core/types/user.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "functions/api/users/[action].ts",
+          "src/core/types/user.ts"
+        ],
+        "invariant": "Las operaciones de usuario deben respetar la jerarquía canManage/canCreateRole y proteger la cuenta del propietario.",
+        "method": "source",
+        "result": "Verificación de jerarquía canManage/canCreateRole, protección de cuenta owner y saneamiento de nombres de usuario.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  },
+  {
+    "coverage_id": "src%2Fcore%2Fauth%2Frate-limit.ts::edge-worker-to-upstash-redis::abuse-prevention-service::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23Rate%20limiting%20and%20failover%20policy",
+    "canonical_refs": {
+      "surface": "src/core/auth/rate-limit.ts",
+      "boundary": "edge-worker-to-upstash-redis",
+      "subsystem": "abuse-prevention-service",
+      "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Rate limiting and failover policy"
+    },
+    "surface": "src/core/auth/rate-limit.ts",
+    "boundary": "edge-worker-to-upstash-redis",
+    "subsystem": "abuse-prevention-service",
+    "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Rate limiting and failover policy",
+    "starting_paths": [
+      "src/core/auth/rate-limit.ts"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource exhaustion and availability",
+    "selected_companion_blocks": [
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Rate limiting and failover policy"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Model context and prompts",
+        "reason": "Sin componentes de IA en limitación de tasa."
+      }
+    ],
+    "prior_status": "prior_needs_validation",
+    "attempts": [],
+    "wave": 1,
+    "status": "covered",
+    "agent_id": "auditor-principal",
+    "reviewed_paths": [
+      "src/core/auth/rate-limit.ts"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "auditor-principal",
+        "reviewed_paths": [
+          "src/core/auth/rate-limit.ts"
+        ],
+        "invariant": "El fallo de infraestructura de limitación de tasa no debe causar denegación de servicio no controlada.",
+        "method": "source",
+        "result": "Comprobación estática de política Fail-Open (SEC-07) para disponibilidad de negocio, manteniendo registro needs_validation para confirmación de reglas Cloudflare WAF en producción.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [],
+    "unresolved": []
+  }
+]

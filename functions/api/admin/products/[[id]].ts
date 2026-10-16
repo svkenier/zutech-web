@@ -1,6 +1,9 @@
 import { getAuthPayload } from '../../../../src/core/auth/auth.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
 import { putFile, cdnImageUrl, deleteFile, extractPathFromCdnUrl } from '../../../../src/core/storage/r2.js';
+import { ROLE_HIERARCHY, type UserRole } from '../../../../src/core/types/user.js';
+
+const ALLOWED_MIMES = new Set(['image/webp', 'image/jpeg', 'image/png']);
 
 export const onRequestOptions: PagesFunction<Env> = async () => {
   return new Response(null, { status: 204 });
@@ -21,17 +24,32 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     let finalImageUrl = body.main_image || '';
 
     if (body.main_image_base64) {
+      const MAX_BASE64_LEN = 10 * 1024 * 1024; // ~7MB decodificados
+      let fileContent: ArrayBuffer | string = body.main_image_base64;
+      if (typeof fileContent === 'string' && fileContent.length > MAX_BASE64_LEN) {
+        return new Response(JSON.stringify({ error: 'La imagen excede el límite permitido' }), {
+          status: 413,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
       try {
         const uniqueSuffix = Math.random().toString(36).substring(7);
         const r2Path = `products/${id}-${uniqueSuffix}.webp`;
         
-        let fileContent: ArrayBuffer | string = body.main_image_base64;
         let mimeType = 'image/webp';
-        if (typeof fileContent === 'string' && fileContent.startsWith('data:')) {
-          const arr = fileContent.split(',');
-          const mimeMatch = arr[0].match(/:(.*?);/);
-          if (mimeMatch) mimeType = mimeMatch[1];
-          const bstr = atob(arr[1]);
+        if (typeof fileContent === 'string') {
+          let base64Data: string = fileContent;
+          if (fileContent.startsWith('data:')) {
+            const parts = fileContent.split(',');
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            if (mimeMatch && ALLOWED_MIMES.has(mimeMatch[1])) {
+              mimeType = mimeMatch[1];
+            }
+            base64Data = parts[1] || '';
+          }
+          // Decodificar a ArrayBuffer binario real para R2:
+          const bstr = atob(base64Data);
           const u8arr = new Uint8Array(bstr.length);
           for (let i = 0; i < bstr.length; i++) {
             u8arr[i] = bstr.charCodeAt(i);
@@ -76,7 +94,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify({ success: true, id }), { status: 201, headers: { 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('Error in Admin Products POST:', e);
-    return new Response(JSON.stringify({ error: `Error interno del servidor - ${e.message}`, details: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };
 
@@ -114,17 +132,32 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     let finalImageUrl = body.main_image;
 
     if (body.main_image_base64) {
+      const MAX_BASE64_LEN = 10 * 1024 * 1024; // ~7MB decodificados
+      let fileContent: ArrayBuffer | string = body.main_image_base64;
+      if (typeof fileContent === 'string' && fileContent.length > MAX_BASE64_LEN) {
+        return new Response(JSON.stringify({ error: 'La imagen excede el límite permitido' }), {
+          status: 413,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
       try {
         const uniqueSuffix = Math.random().toString(36).substring(7);
         const r2Path = `products/${prodId}-${Date.now()}-${uniqueSuffix}.webp`;
         
-        let fileContent: ArrayBuffer | string = body.main_image_base64;
         let mimeType = 'image/webp';
-        if (typeof fileContent === 'string' && fileContent.startsWith('data:')) {
-          const arr = fileContent.split(',');
-          const mimeMatch = arr[0].match(/:(.*?);/);
-          if (mimeMatch) mimeType = mimeMatch[1];
-          const bstr = atob(arr[1]);
+        if (typeof fileContent === 'string') {
+          let base64Data: string = fileContent;
+          if (fileContent.startsWith('data:')) {
+            const parts = fileContent.split(',');
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            if (mimeMatch && ALLOWED_MIMES.has(mimeMatch[1])) {
+              mimeType = mimeMatch[1];
+            }
+            base64Data = parts[1] || '';
+          }
+          // Decodificar a ArrayBuffer binario real para R2:
+          const bstr = atob(base64Data);
           const u8arr = new Uint8Array(bstr.length);
           for (let i = 0; i < bstr.length; i++) {
             u8arr[i] = bstr.charCodeAt(i);
@@ -138,7 +171,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         // 2. Eliminar la imagen antigua de R2
         if (existingImageUrl && existingImageUrl !== finalImageUrl) {
           const oldPath = extractPathFromCdnUrl(existingImageUrl);
-          if (oldPath) {
+          if (oldPath && (oldPath.startsWith(`products/${prodId}-`) || oldPath.startsWith(`products/${prodId}.`))) {
             await deleteFile(env, oldPath);
           }
         }
@@ -179,7 +212,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('Error in Admin Products PUT:', e);
-    return new Response(JSON.stringify({ error: `Error interno del servidor - ${e.message}`, details: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };
 
@@ -188,6 +221,13 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
   const auth = await getAuthPayload(request, env);
   if (!auth) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  if (ROLE_HIERARCHY[auth.role as UserRole] < ROLE_HIERARCHY['encargado']) {
+    return new Response(JSON.stringify({ error: 'Prohibido: Rol insuficiente para eliminar productos' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -217,7 +257,7 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     // 3. Recolección de basura en R2
     if (product && product.image_url) {
       const path = extractPathFromCdnUrl(product.image_url);
-      if (path) {
+      if (path && (path.startsWith(`products/${prodId}-`) || path.startsWith(`products/${prodId}.`))) {
         await deleteFile(env, path);
       }
     }
@@ -225,6 +265,6 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('Error in Admin Products DELETE:', e);
-    return new Response(JSON.stringify({ error: `Error interno del servidor - ${e.message}`, details: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

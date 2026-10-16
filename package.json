@@ -14,6 +14,8 @@
     "test": "oxlint && tsc --noEmit",
     "preview": "vite preview",
     "preview:pages": "wrangler pages dev ./dist --compatibility-flags=nodejs_compat",
+    "predeploy": "node scripts/check-deploy.mjs",
+    "deploy": "pnpm predeploy && wrangler pages deploy dist",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:report": "playwright show-report"

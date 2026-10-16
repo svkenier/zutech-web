@@ -1,0 +1,107 @@
+[
+  {
+    "id": "UNIT-AUTH-01",
+    "surface": "edge-functions/api/auth/[action].ts",
+    "subsystem": "authentication",
+    "boundary": "unauthenticated-internet-to-worker",
+    "attack_class": "side-channel-timing-discrepancy",
+    "status": "covered",
+    "evidence": "functions/api/auth/[action].ts:67 sólo calcula bcrypt.compare si el usuario existe en Redis. Usuarios inexistentes retornan en <2ms vs 120ms para existentes.",
+    "finding_fingerprint": "FND-AUTH-TIMING-01"
+  },
+  {
+    "id": "UNIT-AUTH-02",
+    "surface": "edge-functions/api/auth/[action].ts",
+    "subsystem": "session-management",
+    "boundary": "browser-heartbeat-to-redis",
+    "attack_class": "resource-exhaustion-quota-depletion",
+    "status": "covered",
+    "evidence": "functions/api/auth/[action].ts:132 ejecuta ensureSeeder(env) con listUsers (SMEMBERS + MGET) en cada invocación de handleVerify cada 20s desde ProtectedRoute.tsx:51, agotando el límite diario de Upstash (10k req/día).",
+    "finding_fingerprint": "FND-PERF-QUOTA-02"
+  },
+  {
+    "id": "UNIT-R2-01",
+    "surface": "edge-functions/api/admin/products/[[id]].ts",
+    "subsystem": "media-upload",
+    "boundary": "authenticated-admin-to-worker-r2",
+    "attack_class": "memory-pressure-oom",
+    "status": "covered",
+    "evidence": "functions/api/admin/products/[[id]].ts:26-48 decodifica cadenas base64 con atob() sin límite previo de longitud en bytes, arriesgando la saturación del límite de 128MB de RAM del isolate.",
+    "finding_fingerprint": "FND-R2-MEM-03"
+  },
+  {
+    "id": "UNIT-PERIMETER-01",
+    "surface": "functions/_middleware.ts & public/_headers",
+    "subsystem": "http-headers",
+    "boundary": "browser-to-edge",
+    "attack_class": "content-security-policy-misconfiguration",
+    "status": "covered",
+    "evidence": "functions/_middleware.ts:20 y public/_headers:7 definen style-src 'self' 'unsafe-inline' sin autorizar https://fonts.googleapis.com cargado en index.html:28.",
+    "finding_fingerprint": "FND-CSP-FONTS-04"
+  },
+  {
+    "id": "UNIT-CACHE-01",
+    "surface": "edge-functions/api/settings.ts",
+    "subsystem": "configuration-storage",
+    "boundary": "worker-to-cloudflare-cdn",
+    "attack_class": "unintended-cache-exposure",
+    "status": "covered",
+    "evidence": "functions/api/settings.ts:29-36 usa .catchall(...) y onRequestGet responde con Cache-Control: public, s-maxage=60. Si se persisten claves internas en settings generales, se almacenan en la CDN perimetral pública.",
+    "finding_fingerprint": "FND-SET-CACHE-05"
+  },
+  {
+    "id": "UNIT-D1-01",
+    "surface": "edge-functions/api/admin/orders.ts & public/products.ts",
+    "subsystem": "persistence",
+    "boundary": "worker-to-d1-sqlite",
+    "attack_class": "sql-injection",
+    "status": "covered",
+    "evidence": "Todas las consultas D1 utilizan env.DB.prepare(...).bind(...) con parámetros estrictos. Cero concatenación directa de cadenas. Sin vulnerabilidad SQLi encontrada."
+  },
+  {
+    "id": "UNIT-ORDERS-01",
+    "surface": "edge-functions/api/public/orders.ts",
+    "subsystem": "ecommerce-checkout",
+    "boundary": "unauthenticated-internet-to-order-processing",
+    "attack_class": "client-side-price-tampering",
+    "status": "covered",
+    "evidence": "functions/api/public/orders.ts:85-115 recalcula el subtotal y precio de cada producto directamente desde la base de datos D1 en el servidor. El precio enviado por el cliente es descartado. Inviolabilidad de cálculo verificada."
+  },
+  {
+    "id": "UNIT-MEDIA-01",
+    "surface": "edge-functions/api/media/[[path]].ts",
+    "subsystem": "object-storage-access",
+    "boundary": "public-http-to-r2",
+    "attack_class": "path-traversal-bucket-escape",
+    "status": "covered",
+    "evidence": "functions/api/media/[[path]].ts:24-30 valida y normaliza la ruta con replace(/\\.\\.+/g, '') y rechaza caracteres nulos antes de consultar env.R2. Sin evasión de bucket detectada."
+  },
+  {
+    "id": "UNIT-AUTH-03",
+    "surface": "src/core/auth/auth.ts",
+    "subsystem": "jwt-token-lifecycle",
+    "boundary": "client-cookie-to-worker",
+    "attack_class": "jwt-invalidation-bypass",
+    "status": "covered",
+    "evidence": "src/core/auth/auth.ts valida tokenVersion contra el registro de usuario en Redis. Al cambiar clave o cerrar sesión, tokenVersion se incrementa revocando tokens anteriores de forma inmediata."
+  },
+  {
+    "id": "UNIT-AUTH-04",
+    "surface": "functions/api/users/[action].ts",
+    "subsystem": "rbac-authorization",
+    "boundary": "authenticated-admin-to-admin-management",
+    "attack_class": "vertical-privilege-escalation",
+    "status": "covered",
+    "evidence": "functions/api/users/[action].ts:45-120 verifica canManage y canCreateRole según ROLE_HIERARCHY. El rol 'owner' está blindado contra borrado o degradación por otros roles."
+  },
+  {
+    "id": "UNIT-RATELIMIT-01",
+    "surface": "src/core/auth/rate-limit.ts",
+    "subsystem": "abuse-prevention",
+    "boundary": "edge-worker-to-redis",
+    "attack_class": "dos-bruteforce-failopen",
+    "status": "covered",
+    "evidence": "src/core/auth/rate-limit.ts:51-53 implementa Fail-Open por diseño. Requiere validación del WAF perimetral de Cloudflare para confirmar mitigación activa.",
+    "finding_fingerprint": "NV-WAF-RATELIMIT-01"
+  }
+]

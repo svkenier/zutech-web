@@ -27,7 +27,7 @@ export function signToken(username: string, role: UserRole, tokenVersion: number
 
 export function verifyToken(token: string, env: Env): JWTPayload {
   if (!env.JWT_SECRET) throw new Error("JWT_SECRET environment variable is missing");
-  return jwt.verify(token, env.JWT_SECRET) as unknown as JWTPayload;
+  return jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as unknown as JWTPayload;
 }
 
 export function extractToken(request: Request): string | null {

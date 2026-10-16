@@ -107,6 +107,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     if (body.action === 'purge') {
+      if (auth.role !== 'owner') {
+        return new Response(JSON.stringify({ error: 'Prohibido: Solo el propietario puede purgar el histórico financiero' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
       const closureCount = await env.DB.prepare(
         `SELECT COUNT(*) as cnt FROM cash_closures`
       ).first() as { cnt: number } | null;
@@ -138,7 +145,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[admin/orders/export-purge] Error:', msg);
     return new Response(
-      JSON.stringify({ error: 'Error interno', details: msg }),
+      JSON.stringify({ error: 'Error interno del servidor' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }

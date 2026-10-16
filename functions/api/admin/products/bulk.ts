@@ -1,6 +1,9 @@
 import { getAuthPayload } from '../../../../src/core/auth/auth.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
 import { putFile } from '../../../../src/core/storage/r2.js';
+import { ROLE_HIERARCHY, type UserRole } from '../../../../src/core/types/user.js';
+
+const ALLOWED_MIMES = new Set(['image/webp', 'image/jpeg', 'image/png']);
 
 function normalizeString(str: string): string {
   return (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '').trim();
@@ -18,6 +21,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const auth = await getAuthPayload(request, env);
   if (!auth) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  if (ROLE_HIERARCHY[auth.role as UserRole] < ROLE_HIERARCHY['encargado']) {
+    return new Response(JSON.stringify({ error: 'Prohibido: Rol insuficiente para procesar carga masiva de productos' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -65,15 +75,31 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       
       if (p.imagenBase64) {
         try {
-          const r2Path = `products/${skuToInsert}.webp`;
+          const sanitizedSku = String(skuToInsert).replace(/[^a-zA-Z0-9_-]/g, '').trim();
+          if (!sanitizedSku) throw new Error('SKU inválido para almacenamiento');
+          const r2Path = `products/${sanitizedSku}.webp`;
           
           let fileContent: ArrayBuffer | string = p.imagenBase64;
+          const MAX_BASE64_LEN = 10 * 1024 * 1024; // ~7MB decodificados
+          if (typeof fileContent === 'string' && fileContent.length > MAX_BASE64_LEN) {
+            console.error(`[Admin Bulk] Imagen excede límite permitido para ${p.nombre}`);
+            results.push({ id: p.id, status: 'error', error: 'La imagen excede el límite permitido (10MB)' });
+            continue;
+          }
+
           let mimeType = 'image/webp';
-          if (typeof fileContent === 'string' && fileContent.startsWith('data:')) {
-            const arr = fileContent.split(',');
-            const mimeMatch = arr[0].match(/:(.*?);/);
-            if (mimeMatch) mimeType = mimeMatch[1];
-            const bstr = atob(arr[1]);
+          if (typeof fileContent === 'string') {
+            let base64Data: string = fileContent;
+            if (fileContent.startsWith('data:')) {
+              const parts = fileContent.split(',');
+              const mimeMatch = parts[0].match(/:(.*?);/);
+              if (mimeMatch && ALLOWED_MIMES.has(mimeMatch[1])) {
+                mimeType = mimeMatch[1];
+              }
+              base64Data = parts[1] || '';
+            }
+            // Decodificar a ArrayBuffer binario real para R2:
+            const bstr = atob(base64Data);
             const u8arr = new Uint8Array(bstr.length);
             for (let i = 0; i < bstr.length; i++) {
               u8arr[i] = bstr.charCodeAt(i);
@@ -86,7 +112,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           console.log(`[Admin Bulk] R2 Upload Success. Path: ${finalImageUrl}`);
         } catch (err: any) {
           console.error(`[Admin Bulk] R2 Upload Error for ${p.nombre}:`, err);
-          results.push({ id: p.id, status: 'error', error: 'Error R2' });
+          results.push({ id: p.id, status: 'error', error: 'Error R2: ' + err.message });
           continue; // skip this product
         }
       }
@@ -135,6 +161,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify({ success: true, results }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('Error in Admin Bulk POST:', e);
-    return new Response(JSON.stringify({ error: `Error interno del servidor - ${e.message}` }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

@@ -29,21 +29,30 @@ export async function onRequest(context: any) {
     if (request.method === 'POST' && action === 'create') {
       const body = await request.json() as CreateUserRequest;
       if (!body.username || !body.password || !body.role) {
-        return new Response(JSON.stringify({ error: 'Bad Request' }), { status: 400 });
+        return new Response(JSON.stringify({ error: 'Bad Request' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      const RESERVED_USERNAMES = new Set(['index', 'rate-limit', 'admin', 'system', 'undefined', 'null']);
+      const cleanUsername = String(body.username).trim().toLowerCase();
+      if (!/^[a-z0-9_-]{3,30}$/.test(cleanUsername) || RESERVED_USERNAMES.has(cleanUsername)) {
+        return new Response(JSON.stringify({ error: 'Nombre de usuario inválido o reservado' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
 
       if (!canCreateRole(actorRole, body.role as UserRole)) {
-        return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role to create this user' }), { status: 403 });
+        return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role to create this user' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
       }
 
-      const existing = await getUser(body.username, env);
+      const existing = await getUser(cleanUsername, env);
       if (existing) {
-        return new Response(JSON.stringify({ error: 'User already exists' }), { status: 409 });
+        return new Response(JSON.stringify({ error: 'User already exists' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
       }
 
       const hashed = await hashPassword(body.password);
       await setUser({
-        username: body.username,
+        username: cleanUsername,
         password_hash: hashed,
         role: body.role as UserRole,
         created_by: payload.sub,
@@ -60,7 +69,7 @@ export async function onRequest(context: any) {
       const target = await getUser(body.username, env);
       if (!target) return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 });
       
-      if (target.isProtected || (env.ADMIN_USERNAME && body.username === env.ADMIN_USERNAME)) {
+      if (target.isProtected || (env.ADMIN_USER && body.username === env.ADMIN_USER)) {
         return new Response(JSON.stringify({ error: 'Forbidden: Cannot delete a protected user' }), { status: 403 });
       }
 
@@ -87,22 +96,26 @@ export async function onRequest(context: any) {
       const target = await getUser(body.username, env);
       if (!target) return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 });
       
-      if ((target.isProtected || (env.ADMIN_USERNAME && body.username === env.ADMIN_USERNAME)) && body.role && body.role !== 'superadmin') {
+      if (target.role === 'owner' && actorRole !== 'owner') {
+        return new Response(JSON.stringify({ error: 'Prohibido: Permisos insuficientes para modificar al propietario' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      if ((target.isProtected || (env.ADMIN_USER && body.username === env.ADMIN_USER)) && body.role && body.role !== 'superadmin') {
         return new Response(JSON.stringify({ error: 'Forbidden: Cannot downgrade a protected user' }), { status: 403 });
       }
 
       // Can manage?
       if (body.role) {
         if (payload.sub === target.username) {
-          return new Response(JSON.stringify({ error: 'Forbidden: Cannot promote or change your own role' }), { status: 403 });
+          return new Response(JSON.stringify({ error: 'Forbidden: Cannot promote or change your own role' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
         }
         if (!canManage(actorRole, target.role) || !canCreateRole(actorRole, body.role as UserRole)) {
-          return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403 });
+          return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
         }
       } else {
-        if (actorRole !== 'superadmin' && payload.sub !== target.username) {
+        if (payload.sub !== target.username) {
            if (!canManage(actorRole, target.role)) {
-              return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403 });
+              return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
            }
         }
       }
@@ -120,17 +133,19 @@ export async function onRequest(context: any) {
 
     if (request.method === 'POST' && action === 'reset-password') {
       const body = await request.json() as ResetPasswordRequest;
-      if (!body.target_username || !body.new_password) return new Response(JSON.stringify({ error: 'Bad Request' }), { status: 400 });
+      if (!body.target_username || !body.new_password) return new Response(JSON.stringify({ error: 'Bad Request' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
       const target = await getUser(body.target_username, env);
-      if (!target) return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 });
+      if (!target) return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
 
       if (target.role === 'owner' && payload.sub !== target.username) {
-        return new Response(JSON.stringify({ error: 'Forbidden: Cannot reset owner password' }), { status: 403 });
+        return new Response(JSON.stringify({ error: 'Forbidden: Cannot reset owner password' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
       }
 
-      if (!canManage(actorRole, target.role) && actorRole !== 'superadmin' && payload.sub !== target.username) {
-        return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403 });
+      const isSelf = payload.sub === target.username;
+      const hasHierarchy = canManage(actorRole, target.role);
+      if (!hasHierarchy && !isSelf) {
+        return new Response(JSON.stringify({ error: 'Forbidden: Insufficient role' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
       }
 
       const hashed = await hashPassword(body.new_password);

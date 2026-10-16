@@ -104,7 +104,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[admin/orders/close] Error:', msg);
     return new Response(
-      JSON.stringify({ error: 'Error interno al procesar el cierre', details: msg }),
+      JSON.stringify({ error: 'Error interno al procesar el cierre' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }
@@ -118,6 +118,12 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   if (!auth) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), {
       status: 401, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (ROLE_HIERARCHY[auth.role as UserRole] < ROLE_HIERARCHY['encargado']) {
+    return new Response(JSON.stringify({ error: 'Rol insuficiente' }), {
+      status: 403, headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -212,8 +218,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
+    console.error('[admin/orders/close GET] Error:', msg);
     return new Response(
-      JSON.stringify({ error: 'Error al obtener cierres', details: msg }),
+      JSON.stringify({ error: 'Error al obtener cierres' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }

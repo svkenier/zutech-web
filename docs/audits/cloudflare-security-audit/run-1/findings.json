@@ -1,0 +1,489 @@
+[
+  {
+    "verdict": "confirmed",
+    "fingerprint": "FND-AUTH-TIMING-01",
+    "title": "Enumeración Remota de Usuarios por Discrepancia de Tiempos (Timing Side-Channel) en Login",
+    "description": "El endpoint de autenticación no ejecuta una rutina criptográfica de tiempo constante cuando el usuario solicitado no existe en Redis, permitiendo a un atacante no autenticado deducir qué nombres de usuario están registrados mediante análisis estadístico de la latencia de respuesta.",
+    "root_cause": "En functions/api/auth/[action].ts:67, la función intensiva en CPU verifyPassword (bcrypt.compare) sólo se ejecuta si user?.password_hash existe. Cuando el usuario no existe, se omite bcrypt y sólo se ejecuta timingSafeEqual contra ADMIN_PASSWORD (<2ms), mientras que para usuarios existentes toma ~80-150ms.",
+    "intended_behavior": "El sistema debe tardar un tiempo indistinguible independientemente de si el usuario existe o no, ejecutando una verificación ficticia con bcrypt contra un hash predeterminado cuando el usuario no sea encontrado.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/auth/[action].ts",
+        "line": 50,
+        "scope": "handleLogin",
+        "description": "Recepción de la petición POST /api/auth/login con credenciales enviadas por el cliente."
+      },
+      {
+        "kind": "propagation",
+        "file": "functions/api/auth/[action].ts",
+        "line": 57,
+        "scope": "handleLogin",
+        "description": "Búsqueda del usuario en Redis mediante getUser(usernameClean, env)."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/auth/[action].ts",
+        "line": 67,
+        "scope": "handleLogin",
+        "description": "Bifurcación de cómputo donde verifyPassword es omitido si el usuario no existe."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 67,
+        "description": "let valid = user?.password_hash ? await verifyPassword(password, user.password_hash) : false;"
+      },
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 73,
+        "description": "const isPasswordMatch = envPass ? await timingSafeEqual(password, envPass) : false;"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authentication_level",
+        "description": "No autenticado (acceso público al endpoint /api/auth/login)."
+      },
+      {
+        "kind": "timing_dependency",
+        "description": "Diferencia de tiempo de cómputo de 80ms a 150ms entre usuarios registrados e inexistentes."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Un actor remoto no autenticado envía lotes de peticiones de inicio de sesión con distintos nombres de usuario y mide la latencia de respuesta.",
+      "payloads": [
+        "POST /api/auth/login {\"username\":\"admin\",\"password\":\"invalid_probe_pass\"}",
+        "POST /api/auth/login {\"username\":\"nonexistent_random_user_987\",\"password\":\"invalid_probe_pass\"}"
+      ],
+      "instructions": [
+        "1. Realizar petición POST a /api/auth/login con nombre de usuario existente y contraseña errónea; registrar latencia (~120ms).",
+        "2. Realizar petición POST a /api/auth/login con usuario inexistente y contraseña errónea; registrar latencia (~2ms).",
+        "3. Comparar las distribuciones de tiempos para aislar y enumerar cuentas válidas."
+      ],
+      "observed_result": "Las peticiones para usuarios registrados tardan más de 100ms por el cálculo de bcrypt, mientras que los usuarios inexistentes responden de forma casi instantánea en menos de 5ms."
+    },
+    "remediation": {
+      "strategy": "Ejecutar una comparación ficticia de bcrypt contra un hash sintético cuando el usuario no exista en Redis, garantizando un tiempo de cómputo idéntico en ambos caminos.",
+      "code_changes": [
+        {
+          "file_name": "functions/api/auth/[action].ts",
+          "fixed_code": "const DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';\nconst hashToVerify = user?.password_hash || DUMMY_HASH;\nlet valid = await verifyPassword(password, hashToVerify);\nif (!user?.password_hash) {\n  valid = false;\n}"
+        }
+      ]
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "La discrepancia es medible de forma reproducible a través de internet sin credenciales previas."
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Permite enumerar nombres de usuario válidos para futuros ataques dirigidos, sin comprometer directamente la cuenta."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "El flujo de código omite explícitamente verifyPassword en la línea 67."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "FND-PERF-QUOTA-02",
+    "title": "Agotamiento de Cuota de Upstash Redis y Denegación de Servicio por Seeder en Heartbeat",
+    "description": "El endpoint de verificación de sesión (/api/auth/verify) ejecuta la rutina de comprobación de inicialización de usuarios (ensureSeeder) en cada petición. Dado que el frontend realiza polling cada 20 segundos para mantener la sesión, una única pestaña administrativa abierta puede consumir la cuota gratuita diaria de Redis en pocas horas, provocando errores 500/503 y denegación de servicio a los operadores.",
+    "root_cause": "En functions/api/auth/[action].ts:132, handleVerify llama a ensureSeeder(env), la cual ejecuta listUsers(env) (SMEMBERS + MGET en Redis). Conectado con ProtectedRoute.tsx:51 que ejecuta checkSession cada 20 segundos, se generan múltiples comandos a Redis innecesariamente de forma continua.",
+    "intended_behavior": "ensureSeeder debe ejecutarse únicamente durante la inicialización del sistema o en endpoints administrativos explícitos de setup/seed, nunca en el flujo de verificación de sesión pasiva.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "src/ui/components/ProtectedRoute.tsx",
+        "line": 51,
+        "scope": "startPolling",
+        "description": "El cliente frontend lanza un setInterval que consulta /api/auth/verify cada 20000 ms."
+      },
+      {
+        "kind": "propagation",
+        "file": "functions/api/auth/[action].ts",
+        "line": 132,
+        "scope": "handleVerify",
+        "description": "handleVerify invoca ensureSeeder(env) antes de validar el token de sesión."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/auth/[action].ts",
+        "line": 160,
+        "scope": "ensureSeeder",
+        "description": "ensureSeeder ejecuta listUsers(env) emitiendo SMEMBERS y MGET sobre Upstash Redis."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/auth/[action].ts",
+        "line": 132,
+        "description": "await ensureSeeder(env);"
+      },
+      {
+        "file": "src/ui/components/ProtectedRoute.tsx",
+        "line": 51,
+        "description": "intervalId = window.setInterval(checkSession, 20000);"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authentication_level",
+        "description": "Usuario autenticado con sesión activa en el panel de administración."
+      },
+      {
+        "kind": "third_party_dependency",
+        "description": "Límite de cuota gratuita en Upstash Redis (10,000 comandos/día)."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Un usuario administrativo deja abierta una o varias pestañas del panel o un atacante autenticado fuerza peticiones repetidas a /api/auth/verify.",
+      "payloads": [
+        "GET /api/auth/verify con Cookie: auth_session_token=<valido> repetido continuamente"
+      ],
+      "instructions": [
+        "1. Iniciar sesión como operador o administrador.",
+        "2. Mantener la pestaña abierta en segundo plano durante 8-12 horas o enviar peticiones en bucle.",
+        "3. Observar el consumo acumulativo de comandos en la consola de Upstash hasta alcanzar 10k solicitudes."
+      ],
+      "observed_result": "Upstash rechaza consultas subsiguientes con error de cuota superada, causando que el sistema retorne HTTP 503 en la línea 139 de functions/api/auth/[action].ts bloqueando a todos los administradores."
+    },
+    "remediation": {
+      "strategy": "Eliminar la llamada a ensureSeeder(env) de handleVerify. La verificación de semillas debe ocurrir en scripts de migración o en el arranque inicial condicionado a ausencia de base de datos.",
+      "code_changes": [
+        {
+          "file_name": "functions/api/auth/[action].ts",
+          "fixed_code": "async function handleVerify(request: Request, env: Env) {\n  const payload = await getAuthPayload(request, env);\n  if (!payload) {\n    return new Response(JSON.stringify({ error: 'No autenticado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });\n  }\n\n  const user = await getUser(payload.sub, env);\n  if (!user) {\n    return new Response(JSON.stringify({ error: 'Usuario no encontrado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });\n  }\n\n  return new Response(JSON.stringify({ \n    user: { username: user.username, role: user.role, last_login: user.last_login } \n  }), { status: 200, headers: { 'Content-Type': 'application/json' } });\n}"
+        }
+      ]
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Ocurre de forma natural durante la operación diaria normal de un administrador con la aplicación abierta."
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Provoca indisponibilidad temporal de la autenticación y del panel administrativo al superar el límite de Upstash."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Comprobado mediante el acoplamiento directo entre el hook de polling en el frontend y el endpoint en el backend."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "FND-R2-MEM-03",
+    "title": "Agotamiento de Memoria (OOM) en Worker por Ingesta Ilimitada de Imágenes en Base64",
+    "description": "Los endpoints de creación y actualización de productos permiten enviar imágenes codificadas en base64 en el cuerpo JSON sin validar previamente el tamaño en bytes de la cadena. Al procesar imágenes de gran resolución o datos maliciosos, la conversión sucesiva en memoria (string JSON, split, atob, Uint8Array) excede el límite de 128MB de RAM del isolate de Cloudflare Workers, provocando la terminación abrupta del proceso.",
+    "root_cause": "En functions/api/admin/products/[[id]].ts:26-48 (y 142-162 en PUT), se reciben cadenas base64 sin restricción de tamaño y se aplican operaciones atob() y bucles charCodeAt() que duplican la memoria asignada en el isolate.",
+    "intended_behavior": "El backend debe rechazar peticiones con imágenes base64 que excedan un tamaño máximo seguro (ej. 5MB) antes de intentar decodificarlas, o exigir la subida directa a R2 mediante URLs prefirmadas.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 20,
+        "scope": "onRequestPost",
+        "description": "Recepción de la petición POST /api/admin/products con un cuerpo JSON de gran tamaño."
+      },
+      {
+        "kind": "propagation",
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 34,
+        "scope": "onRequestPost",
+        "description": "División de la cadena base64 con split(',') generando copias adicionales en memoria."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 39,
+        "scope": "onRequestPost",
+        "description": "Ejecución de atob() y reserva de Uint8Array(bstr.length) superando el límite de memoria del worker."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 39,
+        "description": "const bstr = atob(arr[1]);\nconst u8arr = new Uint8Array(bstr.length);"
+      },
+      {
+        "file": "functions/api/admin/products/[[id]].ts",
+        "line": 150,
+        "description": "const bstr = atob(arr[1]);\nconst u8arr = new Uint8Array(bstr.length);"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Usuario autenticado con rol de administración con permiso para crear o editar productos."
+      },
+      {
+        "kind": "system_configuration",
+        "description": "Límite de memoria por isolate de Cloudflare Workers fijado en 128 MB."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Un operador admin o cuenta comprometida envía un producto con un campo main_image_base64 de 35MB.",
+      "payloads": [
+        "POST /api/admin/products {\"name\":\"Test\",\"price\":10,\"main_image_base64\":\"data:image/jpeg;base64,<cadena_de_35MB>\"}"
+      ],
+      "instructions": [
+        "1. Generar un payload JSON con una imagen de 35MB en base64.",
+        "2. Enviar la petición POST con cookie de sesión válida.",
+        "3. Observar la caída del worker con error HTTP 500 (Worker exceeded memory limit)."
+      ],
+      "observed_result": "El Worker falla inmediatamente por falta de memoria RAM al intentar decodificar el buffer sin responder al cliente."
+    },
+    "remediation": {
+      "strategy": "Añadir una validación temprana de longitud máxima de la cadena base64 (máx. 5MB) antes de invocar atob() o cualquier transformación de buffer.",
+      "code_changes": [
+        {
+          "file_name": "functions/api/admin/products/[[id]].ts",
+          "fixed_code": "const MAX_BASE64_BYTES = 5 * 1024 * 1024 * 1.37; // ~5MB decodificados\nif (body.main_image_base64) {\n  if (body.main_image_base64.length > MAX_BASE64_BYTES) {\n    return new Response(JSON.stringify({ error: 'La imagen excede el límite máximo permitido de 5MB.' }), { status: 413, headers: { 'Content-Type': 'application/json' } });\n  }\n  // proceder con decodificación segura..."
+        }
+      ]
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Requiere privilegios de administración o carga accidental de imágenes sin comprimir."
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Terminación forzada del worker y potencial denegación de servicio en operaciones de catálogo."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "El patrón atob en cadenas arbitrarias sin validación de longitud está presente tanto en POST como en PUT."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "FND-CSP-FONTS-04",
+    "title": "Violación de Content Security Policy (CSP) en style-src para Google Fonts",
+    "description": "La cabecera Content-Security-Policy emitida por el middleware de Pages Functions y el archivo estático _headers define style-src 'self' 'unsafe-inline', omitiendo el origen https://fonts.googleapis.com requerido por index.html para cargar la tipografía Inter. Esto provoca violaciones de CSP en navegadores con cumplimiento estricto y fallos de renderizado visual.",
+    "root_cause": "En functions/_middleware.ts:20 y public/_headers:7, la directiva style-src restringe los estilos a 'self' y 'unsafe-inline', mientras que index.html:28 importa https://fonts.googleapis.com/css2.",
+    "intended_behavior": "La directiva style-src debe incluir https://fonts.googleapis.com o los recursos tipográficos deben alojarse localmente bajo el origen 'self'.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "index.html",
+        "line": 28,
+        "scope": "head",
+        "description": "El documento HTML solicita la hoja de estilos de Google Fonts desde fonts.googleapis.com."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/_middleware.ts",
+        "line": 20,
+        "scope": "onRequest",
+        "description": "El middleware inyecta la cabecera CSP que bloquea orígenes externos en style-src."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/_middleware.ts",
+        "line": 20,
+        "description": "newHeaders.set('Content-Security-Policy', \"... style-src 'self' 'unsafe-inline'; ... font-src 'self' data: https:; ...\");"
+      },
+      {
+        "file": "public/_headers",
+        "line": 7,
+        "description": "Content-Security-Policy: ... style-src 'self' 'unsafe-inline'; ... font-src 'self' data: https:; ..."
+      },
+      {
+        "file": "index.html",
+        "line": 28,
+        "description": "href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap\""
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "user_interaction",
+        "description": "Carga inicial de la aplicación por parte de cualquier visitante."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Un usuario o auditor inspecciona la consola del navegador al cargar la página principal.",
+      "payloads": [
+        "GET / con navegador web moderno"
+      ],
+      "instructions": [
+        "1. Navegar a la página raíz del proyecto.",
+        "2. Abrir la consola de herramientas de desarrollador.",
+        "3. Comprobar los reportes de violación de CSP para https://fonts.googleapis.com."
+      ],
+      "observed_result": "El navegador bloquea la carga de la hoja de estilos externa o emite advertencia de violación de política CSP."
+    },
+    "remediation": {
+      "strategy": "Añadir https://fonts.googleapis.com a la directiva style-src tanto en functions/_middleware.ts como en public/_headers, o empaquetar los archivos de la tipografía Inter localmente en /assets.",
+      "code_changes": [
+        {
+          "file_name": "functions/_middleware.ts",
+          "fixed_code": "newHeaders.set('Content-Security-Policy', \"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.cloudflare.com; font-src 'self' data: https: https://fonts.gstatic.com; frame-ancestors 'none';\");"
+        },
+        {
+          "file_name": "public/_headers",
+          "fixed_code": "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self'; font-src 'self' data: https: https://fonts.gstatic.com; frame-ancestors 'none';"
+        }
+      ]
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Se produce de manera continua e invariable en cada visita a la aplicación."
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Impacta la apariencia estética y genera ruido en consolas de monitoreo, sin comprometer datos confidenciales."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Inconsistencia comprobada directamente entre index.html y las cabeceras CSP de middleware y _headers."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "FND-SET-CACHE-05",
+    "title": "Riesgo de Exposición y Cacheo en Edge CDN de Configuraciones Arbitrarias en /api/settings",
+    "description": "El esquema Zod para las configuraciones de la tienda (SettingsSchema) utiliza .catchall() aceptando cualquier par clave-valor arbitrario que sea guardado por un administrador. Al mismo tiempo, el método onRequestGet sirve todo el objeto persistido con la cabecera Cache-Control: public, s-maxage=60. Si en el futuro se guardan configuraciones internas o credenciales en la tabla general de settings, estas quedarán cacheadas y expuestas a cualquier cliente en los puntos de presencia perimetrales de Cloudflare.",
+    "root_cause": "En functions/api/settings.ts:29-36, SettingsSchema permite claves no declaradas con .catchall(...), y la línea 45 instruye a la CDN pública a cachear la respuesta íntegra sin filtrar campos sensibles.",
+    "intended_behavior": "SettingsSchema debe aplicar .strict() o un filtro de lista blanca estricto en la lectura pública, evitando la persistencia y distribución accidental de claves privadas en endpoints de acceso público.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "functions/api/settings.ts",
+        "line": 62,
+        "scope": "onRequestPut",
+        "description": "Un administrador actualiza la configuración enviando claves arbitrarias aceptadas por .catchall()."
+      },
+      {
+        "kind": "propagation",
+        "file": "functions/api/settings.ts",
+        "line": 105,
+        "scope": "onRequestPut",
+        "description": "Las claves arbitrarias se serializan en JSON y se guardan en la tabla settings con id 'general'."
+      },
+      {
+        "kind": "sink",
+        "file": "functions/api/settings.ts",
+        "line": 45,
+        "scope": "onRequestGet",
+        "description": "onRequestGet recupera el JSON completo y lo emite públicamente con Cache-Control: public, s-maxage=60."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "functions/api/settings.ts",
+        "line": 29,
+        "description": "}).catchall(z.union([z.string().max(1000), z.number(), z.boolean(), z.null()]));"
+      },
+      {
+        "file": "functions/api/settings.ts",
+        "line": 45,
+        "description": "headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Administrador guardando propiedades adicionales en la configuración general."
+      },
+      {
+        "kind": "network_routing",
+        "description": "Caché perimetral de Cloudflare CDN activa para el dominio."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Un usuario externo no autenticado consulta GET /api/settings esperando recibir campos de configuración general y analiza si hay parámetros de integraciones internas cacheados.",
+      "payloads": [
+        "GET /api/settings HTTP/1.1"
+      ],
+      "instructions": [
+        "1. Guardar una configuración con un atributo extendido mediante PUT /api/settings.",
+        "2. Ejecutar GET /api/settings desde un cliente anónimo.",
+        "3. Verificar la presencia del campo adicional y los encabezados de caché perimetral pública."
+      ],
+      "observed_result": "Cualquier propiedad introducida es devuelta públicamente y almacenada en la caché perimetral de Cloudflare."
+    },
+    "remediation": {
+      "strategy": "Definir SettingsSchema de forma estricta (sin catchall o con .strip()) y crear un endpoint diferenciado para configuraciones administrativas con cabecera Cache-Control: no-store, private.",
+      "code_changes": [
+        {
+          "file_name": "functions/api/settings.ts",
+          "fixed_code": "const SettingsSchema = z.object({\n  store_name: z.string().max(1000).nullable().optional(),\n  rif: z.string().max(1000).nullable().optional(),\n  phone: z.string().max(1000).nullable().optional(),\n  whatsapp: z.string().max(1000).nullable().optional(),\n  email: z.string().max(1000).nullable().optional(),\n  address: z.string().max(1000).nullable().optional(),\n  map_url: z.string().max(1000).nullable().optional(),\n  social_links: SocialLinksSchema,\n  domain: z.string().max(1000).nullable().optional(),\n  custom_domain: z.string().max(1000).nullable().optional(),\n  expirationDate: z.string().max(1000).nullable().optional(),\n  monitoringActive: z.boolean().nullable().optional(),\n  domainExpirationDate: z.string().max(1000).nullable().optional(),\n  domainAlertEnabled: z.boolean().nullable().optional(),\n  exchange_rate: z.number().nonnegative().nullable().optional(),\n  tasa_bcv: z.number().nonnegative().nullable().optional(),\n}).strict();"
+        }
+      ]
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Depende de que el operador introduzca campos de control interno en el formulario general de settings."
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Exposición potencial de metadatos o flags de configuración en la CDN pública."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Comprobado en la definición del esquema Zod y las cabeceras HTTP de respuesta."
+    }
+  },
+  {
+    "verdict": "needs_validation",
+    "fingerprint": "NV-WAF-RATELIMIT-01",
+    "title": "Verificación del Límite de Tasa en Perímetro Cloudflare WAF por Política Fail-Open en Redis",
+    "description": "La función checkRateLimit implementa una política deliberada de Fail-Open por disponibilidad operativa (SEC-07): si Upstash Redis no está disponible, tiene cuotas agotadas o experimenta latencia, se otorga acceso a la petición para no bloquear las ventas de la tienda. El código documenta que la protección estricta contra fuerza bruta y DoS depende de reglas configuradas en el Cloudflare Dashboard / Cloudflare WAF. Desde la inspección estática del código fuente no es posible verificar si dichas reglas perimetrales están activas en el entorno de producción.",
+    "claimed_root_cause": "En src/core/auth/rate-limit.ts:51-53, el bloque catch concede { success: true } de forma permisiva cuando Upstash Redis falla.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 44,
+        "scope": "checkRateLimit",
+        "description": "Evaluación del rate limit para una IP entrante."
+      },
+      {
+        "kind": "sink",
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 53,
+        "scope": "checkRateLimit",
+        "description": "Retorno de concesión en caso de error en Redis: return { success: true, ... }."
+      }
+    ],
+    "evidence": [
+      {
+        "file": "src/core/auth/rate-limit.ts",
+        "line": 53,
+        "description": "return { success: true, limit: 10, remaining: 10, reset: Date.now() + 10000 };"
+      },
+      {
+        "file": "scripts/check-deploy.mjs",
+        "line": 42,
+        "description": "console.log('✓ Verificando endpoints y rate limiting en despliegue...');"
+      }
+    ],
+    "blockers": [
+      "Las reglas de Cloudflare WAF Rate Limiting se configuran a nivel de cuenta/zona en el Dashboard de Cloudflare o Terraform y no están versionadas dentro de este repositorio.",
+      "La inspección de seguridad en modo seguro y defensivo prohíbe realizar ataques de denegación de servicio o saturación contra los endpoints en vivo."
+    ],
+    "validation_plan": {
+      "local": "Simular la caída de Upstash en entorno de pruebas local (Miniflare con credenciales UPSTASH inválidas) y verificar que el fallback conceda la petición y registre la alerta en logs.",
+      "deployment": "El propietario del despliegue debe acceder a Cloudflare Dashboard -> Security -> WAF -> Rate limiting rules y verificar que existan reglas activas con acción 'Block' sobre /api/auth/login (umbral recomendado: máx 5 req/min por IP) y /api/public/orders (máx 10 req/min por IP)."
+    }
+  }
+]

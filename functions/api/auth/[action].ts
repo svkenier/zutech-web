@@ -3,6 +3,13 @@ import { signToken, verifyToken, getAuthPayload, type Env } from '../../../src/c
 import { getUser, updateLastLogin, activateTTL, cancelTTL, listUsers, setUser, updateUserPreservingTTL } from '../../../src/core/auth/kv.js';
 import { verifyPassword, hashPassword } from '../../../src/core/auth/crypto.js';
 
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const aBuf = await crypto.subtle.digest('SHA-256', encoder.encode(a));
+  const bBuf = await crypto.subtle.digest('SHA-256', encoder.encode(b));
+  return crypto.subtle.timingSafeEqual(aBuf, bBuf);
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, params } = context;
   const action = params.action as string;
@@ -21,12 +28,11 @@ async function handleLogin(request: Request, env: Env) {
     await ensureSeeder(env);
   } catch (err) {
     if (err && (err as any).name === 'ConfigurationError') {
+      console.error('[Upstash Config Error]:', err);
       return new Response(JSON.stringify({
         ok: false,
-        errorType: 'CONFIGURATION_ERROR',
-        provider: (err as any).provider,
-        message: (err as Error).message
-      }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        error: 'Servicio de autenticación no disponible temporalmente'
+      }), { status: 503, headers: { 'Content-Type': 'application/json' } });
     }
     console.error('ensureSeeder error:', err);
   }
@@ -58,31 +64,25 @@ async function handleLogin(request: Request, env: Env) {
       }
     }
 
-    let valid = user?.password_hash ? await verifyPassword(password, user.password_hash) : false;
+    const DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+    const hashToVerify = user?.password_hash || DUMMY_HASH;
+    let valid = await verifyPassword(password, hashToVerify);
+    if (!user?.password_hash) {
+      valid = false;
+    }
 
     const envUser = (env.ADMIN_USER ?? '').replace(/^"|"$/g, '').trim();
     const envPass = (env.ADMIN_PASSWORD ?? '').replace(/^"|"$/g, '').trim();
 
-    // Fallback de Desarrollo / Sincronización Automática:
-    if (!valid && envUser && envPass && usernameClean === envUser.toLowerCase() && password === envPass) {
+    // Fallback de Desarrollo / Sincronización Automática (Tiempo constante):
+    const isPasswordMatch = envPass ? await timingSafeEqual(password, envPass) : false;
+    if (!valid && envUser && envPass && usernameClean === envUser.toLowerCase() && isPasswordMatch) {
       valid = true;
       console.log('[Auth Debug] Fallback activado: ADMIN_PASSWORD coincide. Resincronizando hash en Redis...');
       const newHash = await hashPassword(password);
       await updateUserPreservingTTL(usernameClean, { password_hash: newHash }, env);
     }
 
-    console.log('[Auth Debug]', {
-      requestedUser: usernameClean,
-      foundInRedis: !!user,
-      hasHash: !!user?.password_hash,
-      isValid: valid,
-      adminUserMatch: env.ADMIN_USER ? usernameClean === env.ADMIN_USER.toLowerCase() : false,
-      adminPasswordMatch: env.ADMIN_PASSWORD ? password === env.ADMIN_PASSWORD : false,
-      envAdminUser: env.ADMIN_USER,
-      envAdminPass: env.ADMIN_PASSWORD,
-      pwdLength: password.length,
-      envPwdLength: env.ADMIN_PASSWORD?.length
-    });
 
     if (!user || !valid) {
       return new Response(JSON.stringify({ error: 'Usuario o contraseña incorrectos' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
@@ -118,6 +118,10 @@ async function handleLogin(request: Request, env: Env) {
 async function handleLogout(request: Request, env: Env) {
   const payload = await getAuthPayload(request, env);
   if (payload) {
+    const user = await getUser(payload.sub, env);
+    if (user) {
+      await updateUserPreservingTTL(payload.sub, { tokenVersion: (user.tokenVersion || 1) + 1 }, env);
+    }
     await activateTTL(payload.sub, env);
   }
 
@@ -129,32 +133,13 @@ async function handleLogout(request: Request, env: Env) {
 }
 
 async function handleVerify(request: Request, env: Env) {
-  try {
-    await ensureSeeder(env);
-  } catch (err) {
-    if (err && (err as any).name === 'ConfigurationError') {
-      return new Response(JSON.stringify({
-        ok: false,
-        errorType: 'CONFIGURATION_ERROR',
-        provider: (err as any).provider,
-        message: (err as Error).message
-      }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-    }
-    console.error('ensureSeeder error:', err);
-  }
-  
   const payload = await getAuthPayload(request, env);
   if (!payload) {
     return new Response(JSON.stringify({ error: 'No autenticado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const user = await getUser(payload.sub, env);
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Usuario no encontrado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
-  }
-
   return new Response(JSON.stringify({ 
-    user: { username: user.username, role: user.role, last_login: user.last_login } 
+    user: { username: payload.sub, role: payload.role } 
   }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
@@ -171,7 +156,7 @@ async function ensureSeeder(env: Env) {
     await setUser({
       username: envUser,
       password_hash: hashed,
-      role: 'superadmin',
+      role: 'owner',
       tokenVersion: 1,
       last_login: new Date().toISOString(),
       created_by: 'system-seeder',

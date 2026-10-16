@@ -12,6 +12,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const { results } = await env.DB.prepare(`SELECT * FROM brands ORDER BY name ASC`).all();
     return new Response(JSON.stringify({ success: true, brands: results }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    console.error('[Admin Brands GET] Error:', e);
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

@@ -1,6 +1,32 @@
+import { z } from 'zod';
 import { getAuthPayload } from '../../src/core/auth/auth.js';
 import { ROLE_HIERARCHY, type UserRole } from '../../src/core/types/user.js';
 import type { Env } from '../../src/core/auth/auth.js';
+
+const SocialLinksSchema = z.object({
+  instagram: z.string().max(1000).nullable().optional(),
+  facebook: z.string().max(1000).nullable().optional(),
+  twitter: z.string().max(1000).nullable().optional(),
+}).catchall(z.string().max(1000).nullable().optional()).nullable().optional();
+
+const SettingsSchema = z.object({
+  store_name: z.string().max(1000).nullable().optional(),
+  rif: z.string().max(1000).nullable().optional(),
+  phone: z.string().max(1000).nullable().optional(),
+  whatsapp: z.string().max(1000).nullable().optional(),
+  email: z.string().max(1000).nullable().optional(),
+  address: z.string().max(1000).nullable().optional(),
+  map_url: z.string().max(1000).nullable().optional(),
+  social_links: SocialLinksSchema,
+  domain: z.string().max(1000).nullable().optional(),
+  custom_domain: z.string().max(1000).nullable().optional(),
+  expirationDate: z.string().max(1000).nullable().optional(),
+  monitoringActive: z.boolean().nullable().optional(),
+  domainExpirationDate: z.string().max(1000).nullable().optional(),
+  domainAlertEnabled: z.boolean().nullable().optional(),
+  exchange_rate: z.number().nonnegative().nullable().optional(),
+  tasa_bcv: z.number().nonnegative().nullable().optional(),
+}).strict();
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { env } = context;
@@ -34,7 +60,25 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const body = await request.json() as any;
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'JSON inválido en el cuerpo de la petición' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    const validationResult = SettingsSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      const issueMessage = validationResult.error.issues
+        .map((issue) => `${issue.path.join('.') || 'cuerpo'}: ${issue.message}`)
+        .join(', ');
+      return new Response(JSON.stringify({ error: `Configuración inválida: ${issueMessage}` }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = validationResult.data as Record<string, any>;
     
     // FETCH EXISTING SETTINGS
     const row = (await env.DB.prepare(`SELECT data FROM settings WHERE id = 'general'`).first()) as { data: string } | null;
@@ -44,7 +88,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     }
 
     if (payload.role !== 'owner') {
-      const criticalKeys = ['domain', 'custom_domain', 'expirationDate', 'monitoringActive'];
+      const criticalKeys = ['domain', 'custom_domain', 'expirationDate', 'monitoringActive', 'domainExpirationDate', 'domainAlertEnabled'];
       
       for (const key of criticalKeys) {
         if (key in body && body[key] !== existingData[key]) {

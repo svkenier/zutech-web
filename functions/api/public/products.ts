@@ -62,8 +62,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     return new Response(JSON.stringify(records), { status: 200, headers });
   } catch (err: any) {
-    console.warn('[Public Products Fallback]:', err);
-    return new Response(JSON.stringify({ error: err.message || err.toString() }), {
+    console.error('[Public Products Error]:', err);
+    return new Response(JSON.stringify({ error: 'Error al obtener productos' }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
