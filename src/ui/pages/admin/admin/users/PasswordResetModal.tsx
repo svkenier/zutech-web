@@ -89,7 +89,7 @@ export function PasswordResetModal({ target, onClose }: PasswordResetModalProps)
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton aria-label="Acción" onClick={() => setShowPassword(!showPassword)} edge="end" size="small" tabIndex={-1}>
+                    <IconButton aria-label="Mostrar u ocultar contraseña" onClick={() => setShowPassword(!showPassword)} edge="end" size="small" tabIndex={-1}>
                       {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>

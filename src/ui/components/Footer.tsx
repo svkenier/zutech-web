@@ -107,6 +107,8 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   aria-label="Contactar por WhatsApp"
                   sx={{
+                    minWidth: 44,
+                    minHeight: 44,
                     bgcolor: 'rgba(255, 255, 255, 0.08)',
                     color: 'rgba(255, 255, 255, 0.90)',
                     border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -129,7 +131,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Visitar nuestro perfil de Facebook"
-                  sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#FFFFFF', borderRadius: '50%', transition: 'all 0.2s ease-in-out', '&:hover': { bgcolor: '#1877F2', color: '#FFFFFF' } }}
+                  sx={{ minWidth: 44, minHeight: 44, bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#FFFFFF', borderRadius: '50%', transition: 'all 0.2s ease-in-out', '&:hover': { bgcolor: '#1877F2', color: '#FFFFFF' } }}
                 >
                   <FacebookIcon />
                 </IconButton>
@@ -140,7 +142,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Visitar nuestro perfil de Instagram"
-                  sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#FFFFFF', borderRadius: '50%', transition: 'all 0.2s ease-in-out', '&:hover': { bgcolor: '#E4405F', color: '#FFFFFF' } }}
+                  sx={{ minWidth: 44, minHeight: 44, bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#FFFFFF', borderRadius: '50%', transition: 'all 0.2s ease-in-out', '&:hover': { bgcolor: '#E4405F', color: '#FFFFFF' } }}
                 >
                   <InstagramIcon />
                 </IconButton>
@@ -151,7 +153,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Visitar nuestro perfil de Twitter / X"
-                  sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#FFFFFF', borderRadius: '50%', transition: 'all 0.2s ease-in-out', '&:hover': { bgcolor: '#000000', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.35)' } }}
+                  sx={{ minWidth: 44, minHeight: 44, bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#FFFFFF', borderRadius: '50%', transition: 'all 0.2s ease-in-out', '&:hover': { bgcolor: '#000000', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.35)' } }}
                 >
                   <TwitterIcon />
                 </IconButton>
@@ -171,7 +173,7 @@ export default function Footer() {
                   component={RouterLink}
                   to={l.to}
                   underline="none"
-                  sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', display: 'inline-block', '&:hover': { color: '#00f0ff', textDecoration: 'none' } }}
+                  sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', display: 'inline-block', '&:hover': { color: '#00E5FF', textDecoration: 'none' } }}
                 >
                   {l.label}
                 </Link>
@@ -185,13 +187,13 @@ export default function Footer() {
               Contacto
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterSoporteUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterSoporteUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
                 Soporte Técnico
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterVentasUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterVentasUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
                 Ventas y Catálogo
               </Link>
-              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterEstadoUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
+              <Link component="button" variant="body2" onClick={() => openWhatsApp(getFooterEstadoUrl(phone || ''))} sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', textDecoration: 'none' }, textAlign: 'left', display: 'block' }}>
                 Estado de mi pedido
               </Link>
             </Box>
@@ -208,20 +210,20 @@ export default function Footer() {
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
                 {config.phone && (
-                  <Link href={`tel:${config.phone.replace(/\s+/g, '')}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, '&:hover .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } }}>
-                    <PhoneIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00f0ff', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
+                  <Link href={`tel:${config.phone.replace(/\s+/g, '')}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', textDecoration: 'none' }, '&:hover .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } }}>
+                    <PhoneIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00E5FF', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
                     <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.15s ease-in-out' }}>{config.phone}</Typography>
                   </Link>
                 )}
                 {config.email && (
-                  <Link href={`mailto:${config.email}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' }, '&:hover .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } }}>
-                    <EmailIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00f0ff', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
+                  <Link href={`mailto:${config.email}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', textDecoration: 'none' }, '&:hover .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } }}>
+                    <EmailIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00E5FF', flexShrink: 0, transition: 'all 0.2s ease-in-out' }} /> 
                     <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.15s ease-in-out' }}>{config.email}</Typography>
                   </Link>
                 )}
                 {config.address && (
-                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
-                    <PlaceIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00f0ff', flexShrink: 0, mt: 0.3, transition: 'all 0.2s ease-in-out' }} /> 
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.75)', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', '& .contact-icon': { transform: 'scale(1.15)', filter: 'brightness(1.2)' } } }}>
+                    <PlaceIcon className="contact-icon" sx={{ fontSize: '1.2rem', color: '#00E5FF', flexShrink: 0, mt: 0.3, transition: 'all 0.2s ease-in-out' }} /> 
                     <Typography sx={{ color: 'inherit', fontSize: '0.95rem', fontWeight: 400, transition: 'color 0.15s ease-in-out' }}>{config.address}</Typography>
                   </Box>
                 )}
@@ -275,7 +277,7 @@ export default function Footer() {
                 component={RouterLink}
                 to={l.to}
                 underline="none"
-                sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00f0ff', textDecoration: 'none' } }}
+                sx={{ color: 'rgba(255, 255, 255, 0.75)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.15s ease-in-out', cursor: 'pointer', '&:hover': { color: '#00E5FF', textDecoration: 'none' } }}
               >
                 {l.label}
               </Link>

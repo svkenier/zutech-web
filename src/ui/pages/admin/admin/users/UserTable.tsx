@@ -275,7 +275,7 @@ export function UserTable({
                             {actionStatus.canDelete && (
                               <Tooltip title={actionStatus.disabled ? actionStatus.disabledReason : "Eliminar usuario"}>
                                 <span>
-                                  <IconButton aria-label="Acción" size="small" color="error" disabled={actionStatus.disabled} onClick={() => { setDeleteError(''); setDeleteTarget(u); }}>
+                                  <IconButton aria-label="Eliminar usuario" size="small" color="error" disabled={actionStatus.disabled} onClick={() => { setDeleteError(''); setDeleteTarget(u); }}>
                                     <DeleteIcon fontSize="small" />
                                   </IconButton>
                                 </span>

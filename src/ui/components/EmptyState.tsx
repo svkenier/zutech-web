@@ -38,7 +38,7 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
           transform: 'translate(-50%, -50%)',
           width: 120,
           height: 120,
-          background: 'radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%)',
+          background: 'radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%)',
           zIndex: 0,
           pointerEvents: 'none'
         }} />
@@ -48,11 +48,11 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
             display: 'inline-flex',
             p: 2,
             borderRadius: '50%',
-            bgcolor: 'rgba(0, 240, 255, 0.05)',
-            border: '1px solid rgba(0, 240, 255, 0.2)',
+            bgcolor: 'rgba(0, 229, 255, 0.05)',
+            border: '1px solid rgba(0, 229, 255, 0.2)',
             mb: 3
           }}>
-            {React.cloneElement(icon, { sx: { fontSize: 48, color: '#00F0FF' } })}
+            {React.cloneElement(icon, { sx: { fontSize: 48, color: '#00E5FF' } })}
           </Box>
           <Typography variant="h5" component="h3" color="#FFFFFF" fontWeight={700} gutterBottom sx={{ letterSpacing: '-0.01em' }}>
             {title}

@@ -407,15 +407,15 @@ export default function ProductsPage() {
                       startIcon={<ClearIcon />}
                       sx={{ 
                         mt: 1, 
-                        color: '#00F0FF', 
-                        borderColor: 'rgba(0, 240, 255, 0.3)',
+                        color: '#00E5FF', 
+                        borderColor: 'rgba(0, 229, 255, 0.3)',
                         borderRadius: 2,
                         textTransform: 'none',
                         fontWeight: 600,
                         transition: 'transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease',
                         '&:hover': {
-                          bgcolor: 'rgba(0, 240, 255, 0.08)',
-                          borderColor: '#00F0FF',
+                          bgcolor: 'rgba(0, 229, 255, 0.08)',
+                          borderColor: '#00E5FF',
                           transform: 'translateY(-2px)'
                         }
                       }}

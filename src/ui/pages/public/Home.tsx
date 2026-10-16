@@ -149,9 +149,9 @@ export default function Home() {
                 <Box sx={{ position: 'relative', px: { xs: 0, md: 2 } }}>
                 {isDesktop && loopActive && hasMultipleProducts && (
                   <IconButton 
-                    aria-label="Anterior"
+                    aria-label="Ver productos anteriores en el carrusel"
                     onClick={() => emblaApi && emblaApi.scrollPrev()}
-                    sx={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, bgcolor: 'background.paper', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}
+                    sx={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, minWidth: 44, minHeight: 44, bgcolor: 'background.paper', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <ChevronLeftIcon />
                   </IconButton>
@@ -192,9 +192,9 @@ export default function Home() {
 
                 {isDesktop && loopActive && hasMultipleProducts && (
                   <IconButton 
-                    aria-label="Siguiente"
+                    aria-label="Ver productos siguientes en el carrusel"
                     onClick={() => emblaApi && emblaApi.scrollNext()}
-                    sx={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, bgcolor: 'background.paper', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}
+                    sx={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, minWidth: 44, minHeight: 44, bgcolor: 'background.paper', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <ChevronRightIcon />
                   </IconButton>
@@ -229,17 +229,17 @@ export default function Home() {
                         to="/productos"
                         variant="contained"
                         sx={{
-                          bgcolor: '#00F0FF',
-                          color: '#060D17',
+                          bgcolor: 'secondary.main',
+                          color: 'secondary.contrastText',
                           fontWeight: 700,
                           borderRadius: 2,
                           px: 4,
                           py: 1,
-                          boxShadow: '0 0 15px rgba(0,240,255,0.2)',
+                          boxShadow: '0 0 15px rgba(0, 229, 255, 0.2)',
                           transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
                           '&:hover': {
-                            bgcolor: '#33F5FF',
-                            boxShadow: '0 0 25px rgba(0,240,255,0.4)',
+                            bgcolor: '#26EAFF',
+                            boxShadow: '0 0 25px rgba(0, 229, 255, 0.4)',
                             transform: 'translateY(-2px)'
                           }
                         }}

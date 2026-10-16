@@ -83,11 +83,11 @@ export default function OrderEditModal({ open, order, onClose, onSave }: OrderEd
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ bgcolor: 'action.hover', borderRadius: 1 }}>
-                  <IconButton size="small" onClick={() => handleUpdateQuantity(item.id, -1)}><RemoveIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" aria-label="Disminuir cantidad" onClick={() => handleUpdateQuantity(item.id, -1)} sx={{ minWidth: 36, minHeight: 36 }}><RemoveIcon fontSize="small" /></IconButton>
                   <Typography variant="body2" fontWeight={600}>{item.quantity}</Typography>
-                  <IconButton size="small" onClick={() => handleUpdateQuantity(item.id, 1)}><AddIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" aria-label="Aumentar cantidad" onClick={() => handleUpdateQuantity(item.id, 1)} sx={{ minWidth: 36, minHeight: 36 }}><AddIcon fontSize="small" /></IconButton>
                 </Stack>
-                <IconButton size="small" color="error" onClick={() => handleRemove(item.id)}>
+                <IconButton size="small" color="error" aria-label="Eliminar producto de la orden" onClick={() => handleRemove(item.id)} sx={{ minWidth: 36, minHeight: 36 }}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Box>

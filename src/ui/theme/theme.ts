@@ -79,10 +79,10 @@ const theme = createTheme({
           backgroundColor: '#FFFFFF',
           border: '1px solid #E2E8F0',
           borderRadius: 12,
-          transition: 'transform 200ms ease-in-out, box-shadow 200ms ease-in-out, border-color 200ms',
+          transition: 'transform 240ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1), border-color 240ms',
           '&:hover': {
             boxShadow: '0 10px 40px -10px rgba(10, 19, 34, 0.08)',
-            borderColor: '#CBD5E1',
+            borderColor: 'rgba(0, 229, 255, 0.25)',
           },
         },
       },
@@ -94,8 +94,31 @@ const theme = createTheme({
           borderRadius: 6,
           fontWeight: 600,
           padding: '8px 20px',
-          transition: 'transform 0.2s',
-          '&:active': { transform: 'scale(0.98)' },
+          transition: 'transform 150ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease, box-shadow 150ms ease',
+          '&:active': {
+            transform: 'scale(0.96)',
+            transition: 'transform 150ms cubic-bezier(0.2, 0, 0, 1)',
+          },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          transition: 'transform 150ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease',
+          '&:active': {
+            transform: 'scale(0.94)',
+            transition: 'transform 150ms cubic-bezier(0.2, 0, 0, 1)',
+          },
+        },
+      },
+    },
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 8,
+          boxShadow: '0 10px 30px -5px rgba(10, 19, 34, 0.08)',
+          border: '1px solid rgba(0, 229, 255, 0.15)',
         },
       },
     },

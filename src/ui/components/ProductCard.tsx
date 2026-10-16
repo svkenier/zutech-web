@@ -121,6 +121,8 @@ export default function ProductCard({ id, title, brand, category, price, inStock
             onClick={handleAddToCart}
             disabled={!inStock}
             sx={{ 
+              minWidth: 44,
+              minHeight: 44,
               bgcolor: inStock ? '#0F172A' : '#E2E8F0', 
               color: inStock ? '#FFFFFF' : '#94A3B8', 
               borderRadius: 2, 

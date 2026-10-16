@@ -139,7 +139,12 @@ export default function Navbar() {
             ZUTECH
           </Typography>
         </Box>
-        <IconButton onClick={() => setDrawerOpen(false)} size="small" aria-label="Cerrar menú">
+        <IconButton 
+          onClick={() => setDrawerOpen(false)} 
+          size="small" 
+          aria-label="Cerrar menú de navegación"
+          sx={{ minWidth: 44, minHeight: 44 }}
+        >
           <CloseIcon />
         </IconButton>
       </Box>
@@ -347,9 +352,9 @@ export default function Navbar() {
           {/* Cart Icon (Desktop & Mobile) */}
           <IconButton 
             color="primary" 
-            aria-label="Abrir carrito" 
+            aria-label="Ver carrito de compras" 
             onClick={() => setIsCartOpen(true)}
-            sx={{ mr: { xs: 1, md: 2 } }}
+            sx={{ mr: { xs: 1, md: 2 }, minWidth: 44, minHeight: 44 }}
           >
             <Badge badgeContent={totalItems} color="error">
               <ShoppingCartIcon />
@@ -362,7 +367,12 @@ export default function Navbar() {
               {isAuthenticated && user ? (
                 <>
                   <Tooltip title={`${user.username} · ${user.role}`}>
-                    <IconButton aria-label="Abrir menú de usuario" onClick={handleOpenMenu} size="small" sx={{ ml: 1 }}>
+                    <IconButton 
+                      aria-label="Abrir menú de usuario" 
+                      onClick={handleOpenMenu} 
+                      size="small" 
+                      sx={{ ml: 1, minWidth: 44, minHeight: 44 }}
+                    >
                       <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.8rem' }}>
                         {user.username.charAt(0).toUpperCase()}
                       </Avatar>
@@ -417,8 +427,8 @@ export default function Navbar() {
             <IconButton
               edge="end"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Abrir menú"
-              sx={{ color: 'text.primary' }}
+              aria-label="Abrir menú de navegación"
+              sx={{ color: 'text.primary', minWidth: 44, minHeight: 44 }}
             >
               <MenuIcon />
             </IconButton>

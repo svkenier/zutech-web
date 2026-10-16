@@ -64,6 +64,7 @@ export default function StagingRow({
             />
             <IconButton
               size="small"
+              aria-label="Eliminar foto"
               sx={{ position: 'absolute', top: -10, right: -10, p: 0.2, bgcolor: 'background.paper' }}
               onClick={() => onRemoveImage(prod)}
             >
@@ -72,7 +73,7 @@ export default function StagingRow({
           </Box>
         ) : (
           <Tooltip title="Foto Pendiente. Haz clic para subir.">
-            <IconButton component="label" size="small" color="warning">
+            <IconButton component="label" size="small" color="warning" aria-label="Subir foto">
               <input
                 type="file"
                 hidden
@@ -169,10 +170,10 @@ export default function StagingRow({
       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
         {isEditing ? (
           <>
-            <IconButton size="small" color="primary" onClick={onSaveRow} disabled={isLoading}>
+            <IconButton size="small" color="primary" onClick={onSaveRow} disabled={isLoading} aria-label="Guardar fila">
               <SaveIcon fontSize="small" />
             </IconButton>
-            <IconButton size="small" onClick={onCancelEdit} disabled={isLoading}>
+            <IconButton size="small" onClick={onCancelEdit} disabled={isLoading} aria-label="Cancelar edición">
               <CloseIcon fontSize="small" />
             </IconButton>
           </>
@@ -180,15 +181,15 @@ export default function StagingRow({
           <>
             {prod.status === 'Sin foto' && (
               <Tooltip title="Permitir sin foto">
-                <IconButton size="small" onClick={() => onAllowNoPhoto(prod.id)}>
+                <IconButton size="small" onClick={() => onAllowNoPhoto(prod.id)} aria-label="Permitir producto sin foto">
                   <VisibilityOffIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
-            <IconButton size="small" color="primary" onClick={() => onStartEdit(prod)} disabled={isLoading}>
+            <IconButton size="small" color="primary" onClick={() => onStartEdit(prod)} disabled={isLoading} aria-label="Editar fila">
               <EditIcon fontSize="small" />
             </IconButton>
-            <IconButton size="small" color="error" onClick={() => onDiscard(prod.id)} disabled={isLoading}>
+            <IconButton size="small" color="error" onClick={() => onDiscard(prod.id)} disabled={isLoading} aria-label="Descartar fila">
               <DeleteIcon fontSize="small" />
             </IconButton>
           </>

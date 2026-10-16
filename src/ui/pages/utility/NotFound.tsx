@@ -52,12 +52,12 @@ export default function NotFound() {
               sx={{
                 fontSize: { xs: '7rem', sm: '10rem', md: '12rem' },
                 fontWeight: 900,
-                background: 'linear-gradient(135deg, #FFFFFF 0%, #00F0FF 100%)',
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #00E5FF 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 lineHeight: 1,
                 mb: 1,
-                textShadow: '0 0 45px rgba(0, 240, 255, 0.35)',
+                textShadow: '0 0 45px rgba(0, 229, 255, 0.35)',
                 letterSpacing: '-0.04em'
               }}
             >
@@ -81,15 +81,15 @@ export default function NotFound() {
                 startIcon={<HomeOutlinedIcon />}
                 sx={{ 
                   px: 4, py: 1.5, 
-                  bgcolor: '#00F0FF',
+                  bgcolor: '#00E5FF',
                   color: '#060D17',
                   fontWeight: 700,
                   borderRadius: '8px',
-                  boxShadow: '0 0 15px rgba(0,240,255,0.2)',
+                  boxShadow: '0 0 15px rgba(0, 229, 255, 0.2)',
                   transition: 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, background-color 0.25s ease',
                   '&:hover': {
-                    bgcolor: '#33F5FF',
-                    boxShadow: '0 0 30px rgba(0,240,255,0.4)',
+                    bgcolor: '#26EAFF',
+                    boxShadow: '0 0 30px rgba(0, 229, 255, 0.4)',
                     transform: 'translateY(-2px)'
                   },
                   '&:active': { transform: 'scale(0.97)' }

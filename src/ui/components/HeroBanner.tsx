@@ -81,7 +81,7 @@ export default function HeroBanner() {
               }}
             >
               <Box component="span" sx={{ whiteSpace: 'nowrap' }}>HARDWARE Y PC</Box><br />
-              <Box component="span" sx={{ color: '#00F0FF' }}>
+              <Box component="span" sx={{ color: 'secondary.main' }}>
                 DE ÉLITE
               </Box>
               <br />PARA TU SETUP
@@ -116,14 +116,14 @@ export default function HeroBanner() {
                 sx={{
                   fontWeight: 700,
                   px: 4, py: 1.5,
-                  bgcolor: '#00F0FF',
-                  color: '#060D17',
+                  bgcolor: 'secondary.main',
+                  color: 'secondary.contrastText',
                   borderRadius: '6px',
-                  boxShadow: '0 0 20px rgba(0,240,255,0.2)',
+                  boxShadow: '0 0 20px rgba(0, 229, 255, 0.2)',
                   transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease',
                   '&:hover': {
-                    bgcolor: '#33F5FF',
-                    boxShadow: '0 0 32px rgba(0,240,255,0.4)',
+                    bgcolor: '#26EAFF',
+                    boxShadow: '0 0 32px rgba(0, 229, 255, 0.4)',
                     transform: 'translateY(-2px)',
                   },
                   '&:active': { transform: 'scale(0.97)' },

@@ -72,7 +72,7 @@ function Badge({ label }: { label: string }) {
         fontWeight: 800,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
-        color: '#00F0FF',
+        color: '#00E5FF',
         mb: 0.75,
         fontSize: '0.7rem',
       }}
@@ -91,7 +91,7 @@ function ExploreLink() {
         display: 'flex',
         alignItems: 'center',
         gap: 0.5,
-        color: '#00F0FF',
+        color: '#00E5FF',
         fontWeight: 700,
         mt: 1,
         fontSize: '0.8rem',

@@ -19,6 +19,9 @@ import ShareIcon      from '@mui/icons-material/Share';
 import CategoryIcon   from '@mui/icons-material/Category';
 import MemoryIcon     from '@mui/icons-material/Memory';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
+import SearchOffOutlinedIcon from '@mui/icons-material/SearchOffOutlined';
 import Navbar         from '@ui/components/Navbar';
 import Footer         from '@ui/components/Footer';
 import AnimatedSection from '@ui/components/AnimatedSection';
@@ -88,7 +91,7 @@ export default function ProductDetailPage() {
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
         <Container maxWidth="sm" sx={{ py: 10, textAlign: 'center', flexGrow: 1 }}>
-          <Typography fontSize="4rem" mb={2}>🔍</Typography>
+          <SearchOffOutlinedIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.7, mb: 2 }} />
           <Typography variant="h5" fontWeight={700} gutterBottom>
             Registro no encontrado
           </Typography>
@@ -256,7 +259,8 @@ export default function ProductDetailPage() {
             <Grid size={{ xs: 12, md: 6 }}>
               <AnimatedSection direction="right">
                 <Chip
-                  label={inStock ? '✅ En Stock' : '❌ Agotado'}
+                  icon={inStock ? <CheckCircleOutlineIcon sx={{ fontSize: '1rem !important' }} /> : <HighlightOffOutlinedIcon sx={{ fontSize: '1rem !important' }} />}
+                  label={inStock ? 'En Stock' : 'Agotado'}
                   color={inStock ? 'success' : 'default'}
                   size="small"
                   sx={{ mb: 1.5, fontWeight: 700 }}
@@ -307,12 +311,15 @@ export default function ProductDetailPage() {
                   </Button>
 
                   <Tooltip title="Copiar enlace">
-                    <IconButton aria-label="Acción"
+                    <IconButton 
+                      aria-label="Copiar enlace del producto"
                       onClick={() => void handleShare()}
                       sx={{
-                        border:     '1px solid',
+                        border:      '1px solid',
                         borderColor: 'divider',
                         borderRadius: 1.5,
+                        minWidth: 44,
+                        minHeight: 44,
                       }}
                     >
                       <ShareIcon />
@@ -333,7 +340,7 @@ export default function ProductDetailPage() {
         open={snackOpen}
         autoHideDuration={2500}
         onClose={() => setSnackOpen(false)}
-        message="✅ Añadido al carrito / Enlace copiado"
+        message="Producto añadido al carrito / Enlace copiado"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
 

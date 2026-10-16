@@ -16,6 +16,9 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import DeliveryDiningOutlinedIcon from '@mui/icons-material/DeliveryDiningOutlined';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormControl from '@mui/material/FormControl';
@@ -150,7 +153,11 @@ export default function CartDrawer() {
         <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
           <ShoppingCartIcon color="primary" /> Mi Carrito
         </Typography>
-        <IconButton onClick={() => setIsCartOpen(false)}>
+        <IconButton 
+          onClick={() => setIsCartOpen(false)} 
+          aria-label="Cerrar carrito de compras"
+          sx={{ minWidth: 44, minHeight: 44 }}
+        >
           <CloseIcon />
         </IconButton>
       </Box>
@@ -242,11 +249,31 @@ export default function CartDrawer() {
                   <Typography variant="caption" color={item.inStock ? "primary.main" : "text.secondary"} fontWeight={700}>${item.price.toFixed(2)}</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ bgcolor: 'action.hover', borderRadius: 1 }}>
-                      <IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
+                      <IconButton 
+                        size="small" 
+                        aria-label="Disminuir cantidad"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
+                        <RemoveIcon fontSize="small" />
+                      </IconButton>
                       <Typography variant="body2" fontWeight={600}>{item.quantity}</Typography>
-                      <IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity + 1)}><AddIcon fontSize="small" /></IconButton>
+                      <IconButton 
+                        size="small" 
+                        aria-label="Aumentar cantidad"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
                     </Stack>
-                    <IconButton size="small" color="error" onClick={() => removeFromCart(item.id)}>
+                    <IconButton 
+                      size="small" 
+                      color="error" 
+                      aria-label="Eliminar producto del carrito"
+                      onClick={() => removeFromCart(item.id)}
+                      sx={{ minWidth: 44, minHeight: 44 }}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
@@ -265,17 +292,20 @@ export default function CartDrawer() {
           </Box>
           {checkoutMode && formik.values.deliveryMethod === 'delivery' && (
             <Typography variant="caption" color="warning.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, p: 1, borderRadius: 1, backgroundColor: 'rgba(237, 108, 2, 0.1)' }}>
-              🛵 <strong>Costo de Delivery:</strong> No está incluido en este monto. Se cotizará con la tienda por WhatsApp según la ubicación exacta que compartas por el chat (costo adicional).
+              <DeliveryDiningOutlinedIcon sx={{ fontSize: 18, mr: 0.75, verticalAlign: 'text-bottom' }} />
+              <strong>Costo de Delivery:</strong> No está incluido en este monto. Se cotizará con la tienda por WhatsApp según la ubicación exacta que compartas por el chat (costo adicional).
             </Typography>
           )}
           {checkoutMode && ['Pago Móvil', 'Transferencia Bancaria', 'Zelle', 'Binance Pay (USDT)'].includes(formik.values.paymentMethod) && (
             <Typography variant="caption" color="info.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, p: 1, borderRadius: 1, backgroundColor: 'rgba(2, 136, 209, 0.1)' }}>
-              📸 <strong>Comprobante de pago:</strong> Recuerda que para procesar y validar tu orden es indispensable adjuntar la captura del comprobante de pago por el chat de WhatsApp una vez enviado el pedido.
+              <ReceiptLongOutlinedIcon sx={{ fontSize: 18, mr: 0.75, verticalAlign: 'text-bottom' }} />
+              <strong>Comprobante de pago:</strong> Recuerda que para procesar y validar tu orden es indispensable adjuntar la captura del comprobante de pago por el chat de WhatsApp una vez enviado el pedido.
             </Typography>
           )}
           {checkoutMode && formik.values.paymentMethod === 'Dólares en Efectivo' && (
             <Typography variant="caption" color="success.dark" sx={{ display: 'block', mb: 2, lineHeight: 1.3, fontWeight: 600, p: 1, borderRadius: 1, backgroundColor: 'rgba(46, 125, 50, 0.1)' }}>
-              💵 <strong>Pago en tienda:</strong> Pagarás el monto exacto en efectivo al momento de retirar tu pedido en la tienda física.
+              <PaymentsOutlinedIcon sx={{ fontSize: 18, mr: 0.75, verticalAlign: 'text-bottom' }} />
+              <strong>Pago en tienda:</strong> Pagarás el monto exacto en efectivo al momento de retirar tu pedido en la tienda física.
             </Typography>
           )}
           {!canCheckout && cartItems.length > 0 && (

@@ -30,7 +30,7 @@ interface AnimatedSectionProps {
   threshold?: number;
   /**
    * Distancia de deslizamiento inicial en píxeles.
-   * @default 28
+   * @default 12
    */
   distance?: number;
   /** Props sx adicionales para el contenedor Box. */
@@ -50,7 +50,7 @@ export default function AnimatedSection({
   direction = 'up',
   delay     = 0,
   threshold = 0.12,
-  distance  = 16,
+  distance  = 12,
   sx,
 }: AnimatedSectionProps) {
   const ref        = useRef<HTMLDivElement>(null);
@@ -91,7 +91,7 @@ export default function AnimatedSection({
       sx={{
         opacity:    visible ? 1 : 0,
         transform:  visible ? 'translate(0, 0)' : translateHidden,
-        transition: `opacity 400ms ease-out ${delay}ms, transform 400ms ease-out ${delay}ms`,
+        transition: `opacity 240ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 240ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
         willChange: finished ? 'auto' : 'opacity, transform',
         '@media (prefers-reduced-motion: reduce)': {
           transition: 'none',

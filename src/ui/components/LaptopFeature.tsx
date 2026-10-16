@@ -47,13 +47,13 @@ export default function LaptopFeature() {
             <AnimatedSection>
               {/* Badge técnico */}
               <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#00F0FF', boxShadow: '0 0 8px #00F0FF' }} />
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#00E5FF', boxShadow: '0 0 8px rgba(0, 229, 255, 0.6)' }} />
                 <Typography sx={{ 
                   fontFamily: '"JetBrains Mono", monospace', 
                   fontWeight: 700, 
                   letterSpacing: '0.12em', 
                   textTransform: 'uppercase', 
-                  color: '#00F0FF', 
+                  color: '#00E5FF', 
                   fontSize: '0.75rem' 
                 }}>
                   Movilidad &amp; Alto Rendimiento
@@ -91,7 +91,7 @@ export default function LaptopFeature() {
                     fontWeight: 700,
                     color: '#67E8F9',
                     bgcolor: 'rgba(6,182,212,0.1)',
-                    border: '1px solid rgba(0,240,255,0.25)',
+                    border: '1px solid rgba(0, 229, 255, 0.25)',
                     px: 1.5,
                     py: 0.5,
                     borderRadius: '6px',
@@ -113,14 +113,14 @@ export default function LaptopFeature() {
                   fontWeight: 800,
                   px: 4,
                   py: 1.5,
-                  bgcolor: '#00F0FF',
+                  bgcolor: '#00E5FF',
                   color: '#060D17',
                   borderRadius: '6px',
-                  boxShadow: '0 0 20px rgba(0,240,255,0.2)',
+                  boxShadow: '0 0 20px rgba(0, 229, 255, 0.2)',
                   transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease',
                   '&:hover': {
-                    bgcolor: '#33F5FF',
-                    boxShadow: '0 0 32px rgba(0,240,255,0.4)',
+                    bgcolor: '#26EAFF',
+                    boxShadow: '0 0 32px rgba(0, 229, 255, 0.4)',
                     transform: 'translateY(-2px)',
                   },
                 }}
@@ -146,7 +146,7 @@ export default function LaptopFeature() {
                   '&:hover': {
                     transform: 'translateY(-8px) scale(1.02)',
                     '& img': {
-                      filter: 'drop-shadow(0 30px 60px rgba(0,240,255,0.15))',
+                      filter: 'drop-shadow(0 30px 60px rgba(0, 229, 255, 0.15))',
                     }
                   }
                 }}

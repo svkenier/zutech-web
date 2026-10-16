@@ -102,7 +102,7 @@ export function UserFormModal({ open, actorRole, onClose, onCreated }: UserFormM
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" tabIndex={-1}>
+                  <IconButton aria-label="Mostrar u ocultar contraseña" onClick={() => setShowPassword(!showPassword)} edge="end" size="small" tabIndex={-1}>
                     {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                   </IconButton>
                 </InputAdornment>
