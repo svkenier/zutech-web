@@ -12,6 +12,28 @@ export default defineConfig({
       '@ui': path.resolve(__dirname, './src/ui'),
     },
   },
+  optimizeDeps: {
+    entries: ['index.html', 'src/**/*.{ts,tsx}'],
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@tanstack/react-query-devtools',
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material',
+      '@mui/material/styles',
+      '@mui/material/LinearProgress',
+      '@mui/icons-material',
+      'react-helmet-async',
+      'embla-carousel-react',
+      'formik',
+      'yup',
+      'dayjs',
+    ],
+  },
   server: {
     port: 5173,
     proxy: {

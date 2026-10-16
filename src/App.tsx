@@ -10,7 +10,8 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
+import Navbar from '@ui/components/Navbar';
 import { AuthProvider } from '@ui/context/AuthContext';
 import ProtectedRoute from '@ui/components/ProtectedRoute';
 import ScrollToTop from '@ui/components/ScrollToTop';
@@ -28,19 +29,23 @@ const Login        = lazy(() => import('@ui/pages/admin/Login'));
 const Admin        = lazy(() => import('@ui/pages/admin/Admin'));
 const NotFound     = lazy(() => import('@ui/pages/utility/NotFound'));
 
-// ─── Fallback de carga ───────────────────────────────────────────────────────
-function PageLoader() {
+// ─── Fallback de transición de rutas ──────────────────────────────────────────
+function RouteTransitionFallback() {
   return (
-    <Box
-      sx={{
-        minHeight:      '100vh',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        bgcolor:        'background.default',
-      }}
-    >
-      <CircularProgress color="primary" />
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+      {/* 1. Navbar real siempre montado */}
+      <Navbar />
+
+      {/* 2. Micro-barra de carga superior con acento ZUTECH Cyan */}
+      <LinearProgress
+        sx={{
+          height: 2,
+          bgcolor: 'transparent',
+          '& .MuiLinearProgress-bar': {
+            bgcolor: '#00E5FF',
+          },
+        }}
+      />
     </Box>
   );
 }
@@ -49,7 +54,7 @@ function PageLoader() {
 export default function App() {
   return (
     <AuthProvider>
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<RouteTransitionFallback />}>
         <ScrollToTop />
         <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <ConfigErrorBanner />
