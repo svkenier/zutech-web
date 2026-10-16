@@ -1,6 +1,12 @@
 import { getAuthPayload } from '../../../../src/core/auth/auth.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
 
+interface BrandRow {
+  id: string;
+  name: string;
+  created_at?: string;
+}
+
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const auth = await getAuthPayload(request, env);
@@ -9,9 +15,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const { results } = await env.DB.prepare(`SELECT * FROM brands ORDER BY name ASC`).all();
+    const { results } = await env.DB.prepare(`SELECT * FROM brands ORDER BY name ASC`).all<BrandRow>();
     return new Response(JSON.stringify({ success: true, brands: results }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('[Admin Brands GET] Error:', e);
     return new Response(JSON.stringify({ error: 'Error interno del servidor' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }

@@ -4,6 +4,7 @@
  */
 
 import jwt from 'jsonwebtoken';
+import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
 import type { JWTPayload, UserRole } from '../types/user.js';
 import { getUser } from './kv.js';
 
@@ -13,9 +14,9 @@ export interface Env {
   UPSTASH_REDIS_REST_TOKEN: string;
   ADMIN_USER?: string;
   ADMIN_PASSWORD?: string;
-  DB: any; // Cloudflare D1 Binding
-  BUCKET: any; // Cloudflare R2 Binding
-  [key: string]: any;
+  DB: D1Database;
+  BUCKET: R2Bucket;
+  [key: string]: unknown;
 }
 
 const JWT_EXPIRES = '7d';

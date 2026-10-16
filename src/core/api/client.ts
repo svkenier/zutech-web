@@ -1,5 +1,5 @@
 /**
- * Cliente HTTP centralizado para petRescue.
+ * Cliente HTTP centralizado para ZuTech Store.
  *
  * Características:
  * - Instancia única de Axios apuntando a los Serverless Functions de Cloudflare Pages (/api).

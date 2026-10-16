@@ -28,11 +28,13 @@ const SettingsSchema = z.object({
   tasa_bcv: z.number().nonnegative().nullable().optional(),
 }).strict();
 
+type SettingsData = z.infer<typeof SettingsSchema>;
+
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { env } = context;
 
   try {
-    const row = (await env.DB.prepare(`SELECT data FROM settings WHERE id = 'general'`).first()) as { data: string } | null;
+    const row = await env.DB.prepare(`SELECT data FROM settings WHERE id = 'general'`).first<{ data: string }>();
     
     const headers = new Headers();
     headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
@@ -78,17 +80,30 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       });
     }
 
-    const body = validationResult.data as Record<string, any>;
+    const body: SettingsData = validationResult.data;
     
     // FETCH EXISTING SETTINGS
-    const row = (await env.DB.prepare(`SELECT data FROM settings WHERE id = 'general'`).first()) as { data: string } | null;
-    let existingData: any = {};
+    const row = await env.DB.prepare(`SELECT data FROM settings WHERE id = 'general'`).first<{ data: string }>();
+    let existingData: Partial<SettingsData> = {};
     if (row && row.data) {
-      try { existingData = JSON.parse(row.data); } catch (e) {}
+      try {
+        const parsed = JSON.parse(row.data);
+        const parsedResult = SettingsSchema.safeParse(parsed);
+        if (parsedResult.success) {
+          existingData = parsedResult.data;
+        }
+      } catch (e) {}
     }
 
     if (payload.role !== 'owner') {
-      const criticalKeys = ['domain', 'custom_domain', 'expirationDate', 'monitoringActive', 'domainExpirationDate', 'domainAlertEnabled'];
+      const criticalKeys: (keyof SettingsData)[] = [
+        'domain',
+        'custom_domain',
+        'expirationDate',
+        'monitoringActive',
+        'domainExpirationDate',
+        'domainAlertEnabled',
+      ];
       
       for (const key of criticalKeys) {
         if (key in body && body[key] !== existingData[key]) {
@@ -98,7 +113,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
       for (const key of criticalKeys) {
         if (key in existingData) {
-          body[key] = existingData[key];
+          (body as Record<string, unknown>)[key] = existingData[key];
         }
       }
     }
