@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -6,16 +6,8 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
-import CheckIcon from '@mui/icons-material/Check';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import UndoIcon from '@mui/icons-material/Undo';
-import ReceiptIcon from '@mui/icons-material/Receipt';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -27,124 +19,84 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Chip from '@mui/material/Chip';
 import LockIcon from '@mui/icons-material/Lock';
+import UndoIcon from '@mui/icons-material/Undo';
+import CheckIcon from '@mui/icons-material/Check';
 
 import { get, put, post, formatApiError } from '@core/api/client';
-import OrderEditModal, { EditableOrder, OrderItem } from '@ui/components/OrderEditModal';
+import OrderEditModal, { type EditableOrder, type OrderItem } from '@ui/components/OrderEditModal';
 import AdminEmptyState from '@ui/components/AdminEmptyState';
 import InvoiceModal from '@ui/components/InvoiceModal';
 
-export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 'success'|'error') => void }) {
+import type { AdminOrderRecord, BoxSummary, OrderDateFilter } from './orders/orderTypes';
+import { useOrderFilters } from '@ui/hooks/useOrderFilters';
+import { useOptimisticApproval } from '@ui/hooks/useOptimisticApproval';
+import OrderCardItem from './orders/OrderCardItem';
+import DailyCloseDialog from './orders/DailyCloseDialog';
+
+interface OrdersTabProps {
+  showToast: (m: string, s?: 'success' | 'error') => void;
+}
+
+export default function OrdersTab({ showToast }: OrdersTabProps) {
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
-  
-  // Modals state
-  const [approveOrder, setApproveOrder] = useState<any | null>(null);
+  const [approveOrder, setApproveOrder] = useState<AdminOrderRecord | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>('');
-  
-  const [discardOrder, setDiscardOrder] = useState<any | null>(null);
-  const [revertOrder, setRevertOrder] = useState<any | null>(null);
-  const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
-  const [viewOrder, setViewOrder] = useState<any | null>(null);
+  const [discardOrder, setDiscardOrder] = useState<AdminOrderRecord | null>(null);
+  const [revertOrder, setRevertOrder] = useState<AdminOrderRecord | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<AdminOrderRecord | null>(null);
+  const [viewOrder, setViewOrder] = useState<AdminOrderRecord | null>(null);
   const [closeModalOpen, setCloseModalOpen] = useState(false);
 
-  // Undo state
-  const [pendingApproval, setPendingApproval] = useState<string | null>(null);
-  const approvalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const { data, isLoading } = useQuery<{ records: any[] }>({
+  const { data, isLoading } = useQuery<{ records: AdminOrderRecord[] }>({
     queryKey: ['admin-orders'],
     queryFn: () => get('/admin/orders?t=' + Date.now()),
     staleTime: 5000,
   });
 
-  const orders = data?.records || [];
-  
-  const [filterDelivery, setFilterDelivery] = useState<'all' | 'pickup' | 'delivery'>('all');
-  const [filterDate, setFilterDate] = useState<'today' | 'last_7_days' | 'all'>('today');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Optimistic approval filter + Search + Date/Delivery filters
-  const visibleOrders = useMemo(() => {
-    const term = searchQuery.trim().toLowerCase();
-    
-    return orders.filter(o => {
-      // 1. Status Filter
-      if (filter === 'pending') {
-        if (o.status !== 'pending' || pendingApproval === o.id) return false;
-      } else if (filter === 'approved') {
-        if (o.status !== 'approved' && pendingApproval !== o.id) return false;
-      }
-
-      // 2. Delivery Filter
-      if (filterDelivery !== 'all' && o.delivery_type !== filterDelivery) return false;
-
-      // 3. Date Filter
-      if (filterDate !== 'all') {
-        const orderDate = new Date(o.created_at);
-        const today = new Date();
-        if (filterDate === 'today') {
-          if (orderDate.toDateString() !== today.toDateString()) return false;
-        } else if (filterDate === 'last_7_days') {
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(today.getDate() - 7);
-          if (orderDate < sevenDaysAgo) return false;
-        }
-      }
-
-      // 4. Search Query
-      if (term) {
-        const idLower = o.id.toLowerCase();
-        const nameLower = (o.customer_name || '').toLowerCase();
-        const phoneLower = (o.customer_phone || '').toLowerCase();
-        
-        if (!idLower.includes(term) && !nameLower.includes(term) && !phoneLower.includes(term)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [orders, filter, filterDelivery, filterDate, searchQuery, pendingApproval]);
+  const orders = useMemo(() => data?.records || [], [data?.records]);
 
   const updateMutation = useMutation({
-    mutationFn: (args: { id: string, action: string, updates?: any, payment_method?: string }) => put('/admin/orders', args),
+    mutationFn: (args: { id: string; action: string; updates?: { items: OrderItem[]; totalUSD: number }; payment_method?: string }) =>
+      put('/admin/orders', args),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin-orders'] });
     },
     onError: (err) => {
       showToast(formatApiError(err, 'Error actualizando orden'), 'error');
-    }
+    },
   });
+
+  const { pendingApproval, triggerApproval, handleUndoApprove } = useOptimisticApproval({
+    onCommit: (orderId, method) => {
+      updateMutation.mutate({ id: orderId, action: 'aprobar', payment_method: method });
+    },
+    showToast,
+  });
+
+  const {
+    filter,
+    setFilter,
+    filterDelivery,
+    setFilterDelivery,
+    filterDate,
+    setFilterDate,
+    searchQuery,
+    setSearchQuery,
+    visibleOrders,
+  } = useOrderFilters(orders, pendingApproval);
 
   const handleConfirmApprove = () => {
     if (!paymentMethod) {
       showToast('Debe seleccionar un método de pago', 'error');
       return;
     }
+    if (!approveOrder) return;
     const orderId = approveOrder.id;
     const method = paymentMethod;
     setApproveOrder(null);
     setPaymentMethod('');
-
-    // Optimistic Update with Undo
-    setPendingApproval(orderId);
-    showToast('Pedido aprobado. Deshacer disponible...', 'success');
-
-    approvalTimeoutRef.current = setTimeout(() => {
-      // Commit
-      updateMutation.mutate({ id: orderId, action: 'aprobar', payment_method: method });
-      setPendingApproval(null);
-    }, 5000);
-  };
-
-  const handleUndoApprove = () => {
-    if (approvalTimeoutRef.current) {
-      clearTimeout(approvalTimeoutRef.current);
-      approvalTimeoutRef.current = null;
-    }
-    setPendingApproval(null);
-    showToast('Aprobación cancelada');
+    triggerApproval(orderId, method);
   };
 
   const handleConfirmRevert = () => {
@@ -153,7 +105,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         onSuccess: () => {
           showToast('Pedido devuelto a pendientes');
           setRevertOrder(null);
-        }
+        },
       });
     }
   };
@@ -164,7 +116,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         onSuccess: () => {
           showToast('Pedido descartado');
           setDiscardOrder(null);
-        }
+        },
       });
     }
   };
@@ -174,19 +126,22 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
       onSuccess: () => {
         setEditOrder(null);
         showToast('Pedido actualizado');
-      }
+      },
     });
   };
 
-
-  // Calculate live box summary (orders approved and not closed)
-  const openBoxOrders = orders.filter(o => o.status === 'approved');
-  const boxSummary = openBoxOrders.reduce((acc, o) => {
-    acc.total += o.totalUSD;
-    acc.count += 1;
-    acc[o.payment_method] = (acc[o.payment_method] || 0) + o.totalUSD;
-    return acc;
-  }, { total: 0, count: 0, pago_movil: 0, transferencia: 0, zelle: 0, binance: 0, efectivo: 0 });
+  const openBoxOrders = useMemo(() => orders.filter((o) => o.status === 'approved'), [orders]);
+  const boxSummary = useMemo<BoxSummary>(() => {
+    return openBoxOrders.reduce<BoxSummary>(
+      (acc, o) => {
+        acc.total += o.totalUSD;
+        acc.count += 1;
+        acc[o.payment_method] = (acc[o.payment_method] || 0) + o.totalUSD;
+        return acc;
+      },
+      { total: 0, count: 0, pago_movil: 0, transferencia: 0, zelle: 0, binance: 0, efectivo: 0 }
+    );
+  }, [openBoxOrders]);
 
   const closeMutation = useMutation({
     mutationFn: () => post('/admin/orders/close', {}),
@@ -196,24 +151,31 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
       void qc.invalidateQueries({ queryKey: ['admin-orders'] });
       void qc.invalidateQueries({ queryKey: ['admin-closures'] });
     },
-    onError: (err) => showToast(formatApiError(err, 'Error al cerrar caja'), 'error')
+    onError: (err) => showToast(formatApiError(err, 'Error al cerrar caja'), 'error'),
   });
 
   const isMutating = updateMutation.isPending || closeMutation.isPending;
 
   return (
     <Box>
+      {/* Live box summary banner */}
       <Box mb={3} p={2.5} border="1px solid" borderColor="divider" borderRadius={2} bgcolor="background.paper" boxShadow={1}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="subtitle2" fontWeight={600} color="text.secondary" fontSize="0.75rem" textTransform="uppercase">ESTADO DE CAJA ABIERTA (EN VIVO)</Typography>
+          <Typography variant="subtitle2" fontWeight={600} color="text.secondary" fontSize="0.75rem" textTransform="uppercase">
+            ESTADO DE CAJA ABIERTA (EN VIVO)
+          </Typography>
           <Button variant="contained" color="primary" startIcon={<LockIcon />} size="small" onClick={() => setCloseModalOpen(true)} disabled={isLoading || isMutating}>
             Realizar Cierre de Caja
           </Button>
         </Box>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} mt={1} alignItems="center" justifyContent="space-between">
           <Box>
-            <Typography variant="h4" fontWeight={800} color="text.primary" fontSize="1.75rem">${boxSummary.total.toFixed(2)}</Typography>
-            <Typography variant="body2" color="text.secondary">Total acumulado de {boxSummary.count} órdenes aprobadas hoy</Typography>
+            <Typography variant="h4" fontWeight={800} color="text.primary" fontSize="1.75rem">
+              ${boxSummary.total.toFixed(2)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total acumulado de {boxSummary.count} órdenes aprobadas hoy
+            </Typography>
           </Box>
           <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: { xs: 1, md: 0 } }}>
             <Box textAlign="center" px={2} borderRight="1px solid" borderColor="divider">
@@ -240,8 +202,8 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         </Stack>
       </Box>
 
+      {/* Filters row */}
       <Stack spacing={2} sx={{ mb: 3 }}>
-        {/* Fila 1: Búsqueda y Fecha */}
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
           <TextField
             size="small"
@@ -260,7 +222,7 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
           <FormControl size="small" sx={{ minWidth: 150, width: { xs: '100%', md: 'auto' } }}>
             <Select
               value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value as any)}
+              onChange={(e) => setFilterDate(e.target.value as OrderDateFilter)}
               displayEmpty
             >
               <MenuItem value="today">Hoy</MenuItem>
@@ -270,68 +232,22 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
           </FormControl>
         </Stack>
 
-        {/* Fila 2: Segmentación con Chips */}
-        <Stack 
-          direction="row" 
-          spacing={2} 
-          alignItems="center" 
-          sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}
-        >
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
           <Stack direction="row" spacing={1}>
-            <Chip 
-              label="Todos" 
-              clickable 
-              variant={filter === 'all' ? 'filled' : 'outlined'} 
-              color={filter === 'all' ? 'primary' : 'default'} 
-              onClick={() => setFilter('all')} 
-              disabled={isMutating} 
-            />
-            <Chip 
-              label="Pendientes" 
-              clickable 
-              variant={filter === 'pending' ? 'filled' : 'outlined'} 
-              color={filter === 'pending' ? 'warning' : 'default'} 
-              onClick={() => setFilter('pending')} 
-              disabled={isMutating} 
-            />
-            <Chip 
-              label="Aprobados" 
-              clickable 
-              variant={filter === 'approved' ? 'filled' : 'outlined'} 
-              color={filter === 'approved' ? 'success' : 'default'} 
-              onClick={() => setFilter('approved')} 
-              disabled={isMutating} 
-            />
+            <Chip label="Todos" clickable variant={filter === 'all' ? 'filled' : 'outlined'} color={filter === 'all' ? 'primary' : 'default'} onClick={() => setFilter('all')} disabled={isMutating} />
+            <Chip label="Pendientes" clickable variant={filter === 'pending' ? 'filled' : 'outlined'} color={filter === 'pending' ? 'warning' : 'default'} onClick={() => setFilter('pending')} disabled={isMutating} />
+            <Chip label="Aprobados" clickable variant={filter === 'approved' ? 'filled' : 'outlined'} color={filter === 'approved' ? 'success' : 'default'} onClick={() => setFilter('approved')} disabled={isMutating} />
           </Stack>
-          
           <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
-          
           <Stack direction="row" spacing={1}>
-            <Chip 
-              label="Todas entregas" 
-              clickable 
-              variant={filterDelivery === 'all' ? 'filled' : 'outlined'} 
-              color={filterDelivery === 'all' ? 'primary' : 'default'} 
-              onClick={() => setFilterDelivery('all')} 
-            />
-            <Chip 
-              label="Delivery" 
-              clickable 
-              variant={filterDelivery === 'delivery' ? 'filled' : 'outlined'} 
-              color={filterDelivery === 'delivery' ? 'primary' : 'default'} 
-              onClick={() => setFilterDelivery('delivery')} 
-            />
-            <Chip 
-              label="Pick up" 
-              clickable 
-              variant={filterDelivery === 'pickup' ? 'filled' : 'outlined'} 
-              color={filterDelivery === 'pickup' ? 'primary' : 'default'} 
-              onClick={() => setFilterDelivery('pickup')} 
-            />
+            <Chip label="Todas entregas" clickable variant={filterDelivery === 'all' ? 'filled' : 'outlined'} color={filterDelivery === 'all' ? 'primary' : 'default'} onClick={() => setFilterDelivery('all')} />
+            <Chip label="Delivery" clickable variant={filterDelivery === 'delivery' ? 'filled' : 'outlined'} color={filterDelivery === 'delivery' ? 'primary' : 'default'} onClick={() => setFilterDelivery('delivery')} />
+            <Chip label="Pick up" clickable variant={filterDelivery === 'pickup' ? 'filled' : 'outlined'} color={filterDelivery === 'pickup' ? 'primary' : 'default'} onClick={() => setFilterDelivery('pickup')} />
           </Stack>
         </Stack>
       </Stack>
 
+      {/* Optimistic Approval Banner */}
       {pendingApproval && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, p: 2, bgcolor: 'warning.light', color: 'warning.contrastText', borderRadius: 1 }}>
           <Typography fontWeight={700}>Aprobación en progreso para la orden {pendingApproval}</Typography>
@@ -341,109 +257,36 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         </Box>
       )}
 
+      {/* Orders List / Empty State */}
       {isLoading ? (
         <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>
       ) : visibleOrders.length === 0 ? (
-        <AdminEmptyState 
+        <AdminEmptyState
           iconType="inventory"
           title={`No hay pedidos ${filter === 'pending' ? 'pendientes' : filter === 'approved' ? 'aprobados' : 'activos'}`}
           subtitle="Los pedidos aparecerán aquí."
         />
       ) : (
         <Stack spacing={2}>
-          {visibleOrders.map(order => {
-            const isPending = order.status === 'pending' && pendingApproval !== order.id;
-            const isApproved = order.status === 'approved' || pendingApproval === order.id;
-
-            return (
-              <Card key={order.id} variant="outlined" sx={{ borderRadius: 0 }}>
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" mb={1} alignItems="center">
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="h6" fontWeight={500} color="text.secondary">
-                        {order.id.slice(0, -4)}
-                        <Box component="span" fontWeight={800} color="primary.main">{order.id.slice(-4)}</Box>
-                      </Typography>
-                      {filter === 'all' && (
-                        isPending ? (
-                          <Chip label="Pendiente" size="small" color="warning" />
-                        ) : (
-                          <Chip label="Aprobado" size="small" color="success" />
-                        )
-                      )}
-                    </Stack>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {order.payment_method && (
-                        <Chip 
-                          label={
-                            order.payment_method === 'pago_movil' ? 'Pago Móvil' :
-                            order.payment_method === 'transferencia' ? 'Transferencia' :
-                            order.payment_method === 'zelle' ? 'Zelle' :
-                            order.payment_method === 'binance' ? 'Binance' :
-                            order.payment_method === 'efectivo' ? 'Efectivo' :
-                            order.payment_method
-                          } 
-                          size="small" 
-                          variant="outlined" 
-                          color="primary" 
-                        />
-                      )}
-                      <Typography variant="h6" color="primary.main" fontWeight={800}>${order.totalUSD.toFixed(2)}</Typography>
-                    </Stack>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" mb={1}>
-                    {new Date(order.created_at).toLocaleString()} • {order.client?.name} ({order.client?.phone})
-                  </Typography>
-                  <Typography variant="body2" mb={1}>
-                    <strong>Entrega:</strong> {(order.delivery_type || order.delivery?.method) === 'pickup' ? 'Pick up' : 'Delivery (se coordina por WhatsApp)'}
-                  </Typography>
-                  <Box bgcolor="background.default" p={1} borderRadius={1} border="1px solid" borderColor="divider">
-                    {order.items.slice(0, 3).map((it: any, idx: number) => (
-                      <Typography key={idx} variant="caption" display="block">
-                        {it.quantity}x {it.title} (${it.price.toFixed(2)})
-                      </Typography>
-                    ))}
-                    {order.items.length > 3 ? (
-                      <Button size="small" variant="text" sx={{ mt: 1, p: 0, minWidth: 0, textTransform: 'none', fontWeight: 'bold' }} onClick={() => setViewOrder(order)}>
-                        + Ver {order.items.length - 3} productos más
-                      </Button>
-                    ) : (
-                      <Button size="small" variant="text" sx={{ mt: 1, p: 0, minWidth: 0, textTransform: 'none', fontWeight: 'bold' }} onClick={() => setViewOrder(order)}>
-                        Ver Detalle
-                      </Button>
-                    )}
-                  </Box>
-                </CardContent>
-                <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
-                  {isPending ? (
-                    <Stack direction="row" spacing={1} width="100%">
-                      <Button variant="contained" color="success" fullWidth onClick={() => {
-                        setApproveOrder(order);
-                        setPaymentMethod(order.payment_method || '');
-                      }} startIcon={<CheckIcon />} disabled={isMutating || pendingApproval === order.id}>
-                        Aprobar
-                      </Button>
-                      <Button variant="outlined" color="primary" fullWidth onClick={() => setEditOrder(order)} startIcon={<EditIcon />} disabled={isMutating || pendingApproval === order.id}>
-                        Editar
-                      </Button>
-                      <Button variant="outlined" color="error" onClick={() => setDiscardOrder(order)} disabled={isMutating || pendingApproval === order.id}>
-                        <DeleteIcon />
-                      </Button>
-                    </Stack>
-                  ) : isApproved ? (
-                    <Stack direction="row" spacing={1} width="100%">
-                      <Button variant="outlined" color="primary" fullWidth onClick={() => setInvoiceOrder(order)} startIcon={<ReceiptIcon />} disabled={isMutating}>
-                        Ver Factura
-                      </Button>
-                      <Button variant="outlined" color="inherit" fullWidth onClick={() => pendingApproval === order.id ? handleUndoApprove() : setRevertOrder(order)} startIcon={<UndoIcon />} disabled={isMutating} sx={{ color: 'text.primary' }}>
-                        Revertir a Pendiente
-                      </Button>
-                    </Stack>
-                  ) : null}
-                </CardActions>
-              </Card>
-            );
-          })}
+          {visibleOrders.map((order) => (
+            <OrderCardItem
+              key={order.id}
+              order={order}
+              filter={filter}
+              pendingApproval={pendingApproval}
+              isMutating={isMutating}
+              onApprove={(o) => {
+                setApproveOrder(o);
+                setPaymentMethod(o.payment_method || '');
+              }}
+              onEdit={(o) => setEditOrder(o as unknown as EditableOrder)}
+              onDiscard={(o) => setDiscardOrder(o)}
+              onInvoice={(o) => setInvoiceOrder(o)}
+              onRevert={(o) => setRevertOrder(o)}
+              onUndoApprove={handleUndoApprove}
+              onViewDetail={(o) => setViewOrder(o)}
+            />
+          ))}
         </Stack>
       )}
 
@@ -451,16 +294,10 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
       <Dialog open={!!approveOrder} onClose={() => !isMutating && setApproveOrder(null)} maxWidth="xs" fullWidth>
         <DialogTitle>Aprobar Pedido {approveOrder?.id}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" mb={2}>
-            Selecciona el método de pago utilizado por el cliente.
-          </Typography>
+          <Typography variant="body2" mb={2}>Selecciona el método de pago utilizado por el cliente.</Typography>
           <FormControl fullWidth variant="outlined" size="small">
             <InputLabel>Método de Pago</InputLabel>
-            <Select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              label="Método de Pago"
-            >
+            <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} label="Método de Pago">
               <MenuItem value="pago_movil">Pago Móvil</MenuItem>
               <MenuItem value="transferencia">Transferencia Bancaria</MenuItem>
               <MenuItem value="zelle">Zelle</MenuItem>
@@ -509,10 +346,11 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         </DialogActions>
       </Dialog>
 
-      <OrderEditModal 
-        open={!!editOrder} 
-        order={editOrder} 
-        onClose={() => setEditOrder(null)} 
+      {/* Order Edit Modal */}
+      <OrderEditModal
+        open={!!editOrder}
+        order={editOrder}
+        onClose={() => setEditOrder(null)}
         onSave={handleSaveEdit}
       />
 
@@ -532,8 +370,8 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
           
           <Typography variant="subtitle2" fontWeight={700} mb={1}>Productos ({viewOrder?.items?.length || 0})</Typography>
           <Box bgcolor="background.default" p={1.5} borderRadius={1} border="1px solid" borderColor="divider">
-            {viewOrder?.items?.map((it: any, idx: number) => (
-              <Box key={idx} display="flex" justifyContent="space-between" mb={1} borderBottom={idx < viewOrder.items.length - 1 ? '1px solid' : 'none'} borderColor="divider" pb={idx < viewOrder.items.length - 1 ? 1 : 0}>
+            {viewOrder?.items?.map((it, idx) => (
+              <Box key={idx} display="flex" justifyContent="space-between" mb={1} borderBottom={idx < (viewOrder?.items?.length || 0) - 1 ? '1px solid' : 'none'} borderColor="divider" pb={idx < (viewOrder?.items?.length || 0) - 1 ? 1 : 0}>
                 <Typography variant="body2">{it.quantity}x {it.title}</Typography>
                 <Typography variant="body2" fontWeight={600}>${(it.price * it.quantity).toFixed(2)}</Typography>
               </Box>
@@ -547,57 +385,39 @@ export default function OrdersTab({ showToast }: { showToast: (m: string, s?: 's
         <DialogActions>
           <Button onClick={() => setViewOrder(null)}>Cerrar</Button>
           {viewOrder?.status === 'pending' && pendingApproval !== viewOrder?.id && (
-            <Button variant="contained" color="success" onClick={() => {
-              setApproveOrder(viewOrder);
-              setPaymentMethod(viewOrder.payment_method || '');
-              setViewOrder(null);
-            }} startIcon={<CheckIcon />} disabled={isMutating}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => {
+                setApproveOrder(viewOrder);
+                setPaymentMethod(viewOrder.payment_method || '');
+                setViewOrder(null);
+              }}
+              startIcon={<CheckIcon />}
+              disabled={isMutating}
+            >
               Aprobar
             </Button>
           )}
         </DialogActions>
       </Dialog>
 
-      <InvoiceModal 
-        open={!!invoiceOrder} 
-        order={invoiceOrder} 
-        onClose={() => setInvoiceOrder(null)} 
+      {/* Invoice Modal */}
+      <InvoiceModal
+        open={!!invoiceOrder}
+        order={invoiceOrder}
+        onClose={() => setInvoiceOrder(null)}
       />
 
-      {/* Close Caja Modal */}
-      <Dialog open={closeModalOpen} onClose={() => !isMutating && setCloseModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Realizar Cierre de Caja</DialogTitle>
-        <DialogContent>
-          {openBoxOrders.length === 0 ? (
-            <Typography color="error" mt={1}>
-              No hay órdenes aprobadas pendientes de cierre. Debe aprobar órdenes primero.
-            </Typography>
-          ) : (
-            <Box mt={1}>
-              <Typography variant="body2" mb={2}>
-                Se agruparán <strong>{openBoxOrders.length}</strong> órdenes aprobadas en un nuevo cierre oficial.
-              </Typography>
-              <Box p={2} border="1px solid" borderColor="divider" borderRadius={1} bgcolor="background.default">
-                <Typography variant="subtitle2" mb={1}>Totales a declarar:</Typography>
-                <Stack spacing={1}>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Pago Móvil</Typography><Typography variant="body2">${boxSummary.pago_movil.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Transferencia</Typography><Typography variant="body2">${boxSummary.transferencia.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Zelle</Typography><Typography variant="body2">${boxSummary.zelle.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Binance</Typography><Typography variant="body2">${boxSummary.binance.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between"><Typography variant="body2">Efectivo</Typography><Typography variant="body2">${boxSummary.efectivo.toFixed(2)}</Typography></Box>
-                  <Box display="flex" justifyContent="space-between" mt={1} pt={1} borderTop="1px solid"><Typography variant="body2" fontWeight={700}>TOTAL CAJA</Typography><Typography variant="body2" fontWeight={700}>${boxSummary.total.toFixed(2)}</Typography></Box>
-                </Stack>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCloseModalOpen(false)} disabled={isMutating}>Cancelar</Button>
-          <Button onClick={() => closeMutation.mutate()} variant="contained" color="primary" disabled={isMutating || openBoxOrders.length === 0}>
-            {isMutating ? <CircularProgress size={24} /> : 'Confirmar y Cerrar Caja'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Daily Close Dialog */}
+      <DailyCloseDialog
+        open={closeModalOpen}
+        onClose={() => setCloseModalOpen(false)}
+        onConfirm={() => closeMutation.mutate()}
+        isMutating={isMutating}
+        approvedCount={openBoxOrders.length}
+        boxSummary={boxSummary}
+      />
     </Box>
   );
 }
