@@ -1,7 +1,7 @@
 import type { Env } from '../../../src/core/auth/auth.js';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { env, params } = context;
+  const { request, env, params } = context;
   
   // params.path is an array of path segments because of [[path]].ts
   const pathArray = params.path as string[] | undefined;
@@ -40,10 +40,23 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       else headers.set('Content-Type', 'application/octet-stream');
     }
 
+    // Comprobación de cabecera If-None-Match (HTTP 304 Not Modified)
+    const clientEtag = request.headers.get('if-none-match');
+    if (clientEtag) {
+      const cleanClient = clientEtag.replace(/^W\//, '').replace(/^"|"$/g, '');
+      const cleanObject = object.httpEtag.replace(/^W\//, '').replace(/^"|"$/g, '');
+      if (cleanClient === cleanObject || clientEtag === '*' || clientEtag === object.httpEtag) {
+        return new Response(null, {
+          status: 304,
+          headers,
+        });
+      }
+    }
+
     return new Response(object.body, {
       headers,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(`[Media Proxy] Error fetching ${key}:`, err);
     return new Response('Internal Server Error', { status: 500 });
   }

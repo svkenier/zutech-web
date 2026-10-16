@@ -25,6 +25,59 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
     headers.set('Content-Type', 'application/json');
 
+    const url = new URL(request.url);
+    const singleId = url.searchParams.get('id');
+    const singleSku = url.searchParams.get('sku');
+    const publicUrl = (env as any).R2_PUBLIC_URL || (env as any).VITE_R2_PUBLIC_URL;
+
+    // Soporte para consulta atómica de producto individual
+    if (singleId || singleSku) {
+      const query = singleId
+        ? `SELECT products.*, brands.name as brand_name 
+           FROM products 
+           LEFT JOIN brands ON products.brand_id = brands.id 
+           WHERE products.id = ? AND products.is_active = 1 LIMIT 1`
+        : `SELECT products.*, brands.name as brand_name 
+           FROM products 
+           LEFT JOIN brands ON products.brand_id = brands.id 
+           WHERE products.sku = ? AND products.is_active = 1 LIMIT 1`;
+      
+      const param = (singleId || singleSku)!;
+      const row = await env.DB.prepare(query).bind(param).first<any>();
+
+      if (!row) {
+        return new Response(JSON.stringify({ error: 'Producto no encontrado' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      let finalImageUrl = row.image_url;
+      if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+        finalImageUrl = publicUrl ? `${publicUrl}/${finalImageUrl}` : `/api/media/${finalImageUrl}`;
+      }
+
+      const singleRecord = {
+        id: row.id,
+        sku: row.sku,
+        title: row.title,
+        main_image: finalImageUrl,
+        description: row.description,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        attributes: {
+          brand: row.brand_name || 'Sin Marca',
+          category: row.category,
+          price: row.price,
+          in_stock: Boolean(row.in_stock),
+          featured: Boolean(row.featured),
+          specs: row.specs,
+        }
+      };
+
+      return new Response(JSON.stringify(singleRecord), { status: 200, headers });
+    }
+
     const { results } = await env.DB.prepare(`
       SELECT products.*, brands.name as brand_name 
       FROM products 
@@ -32,8 +85,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       WHERE products.is_active = 1
       ORDER BY products.created_at DESC
     `).all();
-
-    const publicUrl = (env as any).R2_PUBLIC_URL || (env as any).VITE_R2_PUBLIC_URL;
 
     // Map to frontend expected format
     const records = results.map((row: any) => {
@@ -61,7 +112,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     });
 
     return new Response(JSON.stringify(records), { status: 200, headers });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Public Products Error]:', err);
     return new Response(JSON.stringify({ error: 'Error al obtener productos' }), {
       status: 500,

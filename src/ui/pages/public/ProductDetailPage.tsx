@@ -38,10 +38,10 @@ export default function ProductDetailPage() {
   const { data: record, isLoading, isError, error } = useQuery<BaseRecord>({
     queryKey: ['product', id],
     queryFn:  async () => {
-      const records = await get<BaseRecord[]>('/public/products');
-      const found = records?.find(p => p.id === id);
-      if (!found) throw new Error('Producto no encontrado');
-      return found;
+      if (!id) throw new Error('ID no proporcionado');
+      const product = await get<BaseRecord>(`/public/products/${encodeURIComponent(id)}`);
+      if (!product) throw new Error('Producto no encontrado');
+      return product;
     },
   });
 
@@ -127,10 +127,28 @@ export default function ProductDetailPage() {
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <SEO 
-        title={`${record.title} · Zutech`} 
-        description={record.description || `Comprar ${record.title} en Zutech.`} 
+        title={`${record.title} · ZuTech Store`} 
+        description={record.description || `Comprar ${record.title} en ZuTech Store.`} 
         url={`/productos/${record.id}`}
         image={record.main_image}
+        type="product"
+        schemaType="Product"
+        product={{
+          name: record.title,
+          description: record.description,
+          image: record.main_image,
+          sku: (record as { sku?: string }).sku || record.attributes?.['sku'] || record.id,
+          brand: brand || 'ZuTech',
+          price: price,
+          priceCurrency: 'USD',
+          inStock: inStock,
+          category: category,
+        }}
+        breadcrumbs={[
+          { name: 'Inicio', url: '/' },
+          { name: 'Catálogo', url: '/productos' },
+          { name: record.title || 'Detalle', url: `/productos/${record.id}` }
+        ]}
       />
       <Navbar />
 

@@ -6,7 +6,7 @@
  * 2. Usuarios: Gestión de usuarios del sistema (solo encargado/superadmin).
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
@@ -59,22 +59,34 @@ import CardActions from '@mui/material/CardActions';
 import Stack from '@mui/material/Stack';
 import LanguageIcon from '@mui/icons-material/Language';
 import Navbar from '@ui/components/Navbar';
-import ProductForm from '@ui/components/ProductForm';
-import UserManagement from '@ui/pages/admin/UserManagement';
-import SettingsManager from '@ui/pages/admin/SettingsManager';
-import DomainManagement from '@ui/pages/admin/DomainManagement';
 import DomainAlert from '@ui/components/DomainAlert';
-import OrdersTab from '@ui/pages/admin/OrdersTab';
-import FacturacionTab from '@ui/pages/admin/FacturacionTab';
-import BulkImportModal from '@ui/components/BulkImportModal';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadIcon from '@mui/icons-material/Download';
-import { exportCatalogToExcel } from '@core/excel/catalogExporter';
 import { useAuth } from '@ui/context/AuthContext';
 import { get, del, formatApiError } from '@core/api/client';
 import { ROLE_HIERARCHY } from '@core/types/user';
 import type { BaseRecord, PaginatedRecords } from '@core/types/record';
 import SEO from '@core/media/SEO';
+
+// ─── Code-Splitting Granular de Pestañas y Modales Administrativos ───────────
+const OrdersTab = lazy(() => import('@ui/pages/admin/OrdersTab'));
+const FacturacionTab = lazy(() => import('@ui/pages/admin/FacturacionTab'));
+const UserManagement = lazy(() => import('@ui/pages/admin/UserManagement'));
+const SettingsManager = lazy(() => import('@ui/pages/admin/SettingsManager'));
+const DomainManagement = lazy(() => import('@ui/pages/admin/DomainManagement'));
+const ProductForm = lazy(() => import('@ui/components/ProductForm'));
+const BulkImportModal = lazy(() => import('@ui/components/BulkImportModal'));
+
+function AdminTabFallback() {
+  return (
+    <Box sx={{ py: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+      <CircularProgress size={36} color="primary" />
+      <Typography variant="body2" color="text.secondary">
+        Cargando módulo administrativo...
+      </Typography>
+    </Box>
+  );
+}
 
 
 // ─── Pestañas ─────────────────────────────────────────────────────────────────
@@ -366,7 +378,10 @@ export default function Admin() {
                 variant="outlined"
                 color="primary"
                 startIcon={<DownloadIcon />}
-                onClick={() => exportCatalogToExcel(filteredProducts)}
+                onClick={async () => {
+                  const { exportCatalogToExcel } = await import('@core/excel/catalogExporter');
+                  exportCatalogToExcel(filteredProducts);
+                }}
                 sx={{ ml: 'auto' }}
               >
                 Exportar
@@ -587,56 +602,62 @@ export default function Admin() {
           </TableContainer>
         </TabPanel>
 
-        {/* ── PANEL PEDIDOS ───────────────────────────────────────────────── */}
-        <TabPanel value={tabIndex} index={1}>
-          <OrdersTab showToast={showToast} />
-        </TabPanel>
-
-        {/* ── PANEL FACTURACIÓN ───────────────────────────────────────────── */}
-        <TabPanel value={tabIndex} index={2}>
-          <FacturacionTab showToast={showToast} />
-        </TabPanel>
-
-        {/* ── PANEL USUARIOS ──────────────────────────────────────────────── */}
-        {canManageUsers && (
-          <TabPanel value={tabIndex} index={3}>
-            <UserManagement />
+        <Suspense fallback={<AdminTabFallback />}>
+          {/* ── PANEL PEDIDOS ───────────────────────────────────────────────── */}
+          <TabPanel value={tabIndex} index={1}>
+            <OrdersTab showToast={showToast} />
           </TabPanel>
-        )}
 
-        {/* ── PANEL CONFIGURACIÓN ─────────────────────────────────────────── */}
-        {isSuperadmin && (
-          <TabPanel value={tabIndex} index={canManageUsers ? 4 : 3}>
-            <SettingsManager />
+          {/* ── PANEL FACTURACIÓN ───────────────────────────────────────────── */}
+          <TabPanel value={tabIndex} index={2}>
+            <FacturacionTab showToast={showToast} />
           </TabPanel>
-        )}
 
-        {/* ── PANEL INFRAESTRUCTURA ───────────────────────────────────────── */}
-        {isOwner && (
-          <TabPanel value={tabIndex} index={5}>
-            <DomainManagement />
-          </TabPanel>
-        )}
+          {/* ── PANEL USUARIOS ──────────────────────────────────────────────── */}
+          {canManageUsers && (
+            <TabPanel value={tabIndex} index={3}>
+              <UserManagement />
+            </TabPanel>
+          )}
+
+          {/* ── PANEL CONFIGURACIÓN ─────────────────────────────────────────── */}
+          {isSuperadmin && (
+            <TabPanel value={tabIndex} index={canManageUsers ? 4 : 3}>
+              <SettingsManager />
+            </TabPanel>
+          )}
+
+          {/* ── PANEL INFRAESTRUCTURA ───────────────────────────────────────── */}
+          {isOwner && (
+            <TabPanel value={tabIndex} index={5}>
+              <DomainManagement />
+            </TabPanel>
+          )}
+        </Suspense>
       </Container>
 
       {productFormOpen && (
-        <ProductForm
-          open={productFormOpen}
-          initial={productToEdit}
-          onClose={handleCloseForm}
-          onSuccess={(isEdit) => {
-            handleCloseForm();
-            showToast(isEdit ? 'Producto actualizado' : 'Producto registrado exitosamente');
-          }}
-        />
+        <Suspense fallback={null}>
+          <ProductForm
+            open={productFormOpen}
+            initial={productToEdit}
+            onClose={handleCloseForm}
+            onSuccess={(isEdit) => {
+              handleCloseForm();
+              showToast(isEdit ? 'Producto actualizado' : 'Producto registrado exitosamente');
+            }}
+          />
+        </Suspense>
       )}
 
       {bulkModalOpen && (
-        <BulkImportModal
-          open={bulkModalOpen}
-          onClose={() => setBulkModalOpen(false)}
-          onSuccess={() => qc.invalidateQueries({ queryKey: ['products-index'] })}
-        />
+        <Suspense fallback={null}>
+          <BulkImportModal
+            open={bulkModalOpen}
+            onClose={() => setBulkModalOpen(false)}
+            onSuccess={() => qc.invalidateQueries({ queryKey: ['products-index'] })}
+          />
+        </Suspense>
       )}
 
       {/* ── Dialog Eliminar Producto ───────────────────────────────────────── */}

@@ -85,6 +85,8 @@ export default function ProductCard({ id, title, brand, category, price, inStock
           component="img" 
           src={image || ITEM_IMAGE_FALLBACK} 
           alt={title}
+          loading="lazy"
+          decoding="async"
           className="product-image"
           onError={(e: any) => { e.currentTarget.src = ITEM_IMAGE_FALLBACK; }}
           sx={{ 

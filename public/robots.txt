@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
 
-Sitemap: https://patitasdeamor.org/sitemap.xml
+Sitemap: https://zetech-web.pages.dev/sitemap.xml
