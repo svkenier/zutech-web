@@ -34,7 +34,7 @@ export default function AdminProductMobileList({
     <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
       {isLoading ? (
         Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} variant="outlined" sx={{ borderRadius: 0 }}>
+          <Card key={i} variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent>
               <Skeleton variant="rectangular" height={100} />
             </CardContent>
@@ -42,7 +42,7 @@ export default function AdminProductMobileList({
         ))
       ) : (
         products.map((product) => (
-          <Card key={product.id} variant="outlined" sx={{ borderRadius: 0 }}>
+          <Card key={product.id} variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ display: 'flex', gap: 2, pb: 1 }}>
               {product.main_image ? (
                 <Box

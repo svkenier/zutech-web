@@ -88,7 +88,7 @@ export default function ChangePasswordDialog({ open, onClose }: ChangePasswordDi
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={isMobile} PaperProps={{ sx: { borderRadius: 0 } }}>
+    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={isMobile}>
       <DialogTitle fontWeight={700}>Cambiar mi contraseña</DialogTitle>
       <DialogContent>
         {success ? (

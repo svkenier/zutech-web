@@ -45,7 +45,7 @@ const INITIAL_FILTERS: RecordFilters = {
 };
 
 const ProductCardSkeleton = () => (
-  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper', borderRadius: 0 }}>
+  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper', borderRadius: 3 }}>
     <Skeleton variant="rectangular" height={200} />
     <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <Skeleton variant="text" width="60%" />
@@ -223,7 +223,7 @@ export default function ProductsPage() {
         </Container>
       </Box>
 
-      <Box sx={{ bgcolor: '#F8F7F4', borderBottom: '1px solid', borderColor: 'divider', py: 2.5 }}>
+      <Box sx={{ bgcolor: '#F8F7F4', borderBottom: '1px solid', borderColor: 'divider', py: 3 }}>
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
             <FilterListIcon sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
@@ -291,7 +291,6 @@ export default function ProductsPage() {
                 startIcon={<ClearIcon />}
                 onClick={clearFilters}
                 variant="outlined"
-                sx={{ borderRadius: 0 }}
               >
                 Limpiar
               </Button>

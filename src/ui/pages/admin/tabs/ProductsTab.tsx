@@ -139,7 +139,6 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
             color="primary"
             startIcon={<UploadFileIcon />}
             onClick={() => setBulkModalOpen(true)}
-            sx={{ borderRadius: 0 }}
           >
             Carga Masiva
           </Button>
@@ -150,14 +149,13 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
               setProductToEdit(null);
               setProductFormOpen(true);
             }}
-            sx={{ borderRadius: 0 }}
           >
             Registrar Producto
           </Button>
         </Box>
       </Box>
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 0, bgcolor: 'background.paper' }}>
+      <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2, bgcolor: 'background.paper' }}>
         <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" width="100%">
           <TextField
             placeholder="Buscar producto, marca..."
@@ -248,7 +246,6 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
         onClose={() => setProductToDelete(null)}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 0 } }}
       >
         <DialogTitle sx={{ fontWeight: 800 }}>Confirmar Eliminación</DialogTitle>
         <DialogContent>
@@ -260,7 +257,6 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
           <Button
             onClick={() => setProductToDelete(null)}
             disabled={deleteProductMutation.isPending}
-            sx={{ borderRadius: 0 }}
           >
             Cancelar
           </Button>
@@ -272,7 +268,6 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
             startIcon={
               deleteProductMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />
             }
-            sx={{ borderRadius: 0 }}
           >
             Eliminar
           </Button>

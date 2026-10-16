@@ -190,13 +190,13 @@ export default function BulkImportModal({ open, onClose, onSuccess }: BulkImport
   const validCount = stagingData?.filter((p) => p.status === 'Listo').length ?? 0;
 
   return (
-    <Dialog open={open} onClose={() => !isLoading && onClose()} maxWidth={stagingData ? 'lg' : 'sm'} fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
+    <Dialog open={open} onClose={() => !isLoading && onClose()} maxWidth={stagingData ? 'lg' : 'sm'} fullWidth>
       <DialogTitle fontWeight={700}>{stagingData ? 'Mesa de Trabajo (Staging)' : 'Importación Masiva Inteligente'}</DialogTitle>
       <DialogContent dividers>
         {!stagingData ? (
           <Box display="flex" flexDirection="column" gap={2}>
             <Typography variant="body2" color="text.secondary">Descarga la plantilla, complétala y sube el archivo .xlsx junto a las fotos de tus productos.</Typography>
-            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleDownloadTemplate} sx={{ borderRadius: 0 }}>Descargar Plantilla Oficial</Button>
+            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleDownloadTemplate}>Descargar Plantilla Oficial</Button>
             <ImportDropzone isDragOver={isDragOver} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} onFileInput={handleFileInput} />
             {isLoading && <Box textAlign="center" mt={2}><CircularProgress size={24} /><Typography variant="body2">Procesando...</Typography></Box>}
           </Box>

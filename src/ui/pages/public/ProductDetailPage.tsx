@@ -238,7 +238,7 @@ export default function ProductDetailPage() {
                           width:      72,
                           height:     56,
                           objectFit:  'cover',
-                          borderRadius: 0,
+                          borderRadius: 1.5,
                           cursor:     'pointer',
                           border:     '2px solid',
                           borderColor: idx === galleryIdx ? 'primary.main' : 'transparent',
@@ -274,16 +274,16 @@ export default function ProductDetailPage() {
                   <Chip icon={<AttachMoneyIcon />} label={price.toFixed(2)} size="small" variant="outlined" sx={{ fontWeight: 800 }} />
                 </Box>
 
-                <Divider sx={{ mb: 2.5 }} />
+                <Divider sx={{ mb: 3 }} />
 
                 {record.description && (
-                  <Typography variant="body1" color="text.secondary" lineHeight={1.8} mb={3}>
+                  <Typography variant="body1" color="text.secondary" lineHeight={1.8} mb={3} sx={{ maxWidth: '68ch' }}>
                     {record.description}
                   </Typography>
                 )}
 
                 {specs && (
-                  <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 0, border: '1px solid', borderColor: 'divider' }}>
+                  <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider', maxWidth: '68ch' }}>
                     <Typography variant="subtitle2" fontWeight={800} mb={1.5} color="text.primary">
                       Especificaciones Técnicas
                     </Typography>
@@ -301,7 +301,7 @@ export default function ProductDetailPage() {
                     startIcon={<ShoppingCartOutlinedIcon />}
                     disabled={!inStock}
                     onClick={handleAddToCart}
-                    sx={{ flexGrow: 1, borderRadius: 0, py: 1.3, fontWeight: 800 }}
+                    sx={{ flexGrow: 1, py: 1.3, fontWeight: 800 }}
                   >
                     {!inStock ? 'Agotado' : 'Añadir al carrito'}
                   </Button>
@@ -312,7 +312,7 @@ export default function ProductDetailPage() {
                       sx={{
                         border:     '1px solid',
                         borderColor: 'divider',
-                        borderRadius: 0,
+                        borderRadius: 1.5,
                       }}
                     >
                       <ShareIcon />

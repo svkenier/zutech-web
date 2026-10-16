@@ -106,7 +106,7 @@ function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImageP
           height:         h,
           border:         '2px dashed',
           borderColor:    preview ? 'primary.main' : 'divider',
-          borderRadius: 0,
+          borderRadius:   2,
           cursor:         'pointer',
           overflow:       'hidden',
           bgcolor:        'background.default',
@@ -318,7 +318,6 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
       maxWidth="md"
       fullWidth
       fullScreen={isMobile}
-      PaperProps={{ sx: { borderRadius: 0 } }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography variant="h6" fontWeight={700}>
@@ -491,7 +490,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           onClick={handleSubmit}
           disabled={mutation.isPending || imgLoading || formik.isSubmitting}
           startIcon={mutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
-          sx={{ borderRadius: 0, px: 3 }}
+          sx={{ px: 3 }}
         >
           {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear registro'}
         </Button>

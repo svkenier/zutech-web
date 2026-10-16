@@ -53,8 +53,8 @@ const theme = createTheme({
     h2: { fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', lineHeight: 1.15, letterSpacing: '-0.02em', color: '#0A1322' },
     h3: { fontWeight: 700, fontSize: 'clamp(1.5rem, 3vw, 2rem)', lineHeight: 1.2, letterSpacing: '-0.01em', color: '#0A1322' },
     h4: { fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)', lineHeight: 1.3, color: '#0A1322' },
-    h5: { fontWeight: 600, fontSize: '1.125rem' },
-    h6: { fontWeight: 600, fontSize: '1rem' },
+    h5: { fontWeight: 600, fontSize: '1.125rem', lineHeight: 1.4, color: '#0A1322' },
+    h6: { fontWeight: 600, fontSize: '1rem', lineHeight: 1.4, color: '#0A1322' },
     subtitle1: { fontWeight: 500, fontSize: '1rem', lineHeight: 1.5 },
     subtitle2: { fontWeight: 500, fontSize: '0.875rem', lineHeight: 1.5 },
     body1: { fontSize: '1rem', lineHeight: 1.7, color: '#334155' },
@@ -119,6 +119,13 @@ const theme = createTheme({
           fontSize: '0.75rem',
           letterSpacing: '0.05em',
           textTransform: 'uppercase',
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 12,
         },
       },
     },

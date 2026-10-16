@@ -40,7 +40,7 @@ export default function AdminProductTable({
       component={Paper}
       variant="outlined"
       sx={{
-        borderRadius: 0,
+        borderRadius: 2,
         display: { xs: 'none', md: 'block' },
         bgcolor: 'background.paper',
       }}
@@ -107,7 +107,7 @@ export default function AdminProductTable({
                           sx={{
                             width: 40,
                             height: 40,
-                            borderRadius: 0,
+                            borderRadius: 1,
                             objectFit: 'cover',
                             position: 'relative',
                             zIndex: 1,

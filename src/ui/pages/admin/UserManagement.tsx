@@ -48,7 +48,6 @@ export default function UserManagement() {
             variant="contained"
             startIcon={<PersonAddIcon />}
             onClick={() => setCreateOpen(true)}
-            sx={{ borderRadius: 0 }}
           >
             Nuevo usuario
           </Button>
@@ -85,7 +84,7 @@ export default function UserManagement() {
       />
 
       {/* Confirmación de eliminación */}
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
         <DialogTitle fontWeight={700} color="error">Eliminar usuario</DialogTitle>
         <DialogContent>
           {deleteError && <Alert severity="error" sx={{ mb: 2 }}>{deleteError}</Alert>}
@@ -108,7 +107,7 @@ export default function UserManagement() {
         </DialogActions>
       </Dialog>
       {/* Confirmación de Forzar Cierre de Sesión */}
-      <Dialog open={Boolean(forceLogoutTarget)} onClose={() => setForceLogoutTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
+      <Dialog open={Boolean(forceLogoutTarget)} onClose={() => setForceLogoutTarget(null)} maxWidth="xs" fullWidth>
         <DialogTitle fontWeight={700}>Forzar cierre de sesión</DialogTitle>
         <DialogContent>
           {forceLogoutError && <Alert severity="error" sx={{ mb: 2 }}>{forceLogoutError}</Alert>}

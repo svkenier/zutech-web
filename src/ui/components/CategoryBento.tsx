@@ -179,7 +179,7 @@ export default function CategoryBento() {
                 >
                   <CardImage src={MOBO_IMG} alt="Placas Base" />
                   <CardOverlay />
-                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2.5, zIndex: 2 }}>
+                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2, zIndex: 2 }}>
                     <Typography variant="subtitle1" fontWeight={900} color="#FFFFFF" sx={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>
                       Placas Base
                     </Typography>
@@ -195,7 +195,7 @@ export default function CategoryBento() {
                 >
                   <CardImage src={RAM_IMG} alt="Memorias RAM" />
                   <CardOverlay />
-                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2.5, zIndex: 2 }}>
+                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2, zIndex: 2 }}>
                     <Typography variant="subtitle1" fontWeight={900} color="#FFFFFF" sx={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>
                       Memorias RAM
                     </Typography>
@@ -223,7 +223,7 @@ export default function CategoryBento() {
               >
                 <CardImage src={img} alt={label} />
                 <CardOverlay />
-                <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2.5, zIndex: 2 }}>
+                <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2, zIndex: 2 }}>
                   <Typography variant="subtitle1" fontWeight={900} color="#FFFFFF" sx={{ textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>
                     {label}
                   </Typography>

@@ -53,7 +53,7 @@ export default function WorkshopFlow() {
                     bgcolor: '#FFFFFF',
                     border: '1px solid #E2E8F0',
                     borderRadius: 3, // 12px via theme (1 unit = 4px)
-                    p: 3.5,
+                    p: 3,
                     boxShadow: 'none',
                     transition:
                       'transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease',

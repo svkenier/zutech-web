@@ -158,7 +158,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }}>
       {children}
       <Snackbar open={!!toastMsg} autoHideDuration={5000} onClose={() => setToastMsg('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert onClose={() => setToastMsg('')} severity="info" sx={{ width: '100%', borderRadius: 0, boxShadow: 3 }}>
+        <Alert onClose={() => setToastMsg('')} severity="info" sx={{ width: '100%', borderRadius: 2, boxShadow: 3 }}>
           {toastMsg}
         </Alert>
       </Snackbar>

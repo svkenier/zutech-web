@@ -61,7 +61,7 @@ export default function OrderCardItem({
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 0 }}>
+    <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Box display="flex" justifyContent="space-between" mb={1} alignItems="center">
           <Stack direction="row" spacing={1} alignItems="center">

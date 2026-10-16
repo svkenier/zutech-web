@@ -376,7 +376,7 @@ export default function Navbar() {
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     PaperProps={{
                       elevation: 3,
-                      sx: { mt: 1.5, borderRadius: 0, minWidth: 200 }
+                      sx: { mt: 1.5, borderRadius: 2, minWidth: 200 }
                     }}
                   >
                     <Box sx={{ px: 2, py: 1 }}>
@@ -405,7 +405,6 @@ export default function Navbar() {
                   size="small"
                   variant="outlined"
                   color="primary"
-                  sx={{ borderRadius: 0 }}
                 >
                   Acceso staff
                 </Button>
@@ -432,7 +431,6 @@ export default function Navbar() {
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { borderRadius: 0 } }}
       >
         {drawer}
       </Drawer>

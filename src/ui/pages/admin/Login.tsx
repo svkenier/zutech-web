@@ -197,7 +197,7 @@ export default function Login() {
                 fullWidth
                 size="large"
                 disabled={loading || !formik.values.username.trim() || !formik.values.password}
-                sx={{ borderRadius: 0, py: 1.2 }}
+                sx={{ py: 1.2 }}
               >
                 {loading
                   ? <CircularProgress size={22} color="inherit" />

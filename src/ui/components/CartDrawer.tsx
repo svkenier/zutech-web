@@ -312,7 +312,7 @@ export default function CartDrawer() {
       )}
 
       <Snackbar open={!!errorToast} autoHideDuration={6000} onClose={() => setErrorToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert onClose={() => setErrorToast('')} severity="error" sx={{ width: '100%', borderRadius: 0, boxShadow: 3 }}>
+        <Alert onClose={() => setErrorToast('')} severity="error" sx={{ width: '100%', borderRadius: 2, boxShadow: 3 }}>
           {errorToast}
         </Alert>
       </Snackbar>

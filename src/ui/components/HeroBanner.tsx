@@ -95,8 +95,8 @@ export default function HeroBanner() {
                 fontSize: { xs: '0.95rem', md: '1.1rem' },
                 lineHeight: 1.6,
                 maxWidth: '520px',
-                mt: { xs: 2, md: 2.5 },
-                mb: { xs: 3.5, md: 4 },
+                mt: { xs: 2, md: 3 },
+                mb: { xs: 3, md: 4 },
               }}
             >
               Componentes de última generación y servicio técnico especializado en Maracaibo. Ensambles a medida para gaming y alto rendimiento.

@@ -90,14 +90,14 @@ export default function ProductCard({ id, title, brand, category, price, inStock
           className="product-image"
           onError={(e: any) => { e.currentTarget.src = ITEM_IMAGE_FALLBACK; }}
           sx={{ 
-            width: '100%', height: '100%', objectFit: 'contain', p: 2.5, 
+            width: '100%', height: '100%', objectFit: 'contain', p: 2, 
             transition: 'transform 0.4s ease-out'
           }} 
         />
       </Box>
 
       {/* Cuerpo Informativo */}
-      <CardContent sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between', p: 2.5, '&:last-child': { pb: 2.5 } }}>
+      <CardContent sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between', p: 2, '&:last-child': { pb: 2 } }}>
         <Box>
           {/* Tags de Marca y Categoría */}
           <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontFamily: 'monospace', mb: 0.5 }}>

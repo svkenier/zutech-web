@@ -68,7 +68,7 @@ export default function OrderEditModal({ open, order, onClose, onSave }: OrderEd
   if (!order) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle fontWeight={700}>Editar Pedido {order.id}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="subtitle2" color="text.secondary" mb={2}>

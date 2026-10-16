@@ -156,7 +156,7 @@ export default function Admin() {
           anchor="left"
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
-          PaperProps={{ sx: { width: 260, borderRadius: 0 } }}
+          PaperProps={{ sx: { width: 260 } }}
         >
           <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
             <Typography variant="h6" fontWeight={700}>
@@ -270,7 +270,7 @@ export default function Admin() {
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%', borderRadius: 0, boxShadow: 3 }}>
+        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%', borderRadius: 2, boxShadow: 3 }}>
           {toast.message}
         </Alert>
       </Snackbar>

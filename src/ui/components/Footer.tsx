@@ -110,7 +110,7 @@ export default function Footer() {
                     bgcolor: 'rgba(255, 255, 255, 0.08)',
                     color: 'rgba(255, 255, 255, 0.90)',
                     border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: 0,
+                    borderRadius: '50%',
                     transition: 'all 0.25s ease-in-out',
                     '&:hover': {
                       bgcolor: '#25D366',
@@ -161,7 +161,7 @@ export default function Footer() {
 
           {/* Columna 2: Navegación */}
           <Grid size={{ xs: 12, sm: 4, md: 3 }}>
-            <Typography variant="overline" color="#FFFFFF" fontWeight={600} fontSize="1rem" letterSpacing="0.5px" display="block" mb={2.5} sx={{ textTransform: 'none' }}>
+            <Typography variant="overline" color="#FFFFFF" fontWeight={600} fontSize="1rem" letterSpacing="0.5px" display="block" mb={3} sx={{ textTransform: 'none' }}>
               Navegación
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -261,7 +261,7 @@ export default function Footer() {
           </Grid>
         </Grid>
 
-        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 2.5 }} />
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }} />
 
         {/* Bottom bar */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1.5 }}>

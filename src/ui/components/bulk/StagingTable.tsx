@@ -40,7 +40,7 @@ export default function StagingTable({
   onAllowNoPhoto,
 }: StagingTableProps) {
   return (
-    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 0, maxHeight: 400, overflowX: 'auto' }}>
+    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, maxHeight: 400, overflowX: 'auto' }}>
       <Table size="small" stickyHeader sx={{ tableLayout: 'auto', minWidth: 800 }}>
         <TableHead>
           <TableRow>

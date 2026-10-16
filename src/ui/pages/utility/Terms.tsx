@@ -233,7 +233,7 @@ export default function Terms() {
             </Box>
 
             {/* Columna Derecha: Tarjetas de Contenido */}
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Box sx={{ flexGrow: 1, minWidth: 0, maxWidth: { md: 720, lg: '68ch' } }}>
               {SECTIONS.map((s, i) => (
                 <AnimatedSection key={s.id} delay={i * 40}>
                   <Box id={s.id} sx={{ mb: { xs: 4, md: 5 }, scrollMarginTop: '110px' }}>

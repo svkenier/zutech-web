@@ -63,7 +63,7 @@ export function PasswordResetModal({ target, onClose }: PasswordResetModalProps)
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Dialog open={Boolean(target)} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={isMobile} PaperProps={{ sx: { borderRadius: 0 } }}>
+    <Dialog open={Boolean(target)} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={isMobile}>
       <DialogTitle fontWeight={700}>Resetear contraseña</DialogTitle>
       <DialogContent>
         {done ? (

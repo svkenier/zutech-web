@@ -209,8 +209,8 @@ export default function DomainManagement() {
           {/* Opción A: Preset */}
           <Box 
             sx={{ 
-              p: 2.5, 
-              mb: 2.5,
+              p: 2, 
+              mb: 2,
               border: '1px solid', 
               borderColor: renewalMode === 'preset' ? 'primary.main' : 'divider', 
               borderRadius: 2, 
@@ -250,7 +250,7 @@ export default function DomainManagement() {
           {/* Opción B: Manual */}
           <Box 
             sx={{ 
-              p: 2.5, 
+              p: 2, 
               border: '1px solid', 
               borderColor: renewalMode === 'manual' ? 'primary.main' : 'divider', 
               borderRadius: 2, 
@@ -301,7 +301,7 @@ export default function DomainManagement() {
       {/* NIVEL 3: ZONA DE DIAGNÓSTICO / TESTING */}
       <Divider sx={{ my: 4 }} />
 
-      <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: 'rgba(255, 255, 255, 0.02)', border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255, 255, 255, 0.02)', border: '1px solid', borderColor: 'divider' }}>
         <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5, fontWeight: 600 }}>
           Herramientas de Previsualización
         </Typography>

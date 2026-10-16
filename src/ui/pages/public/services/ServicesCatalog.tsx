@@ -48,8 +48,8 @@ export default function ServicesCatalog({ phone }: ServicesCatalogProps) {
                       flexGrow: 1,
                       display: 'flex',
                       flexDirection: 'column',
-                      p: 3.5,
-                      '&:last-child': { pb: 3.5 },
+                      p: 3,
+                      '&:last-child': { pb: 3 },
                     }}
                   >
                     {/* Ícono */}
@@ -89,7 +89,7 @@ export default function ServicesCatalog({ phone }: ServicesCatalogProps) {
                     </Typography>
 
                     {/* Viñetas */}
-                    <Stack spacing={0.75} sx={{ mb: 2.5, flexGrow: 1 }}>
+                    <Stack spacing={0.75} sx={{ mb: 2, flexGrow: 1 }}>
                       {srv.bullets.map((b) => (
                         <Box
                           key={b}
@@ -136,7 +136,7 @@ export default function ServicesCatalog({ phone }: ServicesCatalogProps) {
                       </Typography>
                     </Box>
 
-                    <Divider sx={{ mb: 2.5 }} />
+                    <Divider sx={{ mb: 3 }} />
 
                     {/* CTA WhatsApp */}
                     <Button

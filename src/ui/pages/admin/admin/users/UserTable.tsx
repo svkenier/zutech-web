@@ -101,12 +101,12 @@ export function UserTable({
       <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
         {isLoading ? (
           Array.from({ length: 2 }).map((_, i) => (
-            <Card key={i} variant="outlined" sx={{ borderRadius: 0 }}>
+            <Card key={i} variant="outlined" sx={{ borderRadius: 2 }}>
               <CardContent><Skeleton variant="rectangular" height={100} /></CardContent>
             </Card>
           ))
         ) : users.map((u) => (
-          <Card key={u.username} variant="outlined" sx={{ borderRadius: 0 }}>
+          <Card key={u.username} variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ pb: 1 }}>
               <Typography variant="h6" fontWeight={700} lineHeight={1.2} mb={0.5}>
                 {u.username}
@@ -202,7 +202,7 @@ export function UserTable({
         )}
       </Box>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 0, display: { xs: 'none', md: 'block' } }}>
+      <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, display: { xs: 'none', md: 'block' } }}>
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: '#F8F7F4' }}>
