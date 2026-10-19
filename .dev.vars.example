@@ -40,3 +40,11 @@ JWT_SECRET=""
 # (Las credenciales de D1 no van aquí. Cloudflare las enlaza nativamente
 # vía el entorno de Cloudflare Pages y a través del archivo wrangler.jsonc 
 # con el binding "DB").
+
+# ==========================================
+# Servicios de Inteligencia Artificial (Google Gemini)
+# ==========================================
+# 🔴 [Cloudflare: SECRET / Encrypt] - Clave de API de Google AI Studio para escáner y OCR de productos
+GEMINI_API_KEY="AIzaSyYourGeminiApiKeyHere"
+
+

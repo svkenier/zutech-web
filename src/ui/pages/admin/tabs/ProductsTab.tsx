@@ -139,6 +139,7 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
             color="primary"
             startIcon={<UploadFileIcon />}
             onClick={() => setBulkModalOpen(true)}
+            sx={{ display: { xs: 'none', md: 'inline-flex' } }}
           >
             Carga Masiva
           </Button>
@@ -149,8 +150,23 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
               setProductToEdit(null);
               setProductFormOpen(true);
             }}
+            sx={{
+              fontWeight: 600,
+              borderRadius: 2,
+              px: { xs: 2, sm: 2.5 },
+              py: { xs: 1, sm: 0.8 },
+              minHeight: 40,
+              boxShadow: 2,
+              '&:active': { transform: 'scale(0.96)' },
+              transition: 'transform 150ms ease-out, background-color 150ms',
+            }}
           >
-            Registrar Producto
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              + Nuevo Producto
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              Registrar Producto
+            </Box>
           </Button>
         </Box>
       </Box>

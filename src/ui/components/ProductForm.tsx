@@ -31,11 +31,13 @@ import CloseIcon     from '@mui/icons-material/Close';
 import AddPhotoIcon  from '@mui/icons-material/AddPhotoAlternate';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CollectionsIcon from '@mui/icons-material/Collections';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { post, put, formatApiError, clearEtagCache } from '@core/api/client';
 import { optimizeImage } from '@core/media/imageOptimizer';
+import { compressScannerImage } from '@core/media/scannerCompressor';
 import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
 import type { BaseRecord } from '@core/types/record';
 
@@ -54,10 +56,13 @@ const EMPTY = {
 };
 
 const validationSchema = Yup.object({
-  title: Yup.string().required('El título/nombre es obligatorio'),
-  brand: Yup.string(),
+  title: Yup.string().trim().required('El título/nombre es obligatorio'),
+  brand: Yup.string().trim(),
   category: Yup.string().required('La categoría es obligatoria'),
-  price: Yup.number().typeError('Debe ser un número').min(0, 'No puede ser negativo').required('El precio es obligatorio'),
+  price: Yup.number()
+    .typeError('Debe ser un número válido')
+    .positive('El precio debe ser mayor a 0')
+    .required('El precio es obligatorio'),
   description: Yup.string(),
   in_stock: Yup.boolean(),
   featured: Yup.boolean(),
@@ -221,6 +226,91 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
   const [extraFiles,   setExtraFiles]   = useState<{ preview: string; base64: string }[]>([]);
   const [imgLoading,   setImgLoading]   = useState(false);
   const [error,        setError]        = useState('');
+  const [isScanning,   setIsScanning]   = useState(false);
+  const [scanAlert,    setScanAlert]    = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
+
+  const scannerInputRef = useRef<HTMLInputElement>(null);
+  const priceInputRef   = useRef<HTMLInputElement>(null);
+
+  const handleTriggerScan = () => {
+    setScanAlert(null);
+    scannerInputRef.current?.click();
+  };
+
+  const handleScannerFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setIsScanning(true);
+    setScanAlert(null);
+
+    try {
+      const compressedDataUrl = await compressScannerImage(file);
+      const res = await post<{
+        data: {
+          title: string;
+          brand: string;
+          model: string;
+          category: string;
+          specs: Record<string, string>;
+          description: string;
+        };
+      }>('/admin/products/scan-ai', {
+        image: compressedDataUrl,
+        mimeType: 'image/jpeg',
+      });
+
+      const data = res?.data;
+      if (!data) {
+        throw new Error('Respuesta vacía del servidor de escaneo');
+      }
+
+      // Hidratación reactiva de inputs (Human-in-the-Loop)
+      if (data.title) {
+        void formik.setFieldValue('title', data.title);
+      }
+      if (data.brand) {
+        void formik.setFieldValue('brand', data.brand);
+      }
+      if (data.category) {
+        void formik.setFieldValue('category', data.category);
+      }
+
+      let composedDescription = data.description || '';
+      if (data.model && !composedDescription.includes(data.model)) {
+        composedDescription = `Modelo: ${data.model}\n\n${composedDescription}`.trim();
+      }
+      const specsEntries = Object.entries(data.specs || {});
+      if (specsEntries.length > 0) {
+        const specsText = specsEntries.map(([k, v]) => `• ${k}: ${v}`).join('\n');
+        composedDescription = `${composedDescription}\n\nEspecificaciones técnicas:\n${specsText}`.trim();
+      }
+
+      if (composedDescription) {
+        void formik.setFieldValue('description', composedDescription);
+      }
+
+      setScanAlert({
+        type: 'success',
+        message: 'Datos extraídos con éxito. Por favor verifica los campos y asigna el precio.',
+      });
+
+      // Foco obligatorio inmediato en el campo de precio
+      setTimeout(() => {
+        priceInputRef.current?.focus();
+        priceInputRef.current?.select();
+      }, 150);
+    } catch (err: unknown) {
+      console.error('[Scanner AI Error]:', err);
+      setScanAlert({
+        type: 'warning',
+        message: 'No pudimos leer los datos de la etiqueta. Puedes completarlos manualmente.',
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleMainFile = useCallback(async (file: File) => {
     setImgLoading(true);
@@ -335,6 +425,92 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           </Alert>
         )}
 
+        {scanAlert && (
+          <Alert
+            severity={scanAlert.type}
+            onClose={() => setScanAlert(null)}
+            sx={{ mb: 2, borderRadius: 2 }}
+          >
+            {scanAlert.message}
+          </Alert>
+        )}
+
+        {/* Input invisible de captura nativa móvil con cámara trasera */}
+        <input
+          ref={scannerInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={handleScannerFileChange}
+        />
+
+        {/* Disparador de Escáner IA (Fase 1) */}
+        <Box
+          sx={{
+            mb: 2.5,
+            p: { xs: 1.5, sm: 2 },
+            borderRadius: 2,
+            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.04)'),
+            border: '1px solid',
+            borderColor: (t) => (t.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'),
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: 'space-between',
+            gap: 1.5,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
+              }}
+            >
+              <AutoAwesomeIcon sx={{ fontSize: 18 }} />
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" fontWeight={700} lineHeight={1.2}>
+                Autocompletar con Escáner IA
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Captura la etiqueta o empaque para rellenar especificaciones técnicas
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={mutation.isPending || isScanning}
+            onClick={handleTriggerScan}
+            startIcon={isScanning ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
+            sx={{
+              fontWeight: 600,
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 2.5,
+              py: 1,
+              whiteSpace: 'nowrap',
+              display: { xs: 'flex', md: 'inline-flex' },
+              justifyContent: 'center',
+              boxShadow: 2,
+              '&:active': { transform: 'scale(0.96)' },
+              transition: 'transform 150ms ease-out, background-color 150ms',
+            }}
+          >
+            {isScanning ? 'Iniciando escáner...' : '✨ Escanear Producto con IA'}
+          </Button>
+        </Box>
+
         <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1.5}>
           Datos básicos
         </Typography>
@@ -373,13 +549,18 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
                 <MenuItem value="Almacenamiento">Almacenamiento</MenuItem>
                 <MenuItem value="Fuentes de Poder">Fuentes de Poder</MenuItem>
                 <MenuItem value="Chasis / Cases">Chasis / Cases</MenuItem>
+                <MenuItem value="Refrigeración">Refrigeración</MenuItem>
                 <MenuItem value="Periféricos">Periféricos</MenuItem>
+                <MenuItem value="Laptops">Laptops</MenuItem>
+                <MenuItem value="PCs / Computadoras">PCs / Computadoras</MenuItem>
                 <MenuItem value="Servicio Técnico / Software">Servicio Técnico / Software</MenuItem>
+                <MenuItem value="Otros">Otros</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
+              inputRef={priceInputRef}
               label="Precio (USD) *"
               type="number"
               name="price"
@@ -492,7 +673,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           startIcon={mutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
           sx={{ px: 3 }}
         >
-          {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear registro'}
+          {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Guardar Producto'}
         </Button>
       </DialogActions>
     </Dialog>
