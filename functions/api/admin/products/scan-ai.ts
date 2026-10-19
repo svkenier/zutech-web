@@ -98,7 +98,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   // 3. Verificación de clave API de Gemini en variables de entorno
-  const apiKey = (env.GEMINI_API_KEY as string | undefined)?.trim();
+  const apiKey = (env.GEMINI_API_KEY as string | undefined)?.replace(/^["']|["']$/g, '').trim();
   if (!apiKey) {
     return new Response(
       JSON.stringify({ error: 'La clave GEMINI_API_KEY no está configurada en el entorno del servidor' }),
@@ -155,14 +155,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     );
   }
 
-  // 6. Configuración de Inferencia en Gemini 2.5 Flash con Structured Outputs
+  // 6. Configuración de Inferencia en Gemini Flash con Structured Outputs optimizado para mínima latencia
   const geminiPayload = {
     contents: [
       {
         parts: [
           {
             text: `Eres un asistente de hardware informático y electrónica. Analiza la imagen técnica (etiqueta de producto, caja, empaque o placa).
-Extrae los datos técnicos del producto. Si algún campo no aparece visible en la imagen, deduce el más preciso o devuelve cadena vacía si es imposible determinarlo.
+Extrae los datos técnicos del producto de forma rápida y ultra concisa.
 Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
           },
           {
@@ -176,6 +176,8 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
     ],
     generationConfig: {
       temperature: 0.1,
+      topP: 0.8,
+      maxOutputTokens: 2048,
       responseMimeType: 'application/json',
       responseSchema: {
         type: 'OBJECT',
@@ -189,11 +191,18 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
             description: 'Categoría exacta seleccionada de las provistas',
           },
           specs: {
-            type: 'OBJECT',
-            description: 'Pares clave-valor de especificaciones técnicas legibles (ej: RAM, Almacenamiento, Frecuencia)',
-            additionalProperties: { type: 'STRING' },
+            type: 'ARRAY',
+            description: 'Máximo 4 especificaciones técnicas clave visibles (ej: RAM, Almacenamiento, Frecuencia)',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                key: { type: 'STRING', description: 'Nombre del parámetro técnico' },
+                value: { type: 'STRING', description: 'Valor del parámetro técnico' },
+              },
+              required: ['key', 'value'],
+            },
           },
-          description: { type: 'STRING', description: 'Resumen técnico legible del producto en 2 o 3 oraciones' },
+          description: { type: 'STRING', description: 'Resumen técnico legible y conciso de 1 sola frase' },
         },
         required: ['title', 'brand', 'model', 'category', 'specs', 'description'],
       },
@@ -201,10 +210,10 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000);
+  const timeoutId = setTimeout(() => controller.abort(), 11000);
 
   try {
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(apiKey)}`;
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
@@ -218,7 +227,7 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
 
     if (!geminiRes.ok) {
       const errorText = await geminiRes.text();
-      console.error('[Gemini 2.5 Flash Error]:', geminiRes.status, errorText);
+      console.error('[Gemini Flash Error]:', geminiRes.status, errorText);
 
       if (geminiRes.status === 429) {
         return new Response(
@@ -237,6 +246,10 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
     const candidate = geminiData.candidates?.[0];
     const textOutput = candidate?.content?.parts?.[0]?.text;
 
+    if (candidate?.finishReason && candidate.finishReason !== 'STOP') {
+      console.warn('[Gemini finishReason]:', candidate.finishReason);
+    }
+
     if (!textOutput) {
       return new Response(
         JSON.stringify({ error: 'La IA no devolvió información analizable para la imagen proporcionada' }),
@@ -246,8 +259,10 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
 
     let parsed: Record<string, unknown>;
     try {
-      parsed = JSON.parse(textOutput) as Record<string, unknown>;
-    } catch {
+      const cleanJsonText = textOutput.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+      parsed = JSON.parse(cleanJsonText) as Record<string, unknown>;
+    } catch (err: unknown) {
+      console.error('[Scan AI JSON Parse Error]:', err, '\nRaw Gemini Output:', textOutput);
       return new Response(
         JSON.stringify({ error: 'La respuesta estructurada de la IA no pudo ser deserializada' }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
@@ -261,7 +276,17 @@ Categorías válidas permitidas: ${CANONICAL_CATEGORIES.join(', ')}.`,
         : 'Otros';
 
     const normalizedSpecs: Record<string, string> = {};
-    if (parsed.specs && typeof parsed.specs === 'object' && !Array.isArray(parsed.specs)) {
+    if (Array.isArray(parsed.specs)) {
+      for (const item of parsed.specs) {
+        if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
+          const k = String(item.key).trim();
+          const v = String(item.value).trim();
+          if (k && v) {
+            normalizedSpecs[k] = v;
+          }
+        }
+      }
+    } else if (parsed.specs && typeof parsed.specs === 'object') {
       const rawSpecs = parsed.specs as Record<string, unknown>;
       for (const [key, val] of Object.entries(rawSpecs)) {
         if (typeof val === 'string' || typeof val === 'number') {

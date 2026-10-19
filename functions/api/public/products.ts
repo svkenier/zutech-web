@@ -1,6 +1,18 @@
 import { getPublicRateLimit, checkRateLimit } from '../../../src/core/auth/rate-limit.js';
 import type { Env } from '../../../src/core/auth/auth.js';
 
+function resolveProductImageUrl(rawUrl: string | null | undefined, publicUrl?: string): string {
+  if (!rawUrl) return '';
+  let url = rawUrl.trim();
+  if (url.includes('pub-zutech.r2.dev') || url.includes('cdn.zutech.com')) {
+    url = url.replace(/^https?:\/\/[^/]+\//, '');
+  }
+  if (!url.startsWith('http')) {
+    return publicUrl ? `${publicUrl}/${url}` : `/api/media/${url}`;
+  }
+  return url;
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
 
@@ -52,10 +64,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         });
       }
 
-      let finalImageUrl = row.image_url;
-      if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-        finalImageUrl = publicUrl ? `${publicUrl}/${finalImageUrl}` : `/api/media/${finalImageUrl}`;
-      }
+      const finalImageUrl = resolveProductImageUrl(row.image_url, publicUrl);
 
       const singleRecord = {
         id: row.id,
@@ -88,10 +97,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // Map to frontend expected format
     const records = results.map((row: any) => {
-      let finalImageUrl = row.image_url;
-      if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-        finalImageUrl = publicUrl ? `${publicUrl}/${finalImageUrl}` : `/api/media/${finalImageUrl}`;
-      }
+      const finalImageUrl = resolveProductImageUrl(row.image_url, publicUrl);
       return {
       id: row.id,
       sku: row.sku,

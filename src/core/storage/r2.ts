@@ -76,15 +76,39 @@ export function cdnImageUrl(relativePath: string | undefined): string {
 
 export function extractPathFromCdnUrl(url: string): string | null {
   if (!url) return null;
+  const trimmed = url.trim();
+
+  // Si ya es una ruta relativa de products/
+  if (trimmed.startsWith('products/')) {
+    return trimmed;
+  }
+
+  // Si tiene prefijo del proxy /api/media/ o api/media/
+  if (trimmed.startsWith('/api/media/') || trimmed.startsWith('api/media/')) {
+    let clean = trimmed.replace(/^\/?api\/media\//, '');
+    if (clean.startsWith('/')) clean = clean.substring(1);
+    return clean;
+  }
+
   const baseUrl = cfg.R2_PUBLIC_URL || 'https://cdn.zutech.com';
-  if (url.startsWith(baseUrl)) {
-    let relative = url.replace(baseUrl, '');
+  if (trimmed.startsWith(baseUrl)) {
+    let relative = trimmed.replace(baseUrl, '');
     if (relative.startsWith('/')) relative = relative.substring(1);
     return relative;
   }
+
+  // Soporte para URLs con pub-zutech.r2.dev o cdn.zutech.com
+  if (trimmed.includes('pub-zutech.r2.dev') || trimmed.includes('cdn.zutech.com')) {
+    const parts = trimmed.split('/');
+    const prodIdx = parts.indexOf('products');
+    if (prodIdx !== -1) {
+      return parts.slice(prodIdx).join('/');
+    }
+  }
+
   // Fallback para imágenes antiguas en github
-  if (url.includes('cdn.jsdelivr.net/gh/')) {
-    const match = url.match(/cdn\.jsdelivr\.net\/gh\/[^/]+\/[^/]+@[^/]+\/(.*)/);
+  if (trimmed.includes('cdn.jsdelivr.net/gh/')) {
+    const match = trimmed.match(/cdn\.jsdelivr\.net\/gh\/[^/]+\/[^/]+@[^/]+\/(.*)/);
     if (match && match[1]) {
       return match[1];
     }

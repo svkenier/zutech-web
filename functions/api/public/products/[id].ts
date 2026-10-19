@@ -50,7 +50,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     const publicUrl = (env as any).R2_PUBLIC_URL || (env as any).VITE_R2_PUBLIC_URL;
-    let finalImageUrl = row.image_url;
+    let finalImageUrl = row.image_url ? String(row.image_url).trim() : '';
+    if (finalImageUrl.includes('pub-zutech.r2.dev') || finalImageUrl.includes('cdn.zutech.com')) {
+      finalImageUrl = finalImageUrl.replace(/^https?:\/\/[^/]+\//, '');
+    }
     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
       finalImageUrl = publicUrl ? `${publicUrl}/${finalImageUrl}` : `/api/media/${finalImageUrl}`;
     }

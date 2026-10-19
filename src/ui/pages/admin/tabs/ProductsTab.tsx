@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -115,12 +115,33 @@ export default function ProductsTab({ showToast }: ProductsTabProps) {
     },
   });
 
+  // Restauración automática del formulario si el SO reinició la SPA
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('zetech_product_form_draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 1000 * 60 * 30 && !parsed.isEdit) {
+          setProductToEdit(null);
+          setProductFormOpen(true);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const handleOpenEdit = (product: BaseRecord) => {
     setProductToEdit(product);
     setProductFormOpen(true);
   };
 
   const handleCloseForm = () => {
+    try {
+      sessionStorage.removeItem('zetech_product_form_draft');
+    } catch {
+      // ignore
+    }
     setProductFormOpen(false);
     setProductToEdit(null);
   };

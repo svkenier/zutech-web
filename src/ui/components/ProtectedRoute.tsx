@@ -8,7 +8,7 @@
  */
 
 import { Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAuth } from '@ui/context/AuthContext';
@@ -31,13 +31,19 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isLoading, isAuthenticated, user } = useAuth();
   const location = useLocation();
+  const lastCheckRef = useRef<number>(0);
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
     let intervalId: number | undefined;
 
-    const checkSession = async () => {
+    const checkSession = async (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastCheckRef.current < 30000) {
+        return;
+      }
+      lastCheckRef.current = now;
       try {
         await get('/auth/verify');
       } catch {
@@ -47,8 +53,8 @@ export default function ProtectedRoute({
 
     const startPolling = () => {
       if (intervalId) clearInterval(intervalId);
-      // Latido cada 20 segundos para respuesta pasiva
-      intervalId = window.setInterval(checkSession, 20000);
+      // Latido cada 30 segundos para respuesta pasiva
+      intervalId = window.setInterval(() => checkSession(true), 30000);
     };
 
     const stopPolling = () => {
@@ -58,19 +64,19 @@ export default function ProtectedRoute({
       }
     };
 
-    // Revisión inmediata al recuperar el foco de la pestaña
+    // Revisión con throttling (30s) al recuperar el foco de la pestaña (evita saturación tras cámara/galería)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkSession();
+        checkSession(false);
         startPolling();
       } else {
         stopPolling();
       }
     };
 
-    // Para navegadores móviles (iOS Safari, Android)
+    // Para navegadores móviles (iOS Safari, Android) con throttling (30s)
     const handlePageShow = () => {
-      checkSession();
+      checkSession(false);
       startPolling();
     };
     
@@ -84,7 +90,7 @@ export default function ProtectedRoute({
 
     // Verificación inicial
     if (document.visibilityState === 'visible') {
-      checkSession();
+      checkSession(false);
       startPolling();
     }
 
@@ -96,10 +102,14 @@ export default function ProtectedRoute({
     };
   }, [isAuthenticated]);
 
-  // Verificar la sesión al cambiar de ruta interna
+  // Verificar la sesión al cambiar de ruta interna (respetando throttle de 30s)
   useEffect(() => {
     if (isAuthenticated) {
-      get('/auth/verify').catch(() => {});
+      const now = Date.now();
+      if (now - lastCheckRef.current >= 30000) {
+        lastCheckRef.current = now;
+        get('/auth/verify').catch(() => {});
+      }
     }
   }, [location.pathname, isAuthenticated]);
 

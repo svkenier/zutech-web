@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type ChangeEvent } from 'react';
+import { useState, useCallback, useRef, memo, useEffect, type ChangeEvent, type MouseEvent } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Dialog from '@mui/material/Dialog';
@@ -6,14 +6,11 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
+import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -39,7 +36,10 @@ import { post, put, formatApiError, clearEtagCache } from '@core/api/client';
 import { optimizeImage } from '@core/media/imageOptimizer';
 import { compressScannerImage } from '@core/media/scannerCompressor';
 import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
+import CameraScannerModal from './CameraScannerModal';
 import type { BaseRecord } from '@core/types/record';
+
+const DRAFT_STORAGE_KEY = 'zetech_product_form_draft';
 
 interface ProductFormProps {
   open:    boolean;
@@ -76,33 +76,52 @@ interface ImagePickerProps {
   size?:   'small' | 'large';
 }
 
-function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImagePickerProps) {
+const ImagePicker = memo(function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImagePickerProps) {
   const h = size === 'large' ? 180 : 110;
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) onFile(file);
-    e.target.value = '';
-    setDrawerOpen(false);
+    try {
+      const file = e.target.files?.[0];
+      if (file) {
+        onFile(file);
+      }
+    } finally {
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
+      setMenuAnchor(null);
+    }
   };
 
-  const handleTrigger = () => {
-    if (isMobile) {
-      setDrawerOpen(true);
-    } else {
-      galleryInputRef.current?.click();
-    }
+  const handleOpenMenu = (e: MouseEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuAnchor(e.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setMenuAnchor(null);
+  };
+
+  const handleSelectCamera = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCloseMenu();
+    setCameraModalOpen(true);
+  };
+
+  const handleSelectGallery = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCloseMenu();
+    galleryInputRef.current?.click();
   };
 
   return (
     <Box sx={{ position: 'relative' }}>
       <Box
-        onClick={handleTrigger}
+        onClick={handleOpenMenu}
         sx={{
           display:        'flex',
           flexDirection:  'column',
@@ -136,14 +155,8 @@ function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImageP
           </Box>
         )}
       </Box>
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        style={{ display: 'none' }}
-        onChange={handleChange}
-      />
+
+      {/* Input de archivo para selección desde Galería */}
       <input
         ref={galleryInputRef}
         type="file"
@@ -151,38 +164,71 @@ function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImageP
         style={{ display: 'none' }}
         onChange={handleChange}
       />
-      <Drawer
-        anchor="bottom"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16 } }}
-        sx={{ zIndex: (theme) => theme.zIndex.modal + 100 }}
+
+      {/* Menú de selección idéntico entre Cámara y Galería */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleCloseMenu}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 2,
+              boxShadow: 4,
+              minWidth: 210,
+              mt: 0.5,
+              zIndex: (theme) => theme.zIndex.modal + 20,
+            },
+          },
+        }}
       >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 1, px: 2, pt: 1 }}>
-            Seleccionar imagen
-          </Typography>
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton onClick={() => cameraInputRef.current?.click()}>
-                <ListItemIcon><PhotoCameraIcon /></ListItemIcon>
-                <ListItemText primary="Tomar foto" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton onClick={() => galleryInputRef.current?.click()}>
-                <ListItemIcon><CollectionsIcon /></ListItemIcon>
-                <ListItemText primary="Elegir de la galería" />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Box>
-      </Drawer>
+        <MenuItem onClick={handleSelectCamera} sx={{ py: 1.2, gap: 1.5 }}>
+          <ListItemIcon sx={{ minWidth: 28, color: 'primary.main' }}>
+            <PhotoCameraIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary="Tomar foto"
+            secondary="Cámara trasera"
+            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+            secondaryTypographyProps={{ variant: 'caption' }}
+          />
+        </MenuItem>
+        <MenuItem onClick={handleSelectGallery} sx={{ py: 1.2, gap: 1.5 }}>
+          <ListItemIcon sx={{ minWidth: 28, color: 'secondary.main' }}>
+            <CollectionsIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary="Subir desde galería"
+            secondary="Fototeca o archivos"
+            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+            secondaryTypographyProps={{ variant: 'caption' }}
+          />
+        </MenuItem>
+      </Menu>
+
+      {/* Visor de Cámara WebRTC Integrado para foto de producto (Sin IA) */}
+      <CameraScannerModal
+        open={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        onCapture={(file) => {
+          onFile(file);
+        }}
+        onSelectGallery={() => {
+          galleryInputRef.current?.click();
+        }}
+        title="Foto del Producto"
+        subtitle="Encuadra el producto y presiona capturar"
+      />
+
       {preview && onClear && (
         <Tooltip title="Quitar foto">
-          <IconButton aria-label="Quitar foto"
+          <IconButton
+            aria-label="Quitar foto"
             size="small"
-            onClick={onClear}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear();
+            }}
             sx={{
               position: 'absolute', top: 4, right: 4,
               bgcolor: 'rgba(0,0,0,0.55)', color: 'white',
@@ -195,25 +241,41 @@ function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImageP
       )}
     </Box>
   );
-}
+});
 
 export default function ProductForm({ open, onClose, initial, collectionName = 'products', onSuccess }: ProductFormProps) {
   const isEdit = Boolean(initial?.id);
   const qc     = useQueryClient();
 
-  const formik = useFormik({
-    initialValues: initial
-      ? {
-          title:           initial.title,
-          description:     initial.description     ?? '',
-          status:          'active',
-          brand:           (initial.attributes?.['brand'] as string) ?? '',
-          category:        (initial.attributes?.['category'] as string) ?? '',
-          price:           initial.attributes?.['price'] !== undefined ? String(initial.attributes?.['price']) : '',
-          in_stock:        (initial.attributes?.['in_stock'] as boolean) ?? true,
-          featured:        (initial.attributes?.['featured'] as boolean) ?? false,
+  const getInitialFormValues = () => {
+    if (initial) {
+      return {
+        title:           initial.title,
+        description:     initial.description     ?? '',
+        status:          'active',
+        brand:           (initial.attributes?.['brand'] as string) ?? '',
+        category:        (initial.attributes?.['category'] as string) ?? '',
+        price:           initial.attributes?.['price'] !== undefined ? String(initial.attributes?.['price']) : '',
+        in_stock:        (initial.attributes?.['in_stock'] as boolean) ?? true,
+        featured:        (initial.attributes?.['featured'] as boolean) ?? false,
+      };
+    }
+    try {
+      const saved = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 1000 * 60 * 30 && parsed.values && !parsed.isEdit) {
+          return parsed.values;
         }
-      : EMPTY,
+      }
+    } catch {
+      // ignore
+    }
+    return EMPTY;
+  };
+
+  const formik = useFormik({
+    initialValues: getInitialFormValues(),
     enableReinitialize: true,
     validationSchema,
     onSubmit: () => {
@@ -228,20 +290,74 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
   const [error,        setError]        = useState('');
   const [isScanning,   setIsScanning]   = useState(false);
   const [scanAlert,    setScanAlert]    = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
 
-  const scannerInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const priceInputRef   = useRef<HTMLInputElement>(null);
 
-  const handleTriggerScan = () => {
-    setScanAlert(null);
-    scannerInputRef.current?.click();
+  // Sincronización continua de borrador en sessionStorage para resiliencia ante recargas del SO
+  useEffect(() => {
+    if (!open) return;
+    const hasContent = Boolean(
+      formik.values.title ||
+      formik.values.description ||
+      formik.values.brand ||
+      formik.values.price
+    );
+    if (hasContent) {
+      try {
+        sessionStorage.setItem(
+          DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            values: formik.values,
+            isEdit,
+            editId: initial?.id,
+            timestamp: Date.now(),
+          })
+        );
+      } catch {
+        // ignore
+      }
+    }
+  }, [open, formik.values, isEdit, initial?.id]);
+
+  const handleCleanClose = () => {
+    try {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    onClose();
   };
 
-  const handleScannerFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  const [scannerMenuAnchor, setScannerMenuAnchor] = useState<null | HTMLElement>(null);
 
+  const handleOpenScannerMenu = (e: MouseEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setScanAlert(null);
+    setScannerMenuAnchor(e.currentTarget);
+  };
+
+  const handleCloseScannerMenu = () => {
+    setScannerMenuAnchor(null);
+  };
+
+  const handleSelectCamera = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCloseScannerMenu();
+    setCameraModalOpen(true);
+  };
+
+  const handleSelectGallery = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCloseScannerMenu();
+    galleryInputRef.current?.click();
+  };
+
+  const processScannerFile = async (file: File) => {
     setIsScanning(true);
     setScanAlert(null);
 
@@ -303,13 +419,21 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
       }, 150);
     } catch (err: unknown) {
       console.error('[Scanner AI Error]:', err);
+      const msg = formatApiError(err, 'No se pudo completar el escaneo con IA. Ingrese los datos manualmente.');
       setScanAlert({
         type: 'warning',
-        message: 'No pudimos leer los datos de la etiqueta. Puedes completarlos manualmente.',
+        message: msg,
       });
     } finally {
       setIsScanning(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
+  };
+
+  const handleScannerFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processScannerFile(file);
   };
 
   const handleMainFile = useCallback(async (file: File) => {
@@ -379,12 +503,17 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
       return post(`/admin/${collectionName}`, payload);
     },
     onSuccess: () => {
+      try {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
       clearEtagCache(collectionName);
       void qc.invalidateQueries({ queryKey: [`${collectionName}-index`] });
       if (onSuccess) {
         onSuccess(isEdit);
       } else {
-        onClose();
+        handleCleanClose();
       }
     },
     onError: (err: unknown) => {
@@ -404,7 +533,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleCleanClose}
       maxWidth="md"
       fullWidth
       fullScreen={isMobile}
@@ -413,7 +542,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
         <Typography variant="h6" fontWeight={700}>
           {isEdit ? 'Editar Producto' : 'Registrar Nuevo Producto'}
         </Typography>
-        <IconButton aria-label="Cerrar formulario" onClick={onClose} size="small" disabled={mutation.isPending}>
+        <IconButton aria-label="Cerrar formulario" onClick={handleCleanClose} size="small" disabled={mutation.isPending}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -435,12 +564,11 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           </Alert>
         )}
 
-        {/* Input invisible de captura nativa móvil con cámara trasera */}
+        {/* Input dedicado para selección de fotos desde Galería */}
         <input
-          ref={scannerInputRef}
+          ref={galleryInputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           style={{ display: 'none' }}
           onChange={handleScannerFileChange}
         />
@@ -488,10 +616,12 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
             </Box>
           </Box>
           <Button
+            id="btn-trigger-ai-scan"
+            type="button"
             variant="contained"
             color="primary"
             disabled={mutation.isPending || isScanning}
-            onClick={handleTriggerScan}
+            onClick={handleOpenScannerMenu}
             startIcon={isScanning ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
             sx={{
               fontWeight: 600,
@@ -509,6 +639,46 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           >
             {isScanning ? 'Iniciando escáner...' : '✨ Escanear Producto con IA'}
           </Button>
+
+          {/* Menú de selección entre Cámara y Galería */}
+          <Menu
+            anchorEl={scannerMenuAnchor}
+            open={Boolean(scannerMenuAnchor)}
+            onClose={handleCloseScannerMenu}
+            slotProps={{
+              paper: {
+                sx: {
+                  borderRadius: 2,
+                  boxShadow: 4,
+                  minWidth: 210,
+                  mt: 0.5,
+                },
+              },
+            }}
+          >
+            <MenuItem onClick={handleSelectCamera} sx={{ py: 1.2, gap: 1.5 }}>
+              <ListItemIcon sx={{ minWidth: 28, color: 'primary.main' }}>
+                <PhotoCameraIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Tomar foto"
+                secondary="Cámara trasera"
+                primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+              />
+            </MenuItem>
+            <MenuItem onClick={handleSelectGallery} sx={{ py: 1.2, gap: 1.5 }}>
+              <ListItemIcon sx={{ minWidth: 28, color: 'secondary.main' }}>
+                <CollectionsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Subir desde galería"
+                secondary="Fototeca o archivos"
+                primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+              />
+            </MenuItem>
+          </Menu>
         </Box>
 
         <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1.5}>
@@ -663,7 +833,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button onClick={onClose} disabled={mutation.isPending} color="inherit">
+        <Button onClick={handleCleanClose} disabled={mutation.isPending} color="inherit">
           Cancelar
         </Button>
         <Button
@@ -676,6 +846,18 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Guardar Producto'}
         </Button>
       </DialogActions>
+
+      {/* Visor de Cámara WebRTC Integrado en la App (Cero recargas / Cero LMK) */}
+      <CameraScannerModal
+        open={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        onCapture={(file) => {
+          void processScannerFile(file);
+        }}
+        onSelectGallery={() => {
+          galleryInputRef.current?.click();
+        }}
+      />
     </Dialog>
   );
 }

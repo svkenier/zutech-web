@@ -1,6 +1,6 @@
 import { getAuthPayload } from '../../../../src/core/auth/auth.js';
 import type { Env } from '../../../../src/core/auth/auth.js';
-import { putFile, cdnImageUrl, deleteFile, extractPathFromCdnUrl } from '../../../../src/core/storage/r2.js';
+import { putFile, deleteFile, extractPathFromCdnUrl } from '../../../../src/core/storage/r2.js';
 import { ROLE_HIERARCHY, type UserRole } from '../../../../src/core/types/user.js';
 
 const ALLOWED_MIMES = new Set(['image/webp', 'image/jpeg', 'image/png']);
@@ -58,7 +58,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         }
 
         await putFile(env, r2Path, fileContent, mimeType);
-        finalImageUrl = cdnImageUrl(r2Path);
+        finalImageUrl = r2Path;
       } catch (err: any) {
         console.error('[Admin Products POST] R2 Upload Error:', err);
         return new Response(JSON.stringify({ error: `Error al subir la imagen a R2: ${err.message}` }), { status: 502, headers: { 'Content-Type': 'application/json' } });
@@ -166,7 +166,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         }
 
         await putFile(env, r2Path, fileContent, mimeType);
-        finalImageUrl = cdnImageUrl(r2Path);
+        finalImageUrl = r2Path;
         
         // 2. Eliminar la imagen antigua de R2
         if (existingImageUrl && existingImageUrl !== finalImageUrl) {
