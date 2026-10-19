@@ -26,7 +26,7 @@ export default function CameraScannerModal({
   onClose,
   onCapture,
   onSelectGallery,
-  title = '✨ Escanear Producto',
+  title = 'Escanear Producto',
   subtitle = 'Apunta al producto o etiqueta',
 }: CameraScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);

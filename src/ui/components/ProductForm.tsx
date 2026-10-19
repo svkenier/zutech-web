@@ -6,11 +6,13 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
-import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -24,11 +26,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
-import CloseIcon     from '@mui/icons-material/Close';
-import AddPhotoIcon  from '@mui/icons-material/AddPhotoAlternate';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import CollectionsIcon from '@mui/icons-material/Collections';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CloseIcon from '@mui/icons-material/Close';
+import AddPhotoIcon from '@mui/icons-material/AddPhotoAlternate';
+import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined';
+import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -68,6 +70,110 @@ const validationSchema = Yup.object({
   featured: Yup.boolean(),
 });
 
+interface ImageSourceBottomSheetProps {
+  open: boolean;
+  onClose: () => void;
+  onSelectCamera: () => void;
+  onSelectGallery: () => void;
+}
+
+const ImageSourceBottomSheet = memo(function ImageSourceBottomSheet({
+  open,
+  onClose,
+  onSelectCamera,
+  onSelectGallery,
+}: ImageSourceBottomSheetProps) {
+  return (
+    <Drawer
+      anchor="bottom"
+      open={open}
+      onClose={onClose}
+      sx={{
+        zIndex: (theme) => theme.zIndex.modal + 20,
+      }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            backdropFilter: 'blur(3px)',
+            bgcolor: 'rgba(0, 0, 0, 0.5)',
+          },
+        },
+      }}
+      PaperProps={{
+        sx: {
+          borderRadius: '16px 16px 0 0',
+          bgcolor: 'background.paper',
+          px: 2,
+          pb: 3,
+          pt: 1,
+          maxWidth: { xs: '100%', sm: 440 },
+          mx: 'auto',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        },
+      }}
+    >
+      {/* Puller / Barra de agarre minimalista */}
+      <Box
+        sx={{
+          width: 36,
+          height: 4,
+          borderRadius: 2,
+          bgcolor: 'text.disabled',
+          mx: 'auto',
+          my: 1,
+        }}
+      />
+      <List disablePadding sx={{ mt: 1 }}>
+        <ListItemButton
+          onClick={() => {
+            onClose();
+            onSelectCamera();
+          }}
+          sx={{
+            py: 1.5,
+            px: 2,
+            borderRadius: 2,
+            gap: 2,
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 32, color: 'text.primary' }}>
+            <CameraAltOutlinedIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Cámara"
+            primaryTypographyProps={{ variant: 'body1', fontWeight: 500, color: 'text.primary' }}
+          />
+        </ListItemButton>
+
+        <ListItemButton
+          onClick={() => {
+            onClose();
+            onSelectGallery();
+          }}
+          sx={{
+            py: 1.5,
+            px: 2,
+            borderRadius: 2,
+            gap: 2,
+            mt: 0.5,
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 32, color: 'text.primary' }}>
+            <PhotoLibraryOutlinedIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Galería"
+            primaryTypographyProps={{ variant: 'body1', fontWeight: 500, color: 'text.primary' }}
+          />
+        </ListItemButton>
+      </List>
+    </Drawer>
+  );
+});
+
 interface ImagePickerProps {
   label:   string;
   preview: string;
@@ -78,7 +184,7 @@ interface ImagePickerProps {
 
 const ImagePicker = memo(function ImagePicker({ label, preview, onFile, onClear, size = 'large' }: ImagePickerProps) {
   const h = size === 'large' ? 180 : 110;
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,38 +196,24 @@ const ImagePicker = memo(function ImagePicker({ label, preview, onFile, onClear,
       }
     } finally {
       if (galleryInputRef.current) galleryInputRef.current.value = '';
-      setMenuAnchor(null);
+      setDrawerOpen(false);
     }
   };
 
-  const handleOpenMenu = (e: MouseEvent<HTMLElement>) => {
+  const handleOpenDrawer = (e: MouseEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setMenuAnchor(e.currentTarget);
+    setDrawerOpen(true);
   };
 
-  const handleCloseMenu = () => {
-    setMenuAnchor(null);
-  };
-
-  const handleSelectCamera = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleCloseMenu();
-    setCameraModalOpen(true);
-  };
-
-  const handleSelectGallery = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleCloseMenu();
-    galleryInputRef.current?.click();
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
   };
 
   return (
     <Box sx={{ position: 'relative' }}>
       <Box
-        onClick={handleOpenMenu}
+        onClick={handleOpenDrawer}
         sx={{
           display:        'flex',
           flexDirection:  'column',
@@ -165,46 +257,13 @@ const ImagePicker = memo(function ImagePicker({ label, preview, onFile, onClear,
         onChange={handleChange}
       />
 
-      {/* Menú de selección idéntico entre Cámara y Galería */}
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={handleCloseMenu}
-        slotProps={{
-          paper: {
-            sx: {
-              borderRadius: 2,
-              boxShadow: 4,
-              minWidth: 210,
-              mt: 0.5,
-              zIndex: (theme) => theme.zIndex.modal + 20,
-            },
-          },
-        }}
-      >
-        <MenuItem onClick={handleSelectCamera} sx={{ py: 1.2, gap: 1.5 }}>
-          <ListItemIcon sx={{ minWidth: 28, color: 'primary.main' }}>
-            <PhotoCameraIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText
-            primary="Tomar foto"
-            secondary="Cámara trasera"
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-            secondaryTypographyProps={{ variant: 'caption' }}
-          />
-        </MenuItem>
-        <MenuItem onClick={handleSelectGallery} sx={{ py: 1.2, gap: 1.5 }}>
-          <ListItemIcon sx={{ minWidth: 28, color: 'secondary.main' }}>
-            <CollectionsIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText
-            primary="Subir desde galería"
-            secondary="Fototeca o archivos"
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-            secondaryTypographyProps={{ variant: 'caption' }}
-          />
-        </MenuItem>
-      </Menu>
+      {/* Bottom Sheet nativo para selección de origen (Cámara / Galería) */}
+      <ImageSourceBottomSheet
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        onSelectCamera={() => setCameraModalOpen(true)}
+        onSelectGallery={() => galleryInputRef.current?.click()}
+      />
 
       {/* Visor de Cámara WebRTC Integrado para foto de producto (Sin IA) */}
       <CameraScannerModal
@@ -330,32 +389,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
     onClose();
   };
 
-  const [scannerMenuAnchor, setScannerMenuAnchor] = useState<null | HTMLElement>(null);
-
-  const handleOpenScannerMenu = (e: MouseEvent<HTMLElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setScanAlert(null);
-    setScannerMenuAnchor(e.currentTarget);
-  };
-
-  const handleCloseScannerMenu = () => {
-    setScannerMenuAnchor(null);
-  };
-
-  const handleSelectCamera = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleCloseScannerMenu();
-    setCameraModalOpen(true);
-  };
-
-  const handleSelectGallery = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleCloseScannerMenu();
-    galleryInputRef.current?.click();
-  };
+  const [scannerDrawerOpen, setScannerDrawerOpen] = useState(false);
 
   const processScannerFile = async (file: File) => {
     setIsScanning(true);
@@ -579,9 +613,9 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
             mb: 2.5,
             p: { xs: 1.5, sm: 2 },
             borderRadius: 2,
-            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.04)'),
+            bgcolor: 'background.paper',
             border: '1px solid',
-            borderColor: (t) => (t.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'),
+            borderColor: 'divider',
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
             alignItems: { xs: 'stretch', sm: 'center' },
@@ -601,13 +635,12 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
               }}
             >
-              <AutoAwesomeIcon sx={{ fontSize: 18 }} />
+              <AutoAwesomeOutlinedIcon sx={{ fontSize: 18 }} />
             </Box>
             <Box>
-              <Typography variant="subtitle2" fontWeight={700} lineHeight={1.2}>
+              <Typography variant="subtitle2" fontWeight={700} lineHeight={1.2} color="text.primary">
                 Autocompletar con Escáner IA
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block">
@@ -619,10 +652,12 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
             id="btn-trigger-ai-scan"
             type="button"
             variant="contained"
-            color="primary"
             disabled={mutation.isPending || isScanning}
-            onClick={handleOpenScannerMenu}
-            startIcon={isScanning ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
+            onClick={() => {
+              setScanAlert(null);
+              setScannerDrawerOpen(true);
+            }}
+            startIcon={isScanning ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeOutlinedIcon fontSize="small" />}
             sx={{
               fontWeight: 600,
               borderRadius: 2,
@@ -632,53 +667,27 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
               whiteSpace: 'nowrap',
               display: { xs: 'flex', md: 'inline-flex' },
               justifyContent: 'center',
-              boxShadow: 2,
-              '&:active': { transform: 'scale(0.96)' },
+              boxShadow: 'none',
+              bgcolor: 'primary.main',
+              color: 'primary.contrastText',
+              '&:hover': {
+                bgcolor: '#162238',
+                boxShadow: 'none',
+              },
+              '&:active': { transform: 'scale(0.98)' },
               transition: 'transform 150ms ease-out, background-color 150ms',
             }}
           >
-            {isScanning ? 'Iniciando escáner...' : '✨ Escanear Producto con IA'}
+            {isScanning ? 'Iniciando escáner...' : 'Escanear producto con IA'}
           </Button>
 
-          {/* Menú de selección entre Cámara y Galería */}
-          <Menu
-            anchorEl={scannerMenuAnchor}
-            open={Boolean(scannerMenuAnchor)}
-            onClose={handleCloseScannerMenu}
-            slotProps={{
-              paper: {
-                sx: {
-                  borderRadius: 2,
-                  boxShadow: 4,
-                  minWidth: 210,
-                  mt: 0.5,
-                },
-              },
-            }}
-          >
-            <MenuItem onClick={handleSelectCamera} sx={{ py: 1.2, gap: 1.5 }}>
-              <ListItemIcon sx={{ minWidth: 28, color: 'primary.main' }}>
-                <PhotoCameraIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary="Tomar foto"
-                secondary="Cámara trasera"
-                primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
-            </MenuItem>
-            <MenuItem onClick={handleSelectGallery} sx={{ py: 1.2, gap: 1.5 }}>
-              <ListItemIcon sx={{ minWidth: 28, color: 'secondary.main' }}>
-                <CollectionsIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary="Subir desde galería"
-                secondary="Fototeca o archivos"
-                primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
-            </MenuItem>
-          </Menu>
+          {/* Bottom Sheet nativo para selección de origen en Escáner IA */}
+          <ImageSourceBottomSheet
+            open={scannerDrawerOpen}
+            onClose={() => setScannerDrawerOpen(false)}
+            onSelectCamera={() => setCameraModalOpen(true)}
+            onSelectGallery={() => galleryInputRef.current?.click()}
+          />
         </Box>
 
         <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1.5}>
@@ -857,6 +866,8 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
         onSelectGallery={() => {
           galleryInputRef.current?.click();
         }}
+        title="Escanear Producto con IA"
+        subtitle="Apunta a la etiqueta o empaque del producto"
       />
     </Dialog>
   );
