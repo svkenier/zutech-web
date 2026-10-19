@@ -181,3 +181,32 @@ export function supportsWebP(): boolean {
   canvas.height = 1;
   return canvas.toDataURL(OUTPUT_FORMAT).startsWith('data:image/webp');
 }
+
+// ─── Optimización para Escáner IA ─────────────────────────────────────────────
+
+export interface ScannerOptimization {
+  dataUrl: string;
+  mimeType: 'image/webp';
+  sizeBytes: number;
+}
+
+/**
+ * Optimiza específicamente una fotografía para inferencia con el escáner de IA.
+ * Garantiza resolución de 700x700 en WebP para que Gemini procese la imagen
+ * en 1 solo tile de visión (< 2s de latencia), evitando cortes por timeout 504.
+ */
+export async function optimizeForScanner(
+  file: File,
+  quality: number = WEBP_QUALITY,
+  maxWidth: number = MAX_WIDTH_PX
+): Promise<ScannerOptimization> {
+  const result = await optimizeImage(file, quality, maxWidth);
+  const dataUrl = await blobToBase64(result.blob);
+
+  return {
+    dataUrl,
+    mimeType: 'image/webp',
+    sizeBytes: result.sizeBytes,
+  };
+}
+

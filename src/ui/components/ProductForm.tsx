@@ -9,8 +9,6 @@ import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -35,8 +33,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { post, put, formatApiError, clearEtagCache } from '@core/api/client';
-import { optimizeImage } from '@core/media/imageOptimizer';
-import { compressScannerImage } from '@core/media/scannerCompressor';
+import { optimizeImage, optimizeForScanner } from '@core/media/imageOptimizer';
 import { ITEM_IMAGE_FALLBACK } from '@core/coreConfig';
 import CameraScannerModal from './CameraScannerModal';
 import type { BaseRecord } from '@core/types/record';
@@ -331,6 +328,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
   const [isScanning,   setIsScanning]   = useState(false);
   const [scanAlert,    setScanAlert]    = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
+  const [lastScannerFile, setLastScannerFile] = useState<File | null>(null);
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const priceInputRef   = useRef<HTMLInputElement>(null);
@@ -375,9 +373,10 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
   const processScannerFile = async (file: File) => {
     setIsScanning(true);
     setScanAlert(null);
+    setLastScannerFile(file);
 
     try {
-      const compressedDataUrl = await compressScannerImage(file);
+      const { dataUrl, mimeType } = await optimizeForScanner(file);
       const res = await post<{
         data: {
           title: string;
@@ -388,8 +387,8 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           description: string;
         };
       }>('/admin/products/scan-ai', {
-        image: compressedDataUrl,
-        mimeType: 'image/jpeg',
+        image: dataUrl,
+        mimeType,
       });
 
       const data = res?.data;
@@ -426,6 +425,7 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
         type: 'success',
         message: 'Datos extraídos con éxito. Por favor verifica los campos y asigna el precio.',
       });
+      setLastScannerFile(null);
 
       // Foco obligatorio inmediato en el campo de precio
       setTimeout(() => {
@@ -573,7 +573,22 @@ export default function ProductForm({ open, onClose, initial, collectionName = '
           <Alert
             severity={scanAlert.type}
             onClose={() => setScanAlert(null)}
-            sx={{ mb: 2, borderRadius: 2 }}
+            action={
+              scanAlert.type !== 'success' && lastScannerFile ? (
+                <Button
+                  color="inherit"
+                  size="small"
+                  disabled={isScanning}
+                  onClick={() => {
+                    void processScannerFile(lastScannerFile);
+                  }}
+                  sx={{ fontWeight: 600, textTransform: 'none', whiteSpace: 'nowrap' }}
+                >
+                  {isScanning ? 'Reintentando...' : 'Reintentar'}
+                </Button>
+              ) : undefined
+            }
+            sx={{ mb: 2, borderRadius: 2, alignItems: 'center' }}
           >
             {scanAlert.message}
           </Alert>
