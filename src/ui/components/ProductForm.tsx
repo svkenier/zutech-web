@@ -103,48 +103,39 @@ const ImageSourceBottomSheet = memo(function ImageSourceBottomSheet({
         sx: {
           borderRadius: '16px 16px 0 0',
           bgcolor: 'background.paper',
-          px: 2,
-          pb: 3,
-          pt: 1,
-          maxWidth: { xs: '100%', sm: 440 },
+          p: 0,
+          maxWidth: 480,
           mx: 'auto',
           borderTop: '1px solid',
           borderColor: 'divider',
         },
       }}
     >
-      {/* Puller / Barra de agarre minimalista */}
-      <Box
+      <Typography
+        variant="subtitle1"
         sx={{
-          width: 36,
-          height: 4,
-          borderRadius: 2,
-          bgcolor: 'text.disabled',
-          mx: 'auto',
-          my: 1,
+          fontWeight: 600,
+          color: 'text.primary',
+          pt: 2.5,
+          pb: 1,
+          px: 3,
         }}
-      />
-      <List disablePadding sx={{ mt: 1 }}>
+      >
+        Seleccionar imagen
+      </Typography>
+
+      <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
           onClick={() => {
             onClose();
             onSelectCamera();
           }}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: 2,
-            gap: 2,
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
+          sx={{ px: 3, py: 1.5 }}
         >
-          <ListItemIcon sx={{ minWidth: 32, color: 'text.primary' }}>
-            <CameraAltOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary="Cámara"
-            primaryTypographyProps={{ variant: 'body1', fontWeight: 500, color: 'text.primary' }}
-          />
+          <CameraAltOutlinedIcon sx={{ color: 'text.secondary', mr: 2 }} />
+          <Typography sx={{ fontSize: '1rem', color: 'text.primary' }}>
+            Tomar foto
+          </Typography>
         </ListItemButton>
 
         <ListItemButton
@@ -152,22 +143,12 @@ const ImageSourceBottomSheet = memo(function ImageSourceBottomSheet({
             onClose();
             onSelectGallery();
           }}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: 2,
-            gap: 2,
-            mt: 0.5,
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
+          sx={{ px: 3, py: 1.5 }}
         >
-          <ListItemIcon sx={{ minWidth: 32, color: 'text.primary' }}>
-            <PhotoLibraryOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary="Galería"
-            primaryTypographyProps={{ variant: 'body1', fontWeight: 500, color: 'text.primary' }}
-          />
+          <PhotoLibraryOutlinedIcon sx={{ color: 'text.secondary', mr: 2 }} />
+          <Typography sx={{ fontSize: '1rem', color: 'text.primary' }}>
+            Elegir de la galería
+          </Typography>
         </ListItemButton>
       </List>
     </Drawer>
